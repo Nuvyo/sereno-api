@@ -1,5 +1,9 @@
 {
   "compilerOptions": {
+    "typeRoots": [
+      "./types/**/*.ts",
+      "./node_modules/@types"
+    ],
     "esModuleInterop": true,
     "module": "commonjs",
     "declaration": true,
@@ -22,9 +26,29 @@
       "@modules/*": [
         "src/modules/*"
       ],
+      "@dtos/*": [
+        "src/dtos/*"
+      ],
       "@entities/*": [
         "src/entities/*"
       ],
+      "@enums/*": [
+        "src/enums/*"
+      ],
+      "@core/*": [
+        "src/core/*"
+      ],
+      "@test/*": [
+        "test/*"
+      ],
     }
-  }
+  },
+  "ts-node": {
+    "files": true
+  },
+  "include": [
+    "src/**/*.ts",
+    "test/**/*.ts",
+    "./**/*.d.ts"
+  ]
 }

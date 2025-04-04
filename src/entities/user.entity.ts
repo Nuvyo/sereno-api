@@ -1,28 +1,58 @@
-import { Column, Entity, ManyToMany, OneToMany } from 'typeorm';
-import { BaseEntity } from '@entities/base.entity';
+import { Column, Entity, ManyToMany, OneToMany, OneToOne, RelationId } from 'typeorm';
+import { CustomBaseEntity } from '@entities/base.entity';
 import { SessionNote } from '@entities/session-note.entity';
 import { SessionPresence } from '@entities/session-presence.entity';
 import { Session } from '@entities/session.entity';
+import { ChatMessage } from '@entities/chat-message.entity';
+import { Chat } from '@entities/chat.entity';
+import { ChatConfig } from '@entities/chat-config.entity';
+import { PsychologistConfig } from '@entities/psychologist-config.entity';
+import { RefreshToken } from './refresh-token.entity';
+import { AccessToken } from './access-token.entity';
 
 @Entity({ name: 'users' })
-export class User extends BaseEntity {
+export class User extends CustomBaseEntity {
 
   @Column({ type: 'varchar', length: 255, nullable: false })
-  public name: string;
+  name: string;
 
   @Column({ type: 'varchar', length: 255, nullable: false })
-  public email: string;
+  email: string;
 
-  @Column({ type: 'varchar', length: 60, nullable: false })
-  public password: string;
+  @Column({ type: 'varchar', length: 60, nullable: false, select: false })
+  password: string;
+
+  @Column({ type: 'boolean', default: false })
+  is_psychologist: boolean;
+
+  @RelationId((user: User) => user.psychologist_config)
+  psychologist_config_id: string;
+
+  @OneToOne(() => PsychologistConfig, (psychologistConfig) => psychologistConfig.user)
+  psychologist_config: PsychologistConfig;
 
   @ManyToMany(() => Session, (session) => session.users)
-  public sessions: Session[];
+  sessions: Session[];
 
   @ManyToMany(() => SessionPresence, (presence) => presence.user)
-  public session_presences: SessionPresence[];
+  session_presences: SessionPresence[];
 
   @OneToMany(() => SessionNote, (sessionNotes) => sessionNotes.user)
-  public session_notes: SessionNote[];
+  session_notes: SessionNote[];
+
+  @OneToMany(() => ChatMessage, (chatMessage) => chatMessage.user)
+  chat_messages: ChatMessage[];
+
+  @OneToMany(() => Chat, (chat) => chat.users)
+  chats: Chat[];
+
+  @OneToMany(() => ChatConfig, (chatConfig) => chatConfig.user)
+  chat_configs: ChatConfig[];
+
+  @OneToOne(() => RefreshToken, (refreshToken) => refreshToken.user)
+  refresh_token: RefreshToken;
+
+  @OneToOne(() => AccessToken, (blockedToken) => blockedToken.user)
+  access_token: AccessToken;
 
 }

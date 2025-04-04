@@ -1,6 +1,6 @@
 import { CreateDateColumn, PrimaryGeneratedColumn, BaseEntity as TypeormEntity, UpdateDateColumn } from 'typeorm';
 
-export class BaseEntity extends TypeormEntity {
+export class CustomBaseEntity extends TypeormEntity {
   
   @PrimaryGeneratedColumn('uuid')
   id: string;

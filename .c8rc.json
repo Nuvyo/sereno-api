@@ -1,0 +1,22 @@
+{
+  "all": true,
+  "reporter": ["text", "lcov"],
+  "include": ["src/**/*.ts"],
+  "exclude": [
+    "**/node_modules/**",
+    "**/dist/**",
+    "**/test/**",
+    "**/*.spec.ts",
+    "**/*.entity.ts",
+    "**/*.datasource.ts",
+    "src/main.ts",
+    "**/*.dto.ts",
+    "src/modules/app.module.ts"
+  ],
+  "check-coverage": true,
+  "branches": 100,
+  "functions": 100,
+  "lines": 100,
+  "statements": 100,
+  "nodeArguments": ["--experimental-fetch"]
+}
