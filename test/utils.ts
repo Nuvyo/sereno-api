@@ -3,7 +3,7 @@ import { PostgresDataSource } from '@core/datasources/postgres.datasource';
 import { AuthModule } from '@modules/auth/auth.module';
 import { Test } from '@nestjs/testing';
 import { INestApplication, ModuleMetadata, ValidationPipe } from '@nestjs/common';
-import { SigninDTO } from '@dtos/auth.dto';
+import { SigninDTO } from '@core/dtos/auth.dto';
 import request from 'supertest';
 import { JwtModule } from '@nestjs/jwt';
 import * as dotenv from 'dotenv';

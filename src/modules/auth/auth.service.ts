@@ -82,24 +82,29 @@ export class AuthService {
   }
 
   public async updatePsychologistDetail(userId: string, body: PsychologistDetailDTO): Promise<PsychologistDetail> {
-    const userIsPsychologist = await this.dataSource.getRepository(User).existsBy({ id: userId, is_psychologist: true });
-
-    if (!userIsPsychologist) {
-      throw new BadRequestException('User is not a psychologist');
-    }
+    await this.validatePsychologistDetailData(userId, body);
 
     const detailBody = (await this.dataSource.getRepository(PsychologistDetail).findOneBy({ user: { id: userId } })) || new PsychologistDetail();
 
     detailBody.in_person = body.in_person;
     detailBody.online = body.online;
-    detailBody.in_person_price = body.in_person_price;
-    detailBody.online_price = body.online_price;
     detailBody.bio = body.bio;
     detailBody.register_number = body.register_number;
+
+    if (body.in_person) {
+      detailBody.in_person_price = body.in_person_price;
+    }
+
+    if (body.online) {
+      detailBody.online_price = body.online_price;
+    }
+
     detailBody.user = new User();
     detailBody.user.id = userId;
 
     const userDetail = await this.dataSource.getRepository(PsychologistDetail).save(detailBody);
+
+    // TODO: criar job para validar o registro do psicólogo
 
     return this.dataSource.getRepository(PsychologistDetail).findOneOrFail({ where: { id: userDetail.id } });
   }
@@ -191,6 +196,18 @@ export class AuthService {
     await this.dataSource.getRepository(AccessToken).delete({ user: { id: userId } });
 
     return this.dataSource.getRepository(AccessToken).save(accessTokenData);
+  }
+
+  private async validatePsychologistDetailData(userId: string, body: PsychologistDetailDTO): Promise<void> {
+    if (!body.in_person && !body.online) {
+      throw new BadRequestException('At least one of in_person or online must be true');
+    }
+
+    const userIsPsychologist = await this.dataSource.getRepository(User).existsBy({ id: userId, is_psychologist: true });
+
+    if (!userIsPsychologist) {
+      throw new BadRequestException('User is not a psychologist');
+    }
   }
 
 }

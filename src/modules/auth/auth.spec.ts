@@ -278,6 +278,20 @@ describe('Auth', () => {
       assert.equal(response.status, HttpStatus.BAD_REQUEST);
     });
 
+    it('should receive an invalid body with both "online" and "in_person" as false and fail', async () => {
+      const body = {
+        register_number: '1234545',
+        online: false,
+        in_person: false,
+        online_price: 100.00,
+        in_person_price: 100.00,
+        bio: 'Test bio',
+      };
+      const response = await psycologistUserRequester.put('/v1/auth/psychologist-detail', body);
+
+      assert.equal(response.status, HttpStatus.BAD_REQUEST);
+    });
+
     it('should receive invalid prices and fail', async () => {
       const body = {
         register_number: false,
@@ -296,9 +310,9 @@ describe('Auth', () => {
       const body: PsychologistDetailDTO = {
         register_number: '123456789',
         online: true,
-        in_person: false,
+        in_person: true,
         online_price: 100.55,
-        in_person_price: 0.00,
+        in_person_price: 5.00,
         bio: 'Test bio',
       };
       const response = await psycologistUserRequester.put('/v1/auth/psychologist-detail', body);
