@@ -1,12 +1,14 @@
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { PostgresDataSource } from '@core/datasources/postgres.datasource';
-import { AuthModule } from '@core/auth/auth.module';
+import { AuthModule } from '@modules/auth/auth.module';
 import { Test } from '@nestjs/testing';
-import { INestApplication, ModuleMetadata } from '@nestjs/common';
+import { INestApplication, ModuleMetadata, ValidationPipe } from '@nestjs/common';
+import { SigninDTO } from '@dtos/auth.dto';
 import request from 'supertest';
 import { JwtModule } from '@nestjs/jwt';
 import * as dotenv from 'dotenv';
-import { SigninDTO } from '@dtos/auth.dto';
+import * as bodyParser from 'body-parser';
+import * as useragent from 'express-useragent';
 
 dotenv.config();
 
@@ -36,7 +38,12 @@ export async function createApp(options?: ModuleMetadata) {
   }).compile();
 
   const app = moduleRef.createNestApplication();
-  
+
+  app.use(bodyParser.json({ type: ['application/json'], limit: '128mb' }));
+  app.use(bodyParser.urlencoded({ limit: '128mb', extended: true }));
+  app.use(useragent.express());
+  app.useGlobalPipes(new ValidationPipe());
+
   await app.init();
 
   return app;

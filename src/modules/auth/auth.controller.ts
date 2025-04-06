@@ -1,5 +1,5 @@
-import { Body, Controller, Delete, Get, Post, Req, UseGuards } from '@nestjs/common';
-import { RefreshTokenDTO, SigninDTO, SignupDTO } from '@dtos/auth.dto';
+import { Body, Controller, Delete, Get, Post, Put, Req, UseGuards } from '@nestjs/common';
+import { PsychologistDetailDTO, RefreshTokenDTO, SigninDTO, SignupDTO } from '@dtos/auth.dto';
 import { AuthService } from '@modules/auth/auth.service';
 import { Request } from 'express';
 import { AuthGuard } from '@core/guards/auth.guard';
@@ -29,6 +29,12 @@ export class AuthController {
   @UseGuards(AuthGuard)
   public refresh(@Req() req: Request, @Body() body: RefreshTokenDTO) {
     return this.authService.refresh(body, req.userId);
+  }
+
+  @Put('/psychologist-detail')
+  @UseGuards(AuthGuard)
+  public updatePsychologistDetail(@Req() req: Request, @Body() body: PsychologistDetailDTO): Promise<PsychologistDetailDTO> {
+    return this.authService.updatePsychologistDetail(req.userId, body);
   }
 
   @Delete('/signout')

@@ -1,12 +1,12 @@
 import { Column, Entity, ManyToMany, OneToMany, OneToOne, RelationId } from 'typeorm';
-import { CustomBaseEntity } from '@entities/base.entity';
+import { CustomBaseEntity } from '@entities/utils/base.entity';
 import { SessionNote } from '@entities/session-note.entity';
 import { SessionPresence } from '@entities/session-presence.entity';
 import { Session } from '@entities/session.entity';
 import { ChatMessage } from '@entities/chat-message.entity';
 import { Chat } from '@entities/chat.entity';
 import { ChatConfig } from '@entities/chat-config.entity';
-import { PsychologistConfig } from '@entities/psychologist-config.entity';
+import { PsychologistDetail } from '@entities/psychologist-detail.entity';
 import { RefreshToken } from './refresh-token.entity';
 import { AccessToken } from './access-token.entity';
 
@@ -25,11 +25,11 @@ export class User extends CustomBaseEntity {
   @Column({ type: 'boolean', default: false })
   is_psychologist: boolean;
 
-  @RelationId((user: User) => user.psychologist_config)
-  psychologist_config_id: string;
+  @RelationId((user: User) => user.psychologist_detail)
+  psychologist_detail_id: string;
 
-  @OneToOne(() => PsychologistConfig, (psychologistConfig) => psychologistConfig.user)
-  psychologist_config: PsychologistConfig;
+  @OneToOne(() => PsychologistDetail, (psychologistConfig) => psychologistConfig.user)
+  psychologist_detail: PsychologistDetail;
 
   @ManyToMany(() => Session, (session) => session.users)
   sessions: Session[];

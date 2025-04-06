@@ -1,5 +1,5 @@
 import { Column, Entity, ManyToOne, RelationId } from 'typeorm';
-import { CustomBaseEntity } from '@entities/base.entity';
+import { CustomBaseEntity } from '@entities/utils/base.entity';
 import { User } from '@entities/user.entity';
 
 @Entity({ name: 'access_tokens' })

@@ -1,5 +1,5 @@
 import { Column, Entity, ManyToOne, RelationId } from 'typeorm';
-import { CustomBaseEntity } from '@entities/base.entity';
+import { CustomBaseEntity } from '@entities/utils/base.entity';
 import { User } from '@entities/user.entity';
 import { Chat } from '@entities/chat.entity';
 
@@ -12,7 +12,7 @@ export class ChatMessage extends CustomBaseEntity {
   @RelationId((chatMessage: ChatMessage) => chatMessage.chat)
   chat_id: string;
 
-  @Column({ type: 'text', nullable: true })
+  @Column({ type: 'text', nullable: false })
   message: string;
 
   @ManyToOne(() => User, (user) => user.chat_messages, { onDelete: 'CASCADE' })

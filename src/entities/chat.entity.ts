@@ -1,5 +1,5 @@
 import { Entity, ManyToMany, ManyToOne, OneToMany } from 'typeorm';
-import { CustomBaseEntity } from '@entities/base.entity';
+import { CustomBaseEntity } from '@entities/utils/base.entity';
 import { User } from '@entities/user.entity';
 import { ChatMessage } from '@entities/chat-message.entity';
 import { ChatConfig } from './chat-config.entity';

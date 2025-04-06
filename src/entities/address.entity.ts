@@ -1,6 +1,6 @@
 import { Column, Entity, ManyToOne } from 'typeorm';
-import { CustomBaseEntity } from '@entities/base.entity';
-import { PsychologistConfig } from '@entities/psychologist-config.entity';
+import { CustomBaseEntity } from '@entities/utils/base.entity';
+import { PsychologistDetail } from '@entities/psychologist-detail.entity';
 
 @Entity('addresses')
 export class Address extends CustomBaseEntity {
@@ -20,7 +20,7 @@ export class Address extends CustomBaseEntity {
   @Column({ type: 'varchar', length: 255, nullable: false })
   country: string;
 
-  @ManyToOne(() => PsychologistConfig, (psychologistConfig) => psychologistConfig.in_person_addresses, { onDelete: 'CASCADE' })
-  psychologist_config: PsychologistConfig;
+  @ManyToOne(() => PsychologistDetail, (psychologistConfig) => psychologistConfig.in_person_addresses, { onDelete: 'CASCADE' })
+  psychologist_detail: PsychologistDetail;
 
 }

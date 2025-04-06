@@ -13,8 +13,22 @@ export class UserService {
         is_psychologist: true,
       },
       relations: {
-        psychologist_config: true,
+        psychologist_detail: true,
       },
+      select: {
+        id: true,
+        name: true,
+        psychologist_detail: {
+          id: true,
+          likes: true,
+          in_person: true,
+          online: true,
+          in_person_price: true,
+          online_price: true,
+          bio: true,
+          has_valid_register: true,
+        }
+      }
     });
   }
 

@@ -1,13 +1,14 @@
 import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { User } from '@entities/user.entity';
-import { SigninDTO, SessionTokensDTO, SignupDTO, RefreshTokenDTO, SigninResponseDTO, MeDTO } from '@dtos/auth.dto';
+import { SigninDTO, SessionTokensDTO, SignupDTO, RefreshTokenDTO, SigninResponseDTO, MeDTO, PsychologistDetailDTO } from '@dtos/auth.dto';
 import { BcryptService } from '@core/services/bcrypt.service';
 import { JwtService } from '@nestjs/jwt';
 import { v4 as uuidv4 } from 'uuid';
 import { RefreshToken } from '@entities/refresh-token.entity';
 import { AccessToken } from '@entities/access-token.entity';
 import { BaseMessageDTO } from '@dtos/generic.dto';
+import { PsychologistDetail } from '@entities/psychologist-detail.entity';
 
 @Injectable()
 export class AuthService {
@@ -20,14 +21,24 @@ export class AuthService {
 
   public async me(userId: string): Promise<MeDTO> {
     const user = await this.dataSource.getRepository(User).findOneOrFail({ where: { id: userId } });
-    const accessToken = await this.dataSource.getRepository(AccessToken).findOneOrFail({ where: { user: { id: userId } } });
-
-    return {
+    const data: MeDTO = {
       id: user.id,
       name: user.name,
-      email: user.email,
-      access_token: accessToken.token,
+      email: user.email
     };
+
+    if (user.is_psychologist) {
+      const psychologistDetail = await this.dataSource.getRepository(PsychologistDetail).findOne({
+        where: { user: { id: userId } },
+        select: {}
+      });
+
+      if (psychologistDetail) {
+        data['psychologist_detail'] = psychologistDetail;
+      }
+    }
+
+    return data;
   }
 
   public async signup(body: SignupDTO): Promise<User> {
@@ -68,6 +79,29 @@ export class AuthService {
     }
 
     return this.generateUserTokens(token.user_id);
+  }
+
+  public async updatePsychologistDetail(userId: string, body: PsychologistDetailDTO): Promise<PsychologistDetail> {
+    const userIsPsychologist = await this.dataSource.getRepository(User).existsBy({ id: userId, is_psychologist: true });
+
+    if (!userIsPsychologist) {
+      throw new BadRequestException('User is not a psychologist');
+    }
+
+    const detailBody = (await this.dataSource.getRepository(PsychologistDetail).findOneBy({ user: { id: userId } })) || new PsychologistDetail();
+
+    detailBody.in_person = body.in_person;
+    detailBody.online = body.online;
+    detailBody.in_person_price = body.in_person_price;
+    detailBody.online_price = body.online_price;
+    detailBody.bio = body.bio;
+    detailBody.register_number = body.register_number;
+    detailBody.user = new User();
+    detailBody.user.id = userId;
+
+    const userDetail = await this.dataSource.getRepository(PsychologistDetail).save(detailBody);
+
+    return this.dataSource.getRepository(PsychologistDetail).findOneOrFail({ where: { id: userDetail.id } });
   }
 
   public async logout(userId: string): Promise<BaseMessageDTO> {
