@@ -1,12 +1,12 @@
 import { Column, Entity, ManyToMany, OneToMany, OneToOne, RelationId } from 'typeorm';
-import { CustomBaseEntity } from '@entities/utils/base.entity';
-import { SessionNote } from '@entities/session-note.entity';
-import { SessionPresence } from '@entities/session-presence.entity';
-import { Session } from '@entities/session.entity';
-import { ChatMessage } from '@entities/chat-message.entity';
-import { Chat } from '@entities/chat.entity';
-import { ChatConfig } from '@entities/chat-config.entity';
-import { PsychologistDetail } from '@entities/psychologist-detail.entity';
+import { CustomBaseEntity } from '@core/entities/utils/base.entity';
+import { SessionNote } from '@core/entities/session-note.entity';
+import { SessionPresence } from '@core/entities/session-presence.entity';
+import { Session } from '@core/entities/session.entity';
+import { ChatMessage } from '@core/entities/chat-message.entity';
+import { Chat } from '@core/entities/chat.entity';
+import { ChatConfig } from '@core/entities/chat-config.entity';
+import { PsychologistDetail } from '@core/entities/psychologist-detail.entity';
 import { RefreshToken } from './refresh-token.entity';
 import { AccessToken } from './access-token.entity';
 

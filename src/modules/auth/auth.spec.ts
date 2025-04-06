@@ -1,7 +1,7 @@
 import * as assert from 'node:assert/strict';
 import { describe, before, it, after } from 'node:test';
-import { MeDTO, PsychologistDetailDTO, RefreshTokenDTO, SessionTokensDTO, SigninDTO, SigninResponseDTO, SignupDTO } from '@dtos/auth.dto';
-import { PsychologistDetail } from '@entities/psychologist-detail.entity';
+import { MeDTO, PsychologistDetailDTO, RefreshTokenDTO, SessionTokensDTO, SigninDTO, SigninResponseDTO, SignupDTO } from '@core/dtos/auth.dto';
+import { PsychologistDetail } from '@core/entities/psychologist-detail.entity';
 import { HttpStatus, INestApplication } from '@nestjs/common';
 import { createApp, Requester } from '@test/utils';
 import request from 'supertest';

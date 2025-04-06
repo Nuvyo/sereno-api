@@ -1,7 +1,7 @@
 import { Entity, ManyToMany, ManyToOne, OneToMany } from 'typeorm';
-import { CustomBaseEntity } from '@entities/utils/base.entity';
-import { User } from '@entities/user.entity';
-import { ChatMessage } from '@entities/chat-message.entity';
+import { CustomBaseEntity } from '@core/entities/utils/base.entity';
+import { User } from '@core/entities/user.entity';
+import { ChatMessage } from '@core/entities/chat-message.entity';
 import { ChatConfig } from './chat-config.entity';
 
 @Entity({ name: 'chats' })

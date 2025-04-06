@@ -1,8 +1,8 @@
-import { CustomBaseEntity } from '@entities/utils/base.entity';
+import { CustomBaseEntity } from '@core/entities/utils/base.entity';
 import { Column, Entity, JoinColumn, OneToMany, OneToOne, RelationId } from 'typeorm';
-import { User } from '@entities/user.entity';
-import { Address } from '@entities/address.entity';
-import { ColumnNumericTransformer } from '@entities/utils/transformers';
+import { User } from '@core/entities/user.entity';
+import { Address } from '@core/entities/address.entity';
+import { ColumnNumericTransformer } from '@core/entities/utils/transformers';
 
 @Entity({ name: 'psychologist_details' })
 export class PsychologistDetail extends CustomBaseEntity {

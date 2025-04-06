@@ -1,16 +1,16 @@
 import { DataSourceOptions } from 'typeorm';
 import * as dotenv from 'dotenv';
-import { ChatConfig } from '@entities/chat-config.entity';
-import { ChatMessage } from '@entities/chat-message.entity';
-import { Chat } from '@entities/chat.entity';
-import { PsychologistDetail } from '@entities/psychologist-detail.entity';
-import { SessionNote } from '@entities/session-note.entity';
-import { SessionPresence } from '@entities/session-presence.entity';
-import { Session } from '@entities/session.entity';
-import { User } from '@entities/user.entity';
-import { Address } from '@entities/address.entity';
-import { RefreshToken } from '@entities/refresh-token.entity';
-import { AccessToken } from '@entities/access-token.entity';
+import { ChatConfig } from '@core/entities/chat-config.entity';
+import { ChatMessage } from '@core/entities/chat-message.entity';
+import { Chat } from '@core/entities/chat.entity';
+import { PsychologistDetail } from '@core/entities/psychologist-detail.entity';
+import { SessionNote } from '@core/entities/session-note.entity';
+import { SessionPresence } from '@core/entities/session-presence.entity';
+import { Session } from '@core/entities/session.entity';
+import { User } from '@core/entities/user.entity';
+import { Address } from '@core/entities/address.entity';
+import { RefreshToken } from '@core/entities/refresh-token.entity';
+import { AccessToken } from '@core/entities/access-token.entity';
 
 dotenv.config();
 

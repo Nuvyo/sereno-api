@@ -2,7 +2,7 @@ import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
 import { DataSource } from 'typeorm';
-import { AccessToken } from '@entities/access-token.entity';
+import { AccessToken } from '@core/entities/access-token.entity';
 
 @Injectable()
 export class AuthGuard implements CanActivate {

@@ -1,7 +1,7 @@
 import { Column, Entity, ManyToOne, RelationId } from 'typeorm';
-import { Session } from '@entities/session.entity';
-import { User } from '@entities/user.entity';
-import { CustomBaseEntity } from '@entities/utils/base.entity';
+import { Session } from '@core/entities/session.entity';
+import { User } from '@core/entities/user.entity';
+import { CustomBaseEntity } from '@core/entities/utils/base.entity';
 
 @Entity({ name: 'session_notes' })
 export class SessionNote extends CustomBaseEntity {

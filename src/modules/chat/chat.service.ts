@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { DataSource } from 'typeorm';
-import { Chat } from '@entities/chat.entity';
-import { User } from '@entities/user.entity';
+import { Chat } from '@core/entities/chat.entity';
+import { User } from '@core/entities/user.entity';
 
 @Injectable()
 export class ChatService {

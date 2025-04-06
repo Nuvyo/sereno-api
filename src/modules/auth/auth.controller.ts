@@ -1,5 +1,5 @@
 import { Body, Controller, Delete, Get, Post, Put, Req, UseGuards } from '@nestjs/common';
-import { PsychologistDetailDTO, RefreshTokenDTO, SigninDTO, SignupDTO } from '@dtos/auth.dto';
+import { PsychologistDetailDTO, RefreshTokenDTO, SigninDTO, SignupDTO } from '@core/dtos/auth.dto';
 import { AuthService } from '@modules/auth/auth.service';
 import { Request } from 'express';
 import { AuthGuard } from '@core/guards/auth.guard';

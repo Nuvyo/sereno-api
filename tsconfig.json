@@ -26,15 +26,6 @@
       "@modules/*": [
         "src/modules/*"
       ],
-      "@dtos/*": [
-        "src/dtos/*"
-      ],
-      "@entities/*": [
-        "src/entities/*"
-      ],
-      "@enums/*": [
-        "src/enums/*"
-      ],
       "@core/*": [
         "src/core/*"
       ],

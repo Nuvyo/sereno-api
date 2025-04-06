@@ -1,7 +1,7 @@
 import { Column, Entity, ManyToOne, RelationId } from 'typeorm';
-import { Chat } from '@entities/chat.entity';
-import { User } from '@entities/user.entity';
-import { CustomBaseEntity } from '@entities/utils/base.entity';
+import { Chat } from '@core/entities/chat.entity';
+import { User } from '@core/entities/user.entity';
+import { CustomBaseEntity } from '@core/entities/utils/base.entity';
 
 @Entity({ name: 'chat_configs' })
 export class ChatConfig extends CustomBaseEntity {

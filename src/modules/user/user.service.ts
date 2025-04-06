@@ -1,13 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { DataSource } from 'typeorm';
-import { User } from '@entities/user.entity';
+import { User } from '@core/entities/user.entity';
 
 @Injectable()
 export class UserService {
 
   constructor(private readonly dataSource: DataSource) {}
 
-  public getPsychologists() {
+  public getPsychologists(query) {
     return this.dataSource.getRepository(User).find({
       where: {
         is_psychologist: true,
@@ -28,7 +28,14 @@ export class UserService {
           bio: true,
           has_valid_register: true,
         }
-      }
+      },
+      order: {
+        psychologist_detail: {
+          likes: 'DESC',
+        },
+      },
+      skip: 0,
+      take: 10,
     });
   }
 

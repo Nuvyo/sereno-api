@@ -1,14 +1,14 @@
 import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { DataSource } from 'typeorm';
-import { User } from '@entities/user.entity';
-import { SigninDTO, SessionTokensDTO, SignupDTO, RefreshTokenDTO, SigninResponseDTO, MeDTO, PsychologistDetailDTO } from '@dtos/auth.dto';
+import { User } from '@core/entities/user.entity';
+import { SigninDTO, SessionTokensDTO, SignupDTO, RefreshTokenDTO, SigninResponseDTO, MeDTO, PsychologistDetailDTO } from '@core/dtos/auth.dto';
 import { BcryptService } from '@core/services/bcrypt.service';
 import { JwtService } from '@nestjs/jwt';
 import { v4 as uuidv4 } from 'uuid';
-import { RefreshToken } from '@entities/refresh-token.entity';
-import { AccessToken } from '@entities/access-token.entity';
-import { BaseMessageDTO } from '@dtos/generic.dto';
-import { PsychologistDetail } from '@entities/psychologist-detail.entity';
+import { RefreshToken } from '@core/entities/refresh-token.entity';
+import { AccessToken } from '@core/entities/access-token.entity';
+import { BaseMessageDTO } from '@core/dtos/generic.dto';
+import { PsychologistDetail } from '@core/entities/psychologist-detail.entity';
 
 @Injectable()
 export class AuthService {

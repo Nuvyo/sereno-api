@@ -1,6 +1,6 @@
 import { Column, Entity, ManyToOne } from 'typeorm';
-import { CustomBaseEntity } from '@entities/utils/base.entity';
-import { PsychologistDetail } from '@entities/psychologist-detail.entity';
+import { CustomBaseEntity } from '@core/entities/utils/base.entity';
+import { PsychologistDetail } from '@core/entities/psychologist-detail.entity';
 
 @Entity('addresses')
 export class Address extends CustomBaseEntity {

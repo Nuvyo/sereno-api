@@ -1,6 +1,6 @@
 import { Column, Entity, JoinColumn, OneToOne, RelationId } from 'typeorm';
-import { CustomBaseEntity } from '@entities/utils/base.entity';
-import { User } from '@entities/user.entity';
+import { CustomBaseEntity } from '@core/entities/utils/base.entity';
+import { User } from '@core/entities/user.entity';
 
 @Entity({ name: 'refresh_tokens' })
 export class RefreshToken extends CustomBaseEntity {

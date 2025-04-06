@@ -1,5 +1,5 @@
 import { IsBoolean, IsDecimal, IsNotEmpty, IsNumber, IsOptional, IsString, IsUUID, Max, Min, MinLength } from 'class-validator';
-import { PsychologistDetail } from '@entities/psychologist-detail.entity';
+import { PsychologistDetail } from '@core/entities/psychologist-detail.entity';
 import { IsValidPrice } from '@core/decorators/is-valid-price.decorator';
 import 'reflect-metadata';
 
