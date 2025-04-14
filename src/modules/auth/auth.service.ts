@@ -27,27 +27,35 @@ export class AuthService {
       email: user.email
     };
 
-    if (user.is_psychologist) {
+    if (user.isPsychologist) {
       const psychologistDetail = await this.dataSource.getRepository(PsychologistDetail).findOne({
         where: { user: { id: userId } },
         select: {}
       });
 
       if (psychologistDetail) {
-        data['psychologist_detail'] = psychologistDetail;
+        data['psychologistDetail'] = psychologistDetail;
       }
     }
 
     return data;
   }
 
-  public async signup(body: SignupDTO): Promise<User> {
+  public async signup(body: SignupDTO): Promise<Partial<User>> {
     await this.validateSignupData(body);
     await this.hashPassword(body);
 
-    const createdUser = await this.dataSource.getRepository(User).save(body);
+    const data: Partial<User> = { ...body };
 
-    return this.dataSource.getRepository(User).findOneOrFail({ where: { id: createdUser.id } });
+    if (body.isPsychologist) {
+      data.psychologistDetail = new PsychologistDetail();
+    }
+
+    const user = await this.dataSource.getRepository(User).save(data);
+
+    return {
+      id: user.id,
+    };
   }
 
   public async signin(body: SigninDTO): Promise<SigninResponseDTO> {
@@ -62,41 +70,43 @@ export class AuthService {
 
     return {
       ...tokens,
-      user_id: user!.id,
+      userId: user!.id,
     }
   }
 
   public async refresh(body: RefreshTokenDTO, userId: string): Promise<SessionTokensDTO> {
     const token = await this.dataSource.getRepository(RefreshToken)
       .createQueryBuilder('token')
-      .where('token.token = :token', { token: body.refresh_token })
-      .andWhere('token.user_id = :user_id', { user_id: userId })
-      .andWhere('token.expires_at > :now', { now: new Date() })
+      .where('token.token = :token', { token: body.refreshToken })
+      .andWhere('token.userId = :userId', { userId })
+      .andWhere('token.expiresAt > :now', { now: new Date() })
       .getOne();
 
     if (!token) {
       throw new UnauthorizedException('Invalid refresh token');
     }
 
-    return this.generateUserTokens(token.user_id);
+    return this.generateUserTokens(token.userId);
   }
 
   public async updatePsychologistDetail(userId: string, body: PsychologistDetailDTO): Promise<PsychologistDetail> {
     await this.validatePsychologistDetailData(userId, body);
 
-    const detailBody = (await this.dataSource.getRepository(PsychologistDetail).findOneBy({ user: { id: userId } })) || new PsychologistDetail();
+    const detailBody = await this.dataSource.getRepository(PsychologistDetail).findOneByOrFail({ user: { id: userId } });
 
-    detailBody.in_person = body.in_person;
+    detailBody.inPerson = body.inPerson;
     detailBody.online = body.online;
     detailBody.bio = body.bio;
-    detailBody.register_number = body.register_number;
+    detailBody.registerNumber = body.registerNumber;
+    detailBody.inPerson = body.inPerson;
+    detailBody.online = body.online;
 
-    if (body.in_person) {
-      detailBody.in_person_price = body.in_person_price;
+    if (body.inPerson) {
+      detailBody.inPersonPrice = body.inPersonPrice;
     }
 
     if (body.online) {
-      detailBody.online_price = body.online_price;
+      detailBody.onlinePrice = body.onlinePrice;
     }
 
     detailBody.user = new User();
@@ -104,7 +114,7 @@ export class AuthService {
 
     const userDetail = await this.dataSource.getRepository(PsychologistDetail).save(detailBody);
 
-    // TODO: criar job para validar o registro do psicólogo
+    // TODO: criar job para validar o número de registro do psicólogo
 
     return this.dataSource.getRepository(PsychologistDetail).findOneOrFail({ where: { id: userDetail.id } });
   }
@@ -134,7 +144,7 @@ export class AuthService {
       throw new BadRequestException('User already exists');
     }
 
-    if (body.password !== body.password_confirmation) {
+    if (body.password !== body.passwordConfirmation) {
       throw new BadRequestException('Password and password confirmation do not match');
     }
   }
@@ -165,8 +175,8 @@ export class AuthService {
     await this.saveAccessToken(accessToken, userId);
 
     return {
-      access_token: accessToken,
-      refresh_token: refreshToken,
+      accessToken: accessToken,
+      refreshToken: refreshToken,
     };
   }
 
@@ -179,7 +189,7 @@ export class AuthService {
     refreshTokenData.token = token;
     refreshTokenData.user = new User();
     refreshTokenData.user.id = userId;
-    refreshTokenData.expires_at = expiresAt;
+    refreshTokenData.expiresAt = expiresAt;
 
     await this.dataSource.getRepository(RefreshToken).delete({ user: { id: userId } });
 
@@ -199,11 +209,11 @@ export class AuthService {
   }
 
   private async validatePsychologistDetailData(userId: string, body: PsychologistDetailDTO): Promise<void> {
-    if (!body.in_person && !body.online) {
+    if (!body.inPerson && !body.online) {
       throw new BadRequestException('At least one of in_person or online must be true');
     }
 
-    const userIsPsychologist = await this.dataSource.getRepository(User).existsBy({ id: userId, is_psychologist: true });
+    const userIsPsychologist = await this.dataSource.getRepository(User).existsBy({ id: userId, isPsychologist: true });
 
     if (!userIsPsychologist) {
       throw new BadRequestException('User is not a psychologist');

@@ -21,11 +21,11 @@ export class SignupDTO {
   @IsNotEmpty()
   @IsString()
   @MinLength(8)
-  password_confirmation: string;
+  passwordConfirmation: string;
 
   @IsOptional()
   @IsBoolean()
-  is_psychologist: boolean;
+  isPsychologist: boolean;
 
 }
 
@@ -43,16 +43,16 @@ export class SigninDTO {
 
 export class SigninResponseDTO {
 
-  access_token: string;
-  refresh_token: string;
-  user_id: string;
+  accessToken: string;
+  refreshToken: string;
+  userId: string;
 
 }
 
 export class SessionTokensDTO {
 
-  access_token: string;
-  refresh_token: string;
+  accessToken: string;
+  refreshToken: string;
 
 }
 
@@ -61,7 +61,7 @@ export class MeDTO {
   id: string;
   name: string;
   email: string;
-  psychologist_detail?: PsychologistDetail;
+  psychologistDetail?: PsychologistDetail;
 
 }
 
@@ -69,7 +69,7 @@ export class RefreshTokenDTO {
 
   @IsNotEmpty()
   @IsUUID('4')
-  refresh_token: string;
+  refreshToken: string;
 
 }
 
@@ -77,7 +77,7 @@ export class PsychologistDetailDTO {
 
   @IsOptional()
   @IsString()
-  register_number: string;
+  registerNumber: string;
 
   @IsOptional()
   @IsBoolean()
@@ -85,21 +85,21 @@ export class PsychologistDetailDTO {
 
   @IsOptional()
   @IsBoolean()
-  in_person: boolean;
+  inPerson: boolean;
 
   @IsOptional()
   @IsValidPrice({ message: 'online_price must be a valid price' })
   @IsNumber()
   @Min(0.00)
   @Max(99999.99)
-  online_price: number;
+  onlinePrice: number;
 
   @IsOptional()
   @IsValidPrice({ message: 'in_person_price must be a valid price' })
   @IsNumber()
   @Min(0.00)
   @Max(99999.99)
-  in_person_price: number;
+  inPersonPrice: number;
 
   @IsOptional()
   @IsString()

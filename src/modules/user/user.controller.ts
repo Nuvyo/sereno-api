@@ -1,5 +1,8 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Param, ParseUUIDPipe, Put, Query, Req, UseGuards } from '@nestjs/common';
 import { UserService } from '@modules/user/user.service';
+import { QueryData, QueryPipe } from '@core/pipes/query.pipe';
+import { AuthGuard } from '../../core/guards/auth.guard';
+import { Request } from 'express';
 
 @Controller('v1/users')
 export class UserController {
@@ -7,8 +10,19 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Get('/psychologists')
-  public getPsychologists() {
-    return this.userService.getPsychologists();
+  public getPsychologists(@Query(new QueryPipe()) query: QueryData) {
+    return this.userService.listPsychologists(query);
+  }
+
+  @Get('/psychologists/:id')
+  public getPsychologistById(@Param('id', new ParseUUIDPipe()) id: string) {
+    return this.userService.getPsychologistById(id);
+  }
+
+  @Put('/psychologists/:id/like')
+  @UseGuards(AuthGuard)
+  public likePsychologist(@Param('id', new ParseUUIDPipe()) id: string, @Req() req: Request) {
+    return this.userService.likePsychologist(id, req.userId);
   }
 
 }

@@ -20,7 +20,7 @@ export class Address extends CustomBaseEntity {
   @Column({ type: 'varchar', length: 255, nullable: false })
   country: string;
 
-  @ManyToOne(() => PsychologistDetail, (psychologistConfig) => psychologistConfig.in_person_addresses, { onDelete: 'CASCADE' })
-  psychologist_detail: PsychologistDetail;
+  @ManyToOne(() => PsychologistDetail, (psychologistConfig) => psychologistConfig.inPersonAddresses, { onDelete: 'CASCADE' })
+  psychologistDetail: PsychologistDetail;
 
 }

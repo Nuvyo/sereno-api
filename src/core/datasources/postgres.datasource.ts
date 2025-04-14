@@ -11,6 +11,7 @@ import { User } from '@core/entities/user.entity';
 import { Address } from '@core/entities/address.entity';
 import { RefreshToken } from '@core/entities/refresh-token.entity';
 import { AccessToken } from '@core/entities/access-token.entity';
+import { Like } from '@core/entities/like.entity';
 
 dotenv.config();
 
@@ -29,6 +30,7 @@ export const PostgresDataSource: DataSourceOptions = {
     ChatConfig,
     ChatMessage,
     Chat,
+    Like,
     PsychologistDetail,
     RefreshToken,
     SessionNote,

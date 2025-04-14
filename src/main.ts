@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
-import { AppModule } from '@modules/app.module';
 import { ValidationPipe } from '@nestjs/common';
+import { AppModule } from '@modules/app.module';
+import { CustomExceptionFilter } from '@core/filters/error.filter';
 import * as dotenv from 'dotenv';
 import * as bodyParser from 'body-parser';
 import * as useragent from 'express-useragent';
@@ -30,6 +31,7 @@ async function bootstrap() {
   app.use(bodyParser.urlencoded({ limit: '128mb', extended: true }));
   app.use(useragent.express());
   app.useGlobalPipes(new ValidationPipe());
+  app.useGlobalFilters(new CustomExceptionFilter());
 
   await app.listen(port);
 }

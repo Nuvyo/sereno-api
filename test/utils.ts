@@ -4,6 +4,7 @@ import { AuthModule } from '@modules/auth/auth.module';
 import { Test } from '@nestjs/testing';
 import { INestApplication, ModuleMetadata, ValidationPipe } from '@nestjs/common';
 import { SigninDTO } from '@core/dtos/auth.dto';
+import { CustomExceptionFilter } from '@core/filters/error.filter';
 import request from 'supertest';
 import { JwtModule } from '@nestjs/jwt';
 import * as dotenv from 'dotenv';
@@ -43,6 +44,7 @@ export async function createApp(options?: ModuleMetadata) {
   app.use(bodyParser.urlencoded({ limit: '128mb', extended: true }));
   app.use(useragent.express());
   app.useGlobalPipes(new ValidationPipe());
+  app.useGlobalFilters(new CustomExceptionFilter());
 
   await app.init();
 
@@ -51,15 +53,16 @@ export async function createApp(options?: ModuleMetadata) {
 
 export class Requester {
 
-  private access_token: string | null = null;
-  private refresh_token: string | null = null;
+  public userId: string | null = null;
+  private accessToken: string | null = null;
+  private refreshToken: string | null = null;
 
   constructor(private readonly app: INestApplication) {}
 
   public get(path: string, query?: Record<string, any>): Promise<request.Response> {
     return request(this.app.getHttpServer())
       .get(path)
-      .set('Authorization', `Bearer ${this.access_token}`)
+      .set('Authorization', `Bearer ${this.accessToken}`)
       .set('Content-Type', 'application/json')
       .query(query || {});
   }
@@ -67,15 +70,15 @@ export class Requester {
   public async post(endpoint: string, body: Record<string, any>): Promise<request.Response> {
     return request(this.app.getHttpServer())
       .post(endpoint)
-      .set('Authorization', `Bearer ${this.access_token}`)
+      .set('Authorization', `Bearer ${this.accessToken}`)
       .set('Content-Type', 'application/json')
       .send(body);
   }
 
-  public async put(endpoint: string, body: Record<string, any>): Promise<request.Response> {
+  public async put(endpoint: string, body?: Record<string, any>): Promise<request.Response> {
     return request(this.app.getHttpServer())
       .put(endpoint)
-      .set('Authorization', `Bearer ${this.access_token}`)
+      .set('Authorization', `Bearer ${this.accessToken}`)
       .set('Content-Type', 'application/json')
       .send(body);
   }
@@ -83,7 +86,7 @@ export class Requester {
   public async delete(endpoint: string): Promise<request.Response> {
     return request(this.app.getHttpServer())
       .delete(endpoint)
-      .set('Authorization', `Bearer ${this.access_token}`)
+      .set('Authorization', `Bearer ${this.accessToken}`)
   }
 
   public async signin(body: SigninDTO): Promise<void> {
@@ -93,7 +96,8 @@ export class Requester {
       throw new Error('Requester Login failed');
     }
 
-    this.access_token = response.body.access_token;
+    this.setTokens(response.body.accessToken, response.body.refreshToken);
+    this.userId = response.body.userId;
   }
 
   public async signout(): Promise<void> {
@@ -103,19 +107,31 @@ export class Requester {
       throw new Error('Requester Logout failed');
     }
 
-    this.access_token = null;
+    this.setTokens('', '');
+    this.userId = null;
   }
 
-  public setTokens(access_token: string, refresh_token: string): void {
-    this.access_token = access_token;
-    this.refresh_token = refresh_token;
+  public async cancelAccount(): Promise<void> {
+    const response = await this.delete('/v1/auth/cancel-account');
+
+    if (response.status !== 200) {
+      throw new Error('Requester Cancel Account failed');
+    }
+
+    this.setTokens('', '');
   }
 
-  public getTokens(): { access_token: string | null, refresh_token: string | null } {
+  public setTokens(accessToken: string, refreshToken: string): void {
+    this.accessToken = accessToken;
+    this.refreshToken = refreshToken;
+  }
+
+  public getTokens(): { accessToken: string | null, refreshToken: string | null } {
     return {
-      access_token: this.access_token,
-      refresh_token: this.refresh_token,
+      accessToken: this.accessToken,
+      refreshToken: this.refreshToken,
     };
   }
+
 
 }

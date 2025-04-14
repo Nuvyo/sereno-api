@@ -7,8 +7,9 @@ import { ChatMessage } from '@core/entities/chat-message.entity';
 import { Chat } from '@core/entities/chat.entity';
 import { ChatConfig } from '@core/entities/chat-config.entity';
 import { PsychologistDetail } from '@core/entities/psychologist-detail.entity';
-import { RefreshToken } from './refresh-token.entity';
-import { AccessToken } from './access-token.entity';
+import { RefreshToken } from '@core/entities/refresh-token.entity';
+import { AccessToken } from '@core/entities/access-token.entity';
+import { Like } from '@core/entities/like.entity';
 
 @Entity({ name: 'users' })
 export class User extends CustomBaseEntity {
@@ -23,36 +24,39 @@ export class User extends CustomBaseEntity {
   password: string;
 
   @Column({ type: 'boolean', default: false })
-  is_psychologist: boolean;
+  isPsychologist: boolean;
 
-  @RelationId((user: User) => user.psychologist_detail)
-  psychologist_detail_id: string;
+  @RelationId((user: User) => user.psychologistDetail)
+  psychologistDetailId: string;
 
-  @OneToOne(() => PsychologistDetail, (psychologistConfig) => psychologistConfig.user)
-  psychologist_detail: PsychologistDetail;
+  @OneToOne(() => PsychologistDetail, (psychologistConfig) => psychologistConfig.user, { cascade: true })
+  psychologistDetail: PsychologistDetail;
 
   @ManyToMany(() => Session, (session) => session.users)
   sessions: Session[];
 
   @ManyToMany(() => SessionPresence, (presence) => presence.user)
-  session_presences: SessionPresence[];
+  sessionPresences: SessionPresence[];
 
   @OneToMany(() => SessionNote, (sessionNotes) => sessionNotes.user)
-  session_notes: SessionNote[];
+  sessionNotes: SessionNote[];
 
   @OneToMany(() => ChatMessage, (chatMessage) => chatMessage.user)
-  chat_messages: ChatMessage[];
+  chatMessages: ChatMessage[];
 
   @OneToMany(() => Chat, (chat) => chat.users)
   chats: Chat[];
 
   @OneToMany(() => ChatConfig, (chatConfig) => chatConfig.user)
-  chat_configs: ChatConfig[];
+  chatConfigs: ChatConfig[];
+
+  @OneToMany(() => Like, (like) => like.user)
+  likesGiven: Like[];
 
   @OneToOne(() => RefreshToken, (refreshToken) => refreshToken.user)
-  refresh_token: RefreshToken;
+  refreshToken: RefreshToken;
 
   @OneToOne(() => AccessToken, (blockedToken) => blockedToken.user)
-  access_token: AccessToken;
+  accessToken: AccessToken;
 
 }

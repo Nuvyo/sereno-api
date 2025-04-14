@@ -9,13 +9,13 @@ export class RefreshToken extends CustomBaseEntity {
   token: string;
 
   @Column({ type: 'timestamp', nullable: false })
-  expires_at: Date;
+  expiresAt: Date;
 
   @RelationId((refreshToken: RefreshToken) => refreshToken.user)
-  user_id: string;
+  userId: string;
 
-  @OneToOne(() => User, (user) => user.refresh_token, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'user_id' })
+  @OneToOne(() => User, (user) => user.refreshToken, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'userId' })
   user: User;
 
 }

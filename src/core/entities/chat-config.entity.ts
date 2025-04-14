@@ -13,12 +13,12 @@ export class ChatConfig extends CustomBaseEntity {
   icon: string;
 
   @RelationId((chatConfig: ChatConfig) => chatConfig.chat)
-  chat_id: string;
+  chatId: string;
 
   @RelationId((chatConfig: ChatConfig) => chatConfig.user)
-  user_id: string;
+  userId: string;
 
-  @ManyToOne(() => User, (user) => user.chat_configs)
+  @ManyToOne(() => User, (user) => user.chatConfigs)
   user: User;
 
   @ManyToOne(() => Chat, (chat) => chat.configs)

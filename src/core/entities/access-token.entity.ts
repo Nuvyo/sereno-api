@@ -9,9 +9,9 @@ export class AccessToken extends CustomBaseEntity {
   token: string;
 
   @RelationId((tokenBlocklist: AccessToken) => tokenBlocklist.user)
-  user_id: string;
+  userId: string;
 
-  @ManyToOne(() => User, (user) => user.access_token, { onDelete: 'CASCADE' })
+  @ManyToOne(() => User, (user) => user.accessToken, { onDelete: 'CASCADE' })
   user: User;
 
 }

@@ -7,15 +7,15 @@ import { Chat } from '@core/entities/chat.entity';
 export class ChatMessage extends CustomBaseEntity {
 
   @RelationId((chatMessage: ChatMessage) => chatMessage.user)
-  user_id: string;
+  userId: string;
 
   @RelationId((chatMessage: ChatMessage) => chatMessage.chat)
-  chat_id: string;
+  chatId: string;
 
   @Column({ type: 'text', nullable: false })
   message: string;
 
-  @ManyToOne(() => User, (user) => user.chat_messages, { onDelete: 'CASCADE' })
+  @ManyToOne(() => User, (user) => user.chatMessages, { onDelete: 'CASCADE' })
   user: User;
 
   @ManyToOne(() => Chat, (chat) => chat.messages)

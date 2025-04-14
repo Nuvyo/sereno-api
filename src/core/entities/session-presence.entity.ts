@@ -7,15 +7,15 @@ import { CustomBaseEntity } from '@core/entities/utils/base.entity';
 export class SessionPresence extends CustomBaseEntity {
 
   @RelationId((userSessionPresence: SessionPresence) => userSessionPresence.session)
-  session_id: string;
+  sessionId: string;
 
   @RelationId((userSessionPresence: SessionPresence) => userSessionPresence.user)
-  user_id: string;
+  userId: string;
 
   @ManyToOne(() => Session, (session) => session.presences)
   session: Session;
 
-  @ManyToOne(() => User, (user) => user.session_presences)
+  @ManyToOne(() => User, (user) => user.sessionPresences)
   user: User;
 
 }

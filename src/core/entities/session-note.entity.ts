@@ -10,15 +10,15 @@ export class SessionNote extends CustomBaseEntity {
   notes: string[];
 
   @RelationId((sessionNotes: SessionNote) => sessionNotes.session)
-  session_id: string;
+  sessionId: string;
 
   @RelationId((sessionNotes: SessionNote) => sessionNotes.user)
-  user_id: string;
+  userId: string;
 
   @ManyToOne(() => Session, (session) => session.notes)
   session: Session;
 
-  @ManyToOne(() => User, (user) => user.session_notes)
+  @ManyToOne(() => User, (user) => user.sessionNotes)
   user: User;
 
 }
