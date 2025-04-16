@@ -32,12 +32,12 @@ export class UserService {
 
     if (query.order) {
       if (query.order.likes) {
-        queryBuilder.orderBy('psychologistDetail.likes', query.order.likes === 'ASC' ? 'ASC' : 'DESC');
+        queryBuilder.orderBy('"psychologistDetail_likesCount"', query.order.likes);
       }
 
-      if (query.order.sessionsCount) {
-        queryBuilder.orderBy('sessionsConductedCount', query.order.sessionsCount === 'ASC' ? 'ASC' : 'DESC');
-      }
+      // if (query.order.sessionsConducted) {
+      //   queryBuilder.orderBy('"psychologistDetail_sessionsConductedCount"', query.order.sessionsConducted);
+      // }
     }
 
     const users = await queryBuilder.getRawMany();
@@ -121,7 +121,8 @@ export class UserService {
           .from(Like, 'like')
           .where('like.psychologistDetailId = psychologistDetail.id');
       }, 'psychologistDetail_likesCount')
-      .leftJoin('user.psychologistDetail', 'psychologistDetail');
+      .leftJoin('user.psychologistDetail', 'psychologistDetail')
+      .loadRelationCountAndMap('psychologistDetail_likesCount', 'psychologistDetail.likes')
   }
 
   private formatPsychologistData(userRaw: Record<string, any>): FindPsychologistDTO {

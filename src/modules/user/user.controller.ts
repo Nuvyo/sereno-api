@@ -1,7 +1,7 @@
 import { Controller, Get, Param, ParseUUIDPipe, Put, Query, Req, UseGuards } from '@nestjs/common';
 import { UserService } from '@modules/user/user.service';
 import { QueryData, QueryPipe } from '@core/pipes/query.pipe';
-import { AuthGuard } from '../../core/guards/auth.guard';
+import { AuthGuard } from '@core/guards/auth.guard';
 import { Request } from 'express';
 
 @Controller('v1/users')

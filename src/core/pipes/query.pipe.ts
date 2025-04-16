@@ -8,11 +8,11 @@ export class QueryData {
 
   public take: number;
 
-  public order: Record<string, any>;
+  public order: Record<string, 'ASC' | 'DESC'>;
 
   public where: Record<string, string | number | boolean | Date | any[]>;
 
-  constructor(where?: Record<string, any>, like?: string, skip?: number, take?: number, order?: Record<string, string>) {
+  constructor(where?: Record<string, any>, like?: string, skip?: number, take?: number, order?: Record<string, 'ASC' | 'DESC'>) {
     this.where = where || {};
     this.like = like || '';
     this.skip = skip || 0;
@@ -39,7 +39,7 @@ export class QueryPipe implements PipeTransform<QueryDataInput, QueryData> {
   public transform(value: QueryDataInput): QueryData {
     const where = this.getFilter(value);
     const like = value.like ? value.like.trim() : '';
-    const order = value.order ? value.order.trim() : {};
+    const order = this.getOrder(value.order);
     const { offset, limit } = this.getPagination(value);
 
     return new QueryData(where, like, offset, limit, order);
@@ -91,6 +91,26 @@ export class QueryPipe implements PipeTransform<QueryDataInput, QueryData> {
     }
 
     return value;
+  }
+
+  private getOrder(value?: string): Record<string, 'ASC' | 'DESC'> {
+    const order: Record<string, 'ASC' | 'DESC'> = {};
+
+    if (value) {
+      const orderArray = value.split(',');
+
+      orderArray.forEach(orderItem => {
+        const isDesc = orderItem.startsWith('-');
+        const isAsc = orderItem.startsWith('+') || (!orderItem.startsWith('-') && !orderItem.startsWith('+'));
+        const orderKey = orderItem.replace(/^[-+]/, '');
+        const orderValue = isAsc ? 'ASC' : 'DESC';
+        const clearedOrderKey = orderKey.replace(/[^a-zA-Z0-9_]/g, '');
+
+        order[clearedOrderKey] = orderValue;
+      });
+    }
+
+    return order;
   }
 
 }

@@ -46,7 +46,6 @@ describe('v1/users', () => {
       bio: 'My name is Charles',
     });
 
-    // TODO: Update psychologist detail likes to test order by likes
     // TODO: Register Session to test order by session conduct count
   });
 
@@ -56,6 +55,44 @@ describe('v1/users', () => {
     await requesterThree.cancelAccount();
 
     await app.close();
+  });
+
+  describe('/psychologists/:id/like', () => {
+    it('should receive psychologist id and add like successfully', async () => {
+      const response = await requesterOne.put(`/v1/users/psychologists/${requesterTwo.userId}/like`);
+      const psychlogistResponse = await requesterOne.get(`/v1/users/psychologists/${requesterTwo.userId}`);
+
+      assert.equal(response.status, HttpStatus.OK);
+      assert.equal(psychlogistResponse.body.psychologistDetail.likes, 1);
+    });
+
+    it('should receive psychologist id and remove like successfully', async () => {
+      const response = await requesterOne.put(`/v1/users/psychologists/${requesterTwo.userId}/like`);
+      const psychlogistResponse = await requesterOne.get(`/v1/users/psychologists/${requesterTwo.userId}`);
+
+      assert.equal(response.status, HttpStatus.OK);
+      assert.equal(psychlogistResponse.body.psychologistDetail.likes, 0);
+    });
+
+    it('should receive psychologist id and add like successfully again', async () => {
+      const response = await requesterOne.put(`/v1/users/psychologists/${requesterTwo.userId}/like`);
+      const psychlogistResponse = await requesterOne.get(`/v1/users/psychologists/${requesterTwo.userId}`);
+
+      assert.equal(response.status, HttpStatus.OK);
+      assert.equal(psychlogistResponse.body.psychologistDetail.likes, 1);
+    });
+
+    it('should fail to like himself', async () => {
+      const response = await requesterOne.put(`/v1/users/psychologists/${requesterOne.userId}/like`);
+
+      assert.equal(response.status, HttpStatus.BAD_REQUEST);
+    });
+
+    it('should receive invalid psychologist id and fail', async () => {
+      const response = await requesterOne.put('/v1/users/psychologists/b74186fb-c440-4f4c-89a9-8d6fda98f9bc/like');
+
+      assert.equal(response.status, HttpStatus.NOT_FOUND);
+    });
   });
 
   describe('/psychologists', () => {
@@ -139,6 +176,32 @@ describe('v1/users', () => {
       assert.equal(psychologists.some(psychologist => psychologist.name.startsWith('Tom')), true);
       assert.equal(psychologists.some(psychologist => psychologist.name.startsWith('Charles')), false);
     });
+
+    it('should receive order by "likes DESC" and succeed', async () => {
+      const response = await requesterOne.get('/v1/users/psychologists', {
+        order: ['-likes'],
+      });
+
+      assert.equal(response.status, HttpStatus.OK);
+      assert.equal(response.body.length >= 3, true);
+
+      const psychologists = response.body as FindPsychologistDTO[];
+
+      assert.equal(psychologists[0].name.startsWith('Tom'), true);
+    });
+
+    it('should receive order by "likes ASC" and succeed', async () => {
+      const response = await requesterOne.get('/v1/users/psychologists', {
+        order: ['likes'],
+      });
+
+      assert.equal(response.status, HttpStatus.OK);
+      assert.equal(response.body.length >= 3, true);
+
+      const psychologists = response.body as FindPsychologistDTO[];
+
+      assert.equal(psychologists[psychologists.length - 1].name.startsWith('Tom'), true);
+    });
   });
 
   describe('/psychologists/:id', () => {
@@ -159,36 +222,6 @@ describe('v1/users', () => {
 
     it('should receive psychologist id and fail', async () => {
       const response = await requesterOne.get('/v1/users/psychologists/b74186fb-c440-4f4c-89a9-8d6fda98f9bc');
-
-      assert.equal(response.status, HttpStatus.NOT_FOUND);
-    });
-  });
-
-  describe('/psychologists/:id/like', () => {
-    it('should receive psychologist id and add like successfully', async () => {
-      const response = await requesterOne.put(`/v1/users/psychologists/${requesterTwo.userId}/like`);
-      const psychlogistResponse = await requesterOne.get(`/v1/users/psychologists/${requesterTwo.userId}`);
-
-      assert.equal(response.status, HttpStatus.OK);
-      assert.equal(psychlogistResponse.body.psychologistDetail.likes, 1);
-    });
-
-    it('should receive psychologist id and remove like successfully', async () => {
-      const response = await requesterOne.put(`/v1/users/psychologists/${requesterTwo.userId}/like`);
-      const psychlogistResponse = await requesterOne.get(`/v1/users/psychologists/${requesterTwo.userId}`);
-
-      assert.equal(response.status, HttpStatus.OK);
-      assert.equal(psychlogistResponse.body.psychologistDetail.likes, 0);
-    });
-
-    it('should fail to like himself', async () => {
-      const response = await requesterOne.put(`/v1/users/psychologists/${requesterOne.userId}/like`);
-
-      assert.equal(response.status, HttpStatus.BAD_REQUEST);
-    });
-
-    it('should receive invalid psychologist id and fail', async () => {
-      const response = await requesterOne.put('/v1/users/psychologists/b74186fb-c440-4f4c-89a9-8d6fda98f9bc/like');
 
       assert.equal(response.status, HttpStatus.NOT_FOUND);
     });

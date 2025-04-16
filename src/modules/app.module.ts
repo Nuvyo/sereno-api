@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
-import { ChatModule } from '@modules/chat/chat.module';
-import { SessionModule } from '@modules/session/session.module';
 import { UserModule } from '@modules/user/user.module';
+import { StatusModule } from '@modules/status/status.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { PostgresDataSource } from '@core/datasources/postgres.datasource';
 import { AuthModule } from '@modules/auth/auth.module';
@@ -14,9 +13,8 @@ dotenv.config();
   imports: [
     JwtModule.register({ global: true, secret: process.env.JWT_SECRET }),
     TypeOrmModule.forRoot(PostgresDataSource),
-    ChatModule,
-    SessionModule,
     UserModule,
+    StatusModule,
     AuthModule
   ]
 })
