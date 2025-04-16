@@ -14,8 +14,14 @@ export class CustomExceptionFilter implements ExceptionFilter {
     let message = 'Bad Request';
 
     if (exception instanceof TypeORMError) {
-      status = HttpStatus.NOT_FOUND;
-      message = 'Not found';
+      const isNotFound = exception.stack?.startsWith('EntityNotFoundError');
+      
+      message = exception.message;
+
+      if (isNotFound) {
+        status = HttpStatus.NOT_FOUND;
+        message = 'Not found';
+      }
     } else if (exception instanceof HttpException) {
       status = Number(exception.getStatus());
       message = exception.message;
