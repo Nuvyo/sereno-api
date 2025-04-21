@@ -6,7 +6,6 @@ export class FindPsychologistDTO {
 
 export class FindPsychologistDetailDTO {
   likes: number;
-  sessionsConducted: number;
   inPerson: boolean;
   online: boolean;
   inPersonPrice: number;
