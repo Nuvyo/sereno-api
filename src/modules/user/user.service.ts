@@ -4,29 +4,32 @@ import { User } from '@core/entities/user.entity';
 import { QueryData } from '@core/pipes/query.pipe';
 import { FindPsychologistDetailDTO, FindPsychologistDTO } from '@core/dtos/user.dto';
 import { PsychologistDetail } from '@core/entities/psychologist-detail.entity';
-import { Session } from '@core/entities/session.entity';
 import { BaseMessageDTO } from '@core/dtos/generic.dto';
 import { Like } from '@core/entities/like.entity';
 
 @Injectable()
 export class UserService {
-
+  
   constructor(private readonly dataSource: DataSource) {}
 
   public async listPsychologists(query: QueryData): Promise<FindPsychologistDTO[]> {
     const list: FindPsychologistDTO[] = [];
     const queryBuilder = this.getPsychologistDataQueryBuilder()
-      .where('user.isPsychologist = :isPsychologist', { isPsychologist: true })
-      .skip(query.skip)
-      .take(query.take);
+      .where('user.isPsychologist = :isPsychologist', { isPsychologist: true });
 
     if (query.where) {
-      if (query.where.inPerson === true || query.where.inPerson === false) {
+      if ('inPerson' in query.where) {
         queryBuilder.andWhere('psychologistDetail.inPerson = :inPerson', { inPerson: query.where.inPerson });
       }
 
-      if (query.where.online === true || query.where.online === false) {
+      if ('online' in query.where) {
         queryBuilder.andWhere('psychologistDetail.online = :online', { online: query.where.online });
+      }
+    }
+
+    if (query.like) {
+      if (query.like) {
+        queryBuilder.andWhere('user.name ILIKE :name', { name: `%${query.like}%` });
       }
     }
 
@@ -34,15 +37,25 @@ export class UserService {
       if (query.order.likes) {
         queryBuilder.orderBy('"psychologistDetail_likesCount"', query.order.likes);
       }
-
-      // if (query.order.sessionsConducted) {
-      //   queryBuilder.orderBy('"psychologistDetail_sessionsConductedCount"', query.order.sessionsConducted);
-      // }
     }
 
-    const users = await queryBuilder.getRawMany();
+    let [rawQuery, params] = queryBuilder.getQueryAndParameters();
 
-    users.forEach(userRaw => {
+    if (query.take) {
+      rawQuery += ` LIMIT $${params.length + 1}`;
+
+      params.push(query.take);
+    }
+
+    if (query.skip) {
+      rawQuery += ` OFFSET $${params.length + 1}`;
+
+      params.push(query.skip);
+    }
+
+    const users = await this.dataSource.query(rawQuery, params);
+
+    users.forEach((userRaw: Record<string, any>) => {
       list.push(this.formatPsychologistData(userRaw));
     });
 
@@ -111,12 +124,6 @@ export class UserService {
       .addSelect('psychologistDetail.hasValidRegister', 'psychologistDetail_hasValidRegister')
       .addSelect((subQuery) => {
         return subQuery
-          .select('COUNT(session.id)', 'count')
-          .from(Session, 'session')
-          .where('session.psychologistDetailId = psychologistDetail.id');
-      }, 'psychologistDetail_sessionsConductedCount')
-      .addSelect((subQuery) => {
-        return subQuery
           .select('COUNT(like.id)', 'count')
           .from(Like, 'like')
           .where('like.psychologistDetailId = psychologistDetail.id');
@@ -134,7 +141,6 @@ export class UserService {
     data.name = user.name;
     data.psychologistDetail = new FindPsychologistDetailDTO();
     data.psychologistDetail.likes = Number((psychologistDetail as any).likesCount) || 0;
-    data.psychologistDetail.sessionsConducted = Number((psychologistDetail as any).sessionsConductedCount) || 0;
     data.psychologistDetail.inPerson = psychologistDetail.inPerson;
     data.psychologistDetail.online = psychologistDetail.online;
     data.psychologistDetail.inPersonPrice = Number(psychologistDetail.inPersonPrice);

@@ -11,6 +11,9 @@ describe('v1/users', () => {
   let requesterOne: Requester;
   let requesterTwo: Requester;
   let requesterThree: Requester;
+  let requesterFour: Requester;
+  let requesterFive: Requester;
+  let requesterSix: Requester;
 
   before(async () => {
     app = await createApp({
@@ -20,6 +23,9 @@ describe('v1/users', () => {
     requesterOne = await registerUserDummy(app, 'john@email.com');
     requesterTwo = await registerUserDummy(app, 'tom@email.com');
     requesterThree = await registerUserDummy(app, 'charles@email.com');
+    requesterFour = await registerUserDummy(app, 'alice@email.com');
+    requesterFive = await registerUserDummy(app, 'emma@email.com');
+    requesterSix = await registerUserDummy(app, 'oliver@email.com');
 
     await requesterOne.put('/v1/auth/psychologist-detail', {
       registerNumber: '123456789',
@@ -46,6 +52,31 @@ describe('v1/users', () => {
       bio: 'My name is Charles',
     });
 
+    await requesterFour.put('/v1/auth/psychologist-detail', {
+      registerNumber: '111111111',
+      online: true,
+      inPerson: true,
+      onlinePrice: 80,
+      inPersonPrice: 85,
+      bio: 'My name is Alice',
+    });
+
+    await requesterFive.put('/v1/auth/psychologist-detail', {
+      registerNumber: '222222222',
+      online: true,
+      inPerson: true,
+      onlinePrice: 60,
+      bio: 'My name is Emma',
+    });
+
+    await requesterSix.put('/v1/auth/psychologist-detail', {
+      registerNumber: '333333333',
+      online: true,
+      inPerson: false,
+      onlinePrice: 50,
+      bio: 'My name is Oliver',
+    });
+
     // TODO: Register Session to test order by session conduct count
   });
 
@@ -53,6 +84,9 @@ describe('v1/users', () => {
     await requesterOne.cancelAccount();
     await requesterTwo.cancelAccount();
     await requesterThree.cancelAccount();
+    await requesterFour.cancelAccount();
+    await requesterFive.cancelAccount();
+    await requesterSix.cancelAccount();
 
     await app.close();
   });
@@ -100,20 +134,21 @@ describe('v1/users', () => {
       const response = await requesterOne.get('/v1/users/psychologists');
 
       assert.equal(response.status, HttpStatus.OK);
-      assert.equal(response.body.length >= 3, true);
 
       const psychologists = response.body as FindPsychologistDTO[];
 
       assert.equal(psychologists.some(psychologist => psychologist.name.startsWith('John')), true);
       assert.equal(psychologists.some(psychologist => psychologist.name.startsWith('Tom')), true);
       assert.equal(psychologists.some(psychologist => psychologist.name.startsWith('Charles')), true);
+      assert.equal(psychologists.some(psychologist => psychologist.name.startsWith('Alice')), true);
+      assert.equal(psychologists.some(psychologist => psychologist.name.startsWith('Emma')), true);
+      assert.equal(psychologists.some(psychologist => psychologist.name.startsWith('Oliver')), true);
 
       const john = psychologists.find(psychologist => psychologist.name.startsWith('John'));
       const tom = psychologists.find(psychologist => psychologist.name.startsWith('Tom'));
 
       assert.equal(typeof john?.id, 'string');
       assert.equal(typeof john?.psychologistDetail.likes, 'number');
-      assert.equal(typeof john?.psychologistDetail.sessionsConducted, 'number');
       assert.equal(typeof john?.psychologistDetail.inPerson, 'boolean');
       assert.equal(typeof john?.psychologistDetail.online, 'boolean');
       assert.equal(typeof john?.psychologistDetail.inPersonPrice, 'number');
@@ -138,13 +173,15 @@ describe('v1/users', () => {
       });
 
       assert.equal(response.status, HttpStatus.OK);
-      assert.equal(response.body.length >= 3, true);
 
       const psychologists = response.body as FindPsychologistDTO[];
 
       assert.equal(psychologists.some(psychologist => psychologist.name.startsWith('John')), true);
       assert.equal(psychologists.some(psychologist => psychologist.name.startsWith('Tom')), true);
       assert.equal(psychologists.some(psychologist => psychologist.name.startsWith('Charles')), true);
+      assert.equal(psychologists.some(psychologist => psychologist.name.startsWith('Alice')), true);
+      assert.equal(psychologists.some(psychologist => psychologist.name.startsWith('Emma')), true);
+      assert.equal(psychologists.some(psychologist => psychologist.name.startsWith('Oliver')), true);
     });
 
     it('should receive filter "inPerson=true" and succeed', async () => {
@@ -153,7 +190,6 @@ describe('v1/users', () => {
       });
 
       assert.equal(response.status, HttpStatus.OK);
-      assert.equal(response.body.length <= 3, true);
 
       const psychologists = response.body as FindPsychologistDTO[];
 
@@ -168,7 +204,7 @@ describe('v1/users', () => {
       });
 
       assert.equal(response.status, HttpStatus.OK);
-      assert.equal(response.body.length === 1, true);
+      assert.equal(response.body.length === 2, true);
 
       const psychologists = response.body as FindPsychologistDTO[];
 
@@ -196,11 +232,67 @@ describe('v1/users', () => {
       });
 
       assert.equal(response.status, HttpStatus.OK);
-      assert.equal(response.body.length >= 3, true);
 
       const psychologists = response.body as FindPsychologistDTO[];
 
       assert.equal(psychologists[psychologists.length - 1].name.startsWith('Tom'), true);
+    });
+
+    it('should receive filter "like=Tom" and succeed', async () => {
+      const response = await requesterOne.get('/v1/users/psychologists', {
+        like: 'Tom',
+      });
+
+      assert.equal(response.status, HttpStatus.OK);
+      assert.equal(response.body.length === 1, true);
+
+      const psychologists = response.body as FindPsychologistDTO[];
+
+      assert.equal(psychologists.some(psychologist => psychologist.name.startsWith('Tom')), true);
+    });
+
+    it('should paginate psychologists with default pagination settings', async () => {
+      const response = await requesterOne.get('/v1/users/psychologists', {
+        page: 0,
+        take: 2,
+      });
+
+      assert.equal(response.status, HttpStatus.OK);
+      assert.equal(response.body.length, 2);
+    });
+
+    it('should paginate psychologists with custom page and limit', async () => {
+      const response = await requesterOne.get('/v1/users/psychologists', {
+        page: 1,
+        take: 1,
+      });
+
+      assert.equal(response.status, HttpStatus.OK);
+      assert.equal(response.body.length, 1);
+
+      const psychologists = response.body as FindPsychologistDTO[];
+
+      assert.equal(psychologists.some(psychologist => psychologist.name.startsWith('Tom')), true);
+    });
+
+    it('should return empty array for out-of-range page', async () => {
+      const response = await requesterOne.get('/v1/users/psychologists', {
+        page: 1,
+        take: 10,
+      });
+
+      assert.equal(response.status, HttpStatus.OK);
+      assert.equal(response.body.length, 0);
+    });
+
+    it('should handle invalid pagination parameters gracefully', async () => {
+      const response = await requesterOne.get('/v1/users/psychologists', {
+        page: -1,
+        take: -3,
+      });
+
+      assert.equal(response.status, HttpStatus.OK);
+      assert.equal(response.body.length >= 3, true);
     });
   });
 
