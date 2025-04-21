@@ -12,12 +12,12 @@ export class QueryData {
 
   public where: Record<string, string | number | boolean | Date | any[]>;
 
-  constructor(where?: Record<string, any>, like?: string, skip?: number, take?: number, order?: Record<string, 'ASC' | 'DESC'>) {
-    this.where = where || {};
-    this.like = like || '';
-    this.skip = skip || 0;
-    this.take = take || 10;
-    this.order = order || {};
+  constructor(where: Record<string, any>, like: string, skip: number, take: number, order: Record<string, 'ASC' | 'DESC'>) {
+    this.where = where;
+    this.like = like;
+    this.skip = skip;
+    this.take = take;
+    this.order = order;
   }
 
 }
@@ -37,12 +37,16 @@ export class QueryPipe implements PipeTransform<QueryDataInput, QueryData> {
   constructor() {}
 
   public transform(value: QueryDataInput): QueryData {
+    Object.keys(value).forEach(key => {
+      (value as Record<string, any>)[key] = this.formatValue((value as Record<string, any>)[key]);
+    });
+
     const where = this.getFilter(value);
     const like = value.like ? value.like.trim() : '';
     const order = this.getOrder(value.order);
-    const { offset, limit } = this.getPagination(value);
+    const { skip, take } = this.getPagination(value);
 
-    return new QueryData(where, like, offset, limit, order);
+    return new QueryData(where, like, skip, take, order);
   }
 
   private getFilter(value: QueryDataInput): Record<string, any> {
@@ -52,27 +56,30 @@ export class QueryPipe implements PipeTransform<QueryDataInput, QueryData> {
       const queryInputObject = new QueryDataInput();
 
       if (!Object.keys(queryInputObject).includes(key)) {
-        where[key] = this.formatValue(value[key as keyof QueryDataInput]);
+        where[key] = value[key as keyof QueryDataInput];
       }
     });
 
     return where;
   }
 
-  private getPagination(value: QueryDataInput) {
+  private getPagination(value: QueryDataInput): { skip: number; take: number } {
     const { page: valuePage, take: valueLimit } = value;
-    const page = valuePage ? Number(valuePage) : 0;
     const maxPageLimit = 10;
-    let limit = valueLimit ? Number(valueLimit) : null;
-    let offset = 0;
+    const page = valuePage ? this.negativeToPositive(valuePage) : 0;
+    const limit = valueLimit ? this.negativeToPositive(valueLimit) : 0;
+    let skip = 0;
+    let take = 10;
 
-    limit = !limit || limit > maxPageLimit ? maxPageLimit : limit;
-
-    if (page !== 0) {
-      offset = (page - 1) * limit;
+    if (limit) {
+      take = limit > maxPageLimit ? maxPageLimit : limit;
     }
 
-    return { offset, limit };
+    if (page) {
+      skip = page * take;
+    }
+
+    return { skip, take };
   }
 
   private formatValue(value: any): string | number | boolean | Date | any[] {
@@ -80,17 +87,26 @@ export class QueryPipe implements PipeTransform<QueryDataInput, QueryData> {
       return Number(value);
     } else if (value === 'true' || value === 'false') {
       return value === 'true';
-    } else if (Array.isArray(JSON.parse(value))) {
+    } else if (this.isJsonString(value)) {
       const parsedValue: any[] = JSON.parse(value);
 
-      return parsedValue.map(item => this.formatValue(item));
+      return Array.isArray(parsedValue)
+        ? parsedValue.map(item => this.formatValue(item))
+        : parsedValue;
     } else if (!isNaN(Date.parse(value))) {
       return new Date(value);
-    } if (typeof value === 'string') {
-      return value.trim().toLowerCase();
     }
-
+  
     return value;
+  }
+  
+  private isJsonString(value: string): boolean {
+    try {
+      JSON.parse(value);
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   private getOrder(value?: string): Record<string, 'ASC' | 'DESC'> {
@@ -101,7 +117,7 @@ export class QueryPipe implements PipeTransform<QueryDataInput, QueryData> {
 
       orderArray.forEach(orderItem => {
         const isDesc = orderItem.startsWith('-');
-        const isAsc = orderItem.startsWith('+') || (!orderItem.startsWith('-') && !orderItem.startsWith('+'));
+        const isAsc = orderItem.startsWith('+') || !isDesc;
         const orderKey = orderItem.replace(/^[-+]/, '');
         const orderValue = isAsc ? 'ASC' : 'DESC';
         const clearedOrderKey = orderKey.replace(/[^a-zA-Z0-9_]/g, '');
@@ -111,6 +127,14 @@ export class QueryPipe implements PipeTransform<QueryDataInput, QueryData> {
     }
 
     return order;
+  }
+
+  private negativeToPositive(value: number): number {
+    if (value < 0) {
+      return value * -1;
+    }
+
+    return value;
   }
 
 }
