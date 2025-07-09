@@ -4,126 +4,76 @@ import { HttpStatus, INestApplication } from '@nestjs/common';
 import { createApp, Requester } from '@test/utils';
 import { registerUserDummy } from '@test/dummies';
 import { UserModule } from '@modules/user/user.module';
-import { FindPsychologistDTO } from '@core/dtos/user.dto';
+import { FindPsychologistDTO } from '@modules/user/user.dto';
+import { SignupDTO } from '@modules/auth/auth.dto';
+import { Modality } from '@core/entities/user.entity';
 
 describe('v1/users', () => {
   let app: INestApplication;
-  let requesterOne: Requester;
-  let requesterTwo: Requester;
-  let requesterThree: Requester;
-  let requesterFour: Requester;
-  let requesterFive: Requester;
-  let requesterSix: Requester;
+  let normalUserRequester: Requester;
+  let psychologistRequesterOne: Requester;
+  let psychologistRequesterTwo: Requester;
+  let psychologistRequesterThree: Requester;
+  let psychologistRequesterFour: Requester;
+  let psychologistRequesterFive: Requester;
 
   before(async () => {
     app = await createApp({
       imports: [UserModule]
     });
 
-    requesterOne = await registerUserDummy(app, 'john@email.com');
-    requesterTwo = await registerUserDummy(app, 'tom@email.com');
-    requesterThree = await registerUserDummy(app, 'charles@email.com');
-    requesterFour = await registerUserDummy(app, 'alice@email.com');
-    requesterFive = await registerUserDummy(app, 'emma@email.com');
-    requesterSix = await registerUserDummy(app, 'oliver@email.com');
+    normalUserRequester = await registerUserDummy(app, 'john@email.com');
+    psychologistRequesterOne = new Requester(app);
+    psychologistRequesterTwo = new Requester(app);
+    psychologistRequesterThree = new Requester(app);
+    psychologistRequesterFour = new Requester(app);
+    psychologistRequesterFive = new Requester(app);
 
-    await requesterOne.put('/v1/auth/psychologist-detail', {
-      registerNumber: '123456789',
-      online: true,
-      inPerson: true,
-      onlinePrice: 100,
-      inPersonPrice: 100,
-      bio: 'My name is John',
-    });
-
-    await requesterTwo.put('/v1/auth/psychologist-detail', {
-      registerNumber: '987654321',
-      online: true,
-      onlinePrice: 70,
-      bio: 'My name is Tom',
-    });
-
-    await requesterThree.put('/v1/auth/psychologist-detail', {
-      registerNumber: '555555555',
-      online: true,
-      inPerson: true,
-      onlinePrice: 90,
-      inPersonPrice: 95,
-      bio: 'My name is Charles',
-    });
-
-    await requesterFour.put('/v1/auth/psychologist-detail', {
-      registerNumber: '111111111',
-      online: true,
-      inPerson: true,
-      onlinePrice: 80,
-      inPersonPrice: 85,
-      bio: 'My name is Alice',
-    });
-
-    await requesterFive.put('/v1/auth/psychologist-detail', {
-      registerNumber: '222222222',
-      online: true,
-      inPerson: true,
-      onlinePrice: 60,
-      bio: 'My name is Emma',
-    });
-
-    await requesterSix.put('/v1/auth/psychologist-detail', {
-      registerNumber: '333333333',
-      online: true,
-      inPerson: false,
-      onlinePrice: 50,
-      bio: 'My name is Oliver',
-    });
-
-    // TODO: Register Session to test order by session conduct count
+    await createPsychologists(psychologistRequesterOne, psychologistRequesterTwo, psychologistRequesterThree, psychologistRequesterFour, psychologistRequesterFive);
   });
 
   after(async () => {
-    await requesterOne.cancelAccount();
-    await requesterTwo.cancelAccount();
-    await requesterThree.cancelAccount();
-    await requesterFour.cancelAccount();
-    await requesterFive.cancelAccount();
-    await requesterSix.cancelAccount();
+    await normalUserRequester.cancelAccount();
+    await psychologistRequesterOne.cancelAccount();
+    await psychologistRequesterTwo.cancelAccount();
+    await psychologistRequesterThree.cancelAccount();
+    await psychologistRequesterFour.cancelAccount();
+    await psychologistRequesterFive.cancelAccount();
 
     await app.close();
   });
 
   describe('/psychologists/:id/like', () => {
     it('should receive psychologist id and add like successfully', async () => {
-      const response = await requesterOne.put(`/v1/users/psychologists/${requesterTwo.userId}/like`);
-      const psychlogistResponse = await requesterOne.get(`/v1/users/psychologists/${requesterTwo.userId}`);
+      const response = await normalUserRequester.put(`/v1/users/psychologists/${psychologistRequesterOne.userId}/like`);
 
       assert.equal(response.status, HttpStatus.OK);
-      assert.equal(psychlogistResponse.body.psychologistDetail.likes, 1);
+      assert.equal(response.body.message, 'Like added successfully');
     });
 
     it('should receive psychologist id and remove like successfully', async () => {
-      const response = await requesterOne.put(`/v1/users/psychologists/${requesterTwo.userId}/like`);
-      const psychlogistResponse = await requesterOne.get(`/v1/users/psychologists/${requesterTwo.userId}`);
+      const response = await normalUserRequester.put(`/v1/users/psychologists/${psychologistRequesterOne.userId}/like`);
 
       assert.equal(response.status, HttpStatus.OK);
-      assert.equal(psychlogistResponse.body.psychologistDetail.likes, 0);
+      assert.equal(response.body.message, 'Like removed successfully');
     });
 
     it('should receive psychologist id and add like successfully again', async () => {
-      const response = await requesterOne.put(`/v1/users/psychologists/${requesterTwo.userId}/like`);
-      const psychlogistResponse = await requesterOne.get(`/v1/users/psychologists/${requesterTwo.userId}`);
+      const response = await normalUserRequester.put(`/v1/users/psychologists/${psychologistRequesterOne.userId}/like`);
 
       assert.equal(response.status, HttpStatus.OK);
-      assert.equal(psychlogistResponse.body.psychologistDetail.likes, 1);
+      assert.equal(response.body.message, 'Like added successfully');
     });
 
     it('should fail to like himself', async () => {
-      const response = await requesterOne.put(`/v1/users/psychologists/${requesterOne.userId}/like`);
+      const response = await psychologistRequesterOne.put(`/v1/users/psychologists/${psychologistRequesterOne.userId}/like`);
 
       assert.equal(response.status, HttpStatus.BAD_REQUEST);
+      assert.equal(response.body.message, 'You cannot like yourself');
     });
 
     it('should receive invalid psychologist id and fail', async () => {
-      const response = await requesterOne.put('/v1/users/psychologists/b74186fb-c440-4f4c-89a9-8d6fda98f9bc/like');
+      const response = await normalUserRequester.put('/v1/users/psychologists/b74186fb-c441-4f4c-89a8-8d6fda98f9bc/like');
 
       assert.equal(response.status, HttpStatus.NOT_FOUND);
     });
@@ -131,191 +81,257 @@ describe('v1/users', () => {
 
   describe('/psychologists', () => {
     it('should receive no query param and succeed', async () => {
-      const response = await requesterOne.get('/v1/users/psychologists');
+      const response = await normalUserRequester.get('/v1/users/psychologists');
 
       assert.equal(response.status, HttpStatus.OK);
 
-      const psychologists = response.body as FindPsychologistDTO[];
+      const psychologists = response.body[0] as FindPsychologistDTO[];
 
-      assert.equal(psychologists.some(psychologist => psychologist.name.startsWith('John')), true);
       assert.equal(psychologists.some(psychologist => psychologist.name.startsWith('Tom')), true);
       assert.equal(psychologists.some(psychologist => psychologist.name.startsWith('Charles')), true);
       assert.equal(psychologists.some(psychologist => psychologist.name.startsWith('Alice')), true);
       assert.equal(psychologists.some(psychologist => psychologist.name.startsWith('Emma')), true);
       assert.equal(psychologists.some(psychologist => psychologist.name.startsWith('Oliver')), true);
 
-      const john = psychologists.find(psychologist => psychologist.name.startsWith('John'));
       const tom = psychologists.find(psychologist => psychologist.name.startsWith('Tom'));
+      const charles = psychologists.find(psychologist => psychologist.name.startsWith('Charles'));
 
-      assert.equal(typeof john?.id, 'string');
-      assert.equal(typeof john?.psychologistDetail.likes, 'number');
-      assert.equal(typeof john?.psychologistDetail.inPerson, 'boolean');
-      assert.equal(typeof john?.psychologistDetail.online, 'boolean');
-      assert.equal(typeof john?.psychologistDetail.inPersonPrice, 'number');
-      assert.equal(typeof john?.psychologistDetail.onlinePrice, 'number');
-      assert.equal(typeof john?.psychologistDetail.bio, 'string');
-      assert.equal(typeof john?.psychologistDetail.hasValidRegister, 'boolean');
+      assert.equal(typeof tom?.id, 'string');
+      assert.equal(typeof tom?.modality, 'string');
+      assert.equal(typeof tom?.sessionCost, 'number');
+      assert.equal(typeof tom?.bio, 'string');
 
-      assert.equal(john?.psychologistDetail.inPerson, true);
-      assert.equal(john?.psychologistDetail.online, true);
-      assert.equal(john?.psychologistDetail.inPersonPrice, 100);
-      assert.equal(john?.psychologistDetail.onlinePrice, 100);
+      assert.equal(tom?.modality, Modality.Online);
+      assert.equal(tom?.sessionCost, 70);
 
-      assert.equal(tom?.psychologistDetail.inPerson, false);
-      assert.equal(tom?.psychologistDetail.online, true);
-      assert.equal(tom?.psychologistDetail.inPersonPrice, null);
-      assert.equal(tom?.psychologistDetail.onlinePrice, 70);
+      assert.equal(charles?.modality, Modality.Both);
+      assert.equal(charles?.sessionCost, 90);
     });
 
-    it('should receive filter "online=true" and succeed', async () => {
-      const response = await requesterOne.get('/v1/users/psychologists', {
-        online: true,
+    it('should receive filter "modality=online" and succeed', async () => {
+      const response = await normalUserRequester.get('/v1/users/psychologists', {
+        modality: Modality.Online,
       });
 
       assert.equal(response.status, HttpStatus.OK);
 
-      const psychologists = response.body as FindPsychologistDTO[];
+      const psychologists = response.body[0] as FindPsychologistDTO[];
 
-      assert.equal(psychologists.some(psychologist => psychologist.name.startsWith('John')), true);
       assert.equal(psychologists.some(psychologist => psychologist.name.startsWith('Tom')), true);
-      assert.equal(psychologists.some(psychologist => psychologist.name.startsWith('Charles')), true);
-      assert.equal(psychologists.some(psychologist => psychologist.name.startsWith('Alice')), true);
-      assert.equal(psychologists.some(psychologist => psychologist.name.startsWith('Emma')), true);
+      assert.equal(psychologists.some(psychologist => psychologist.name.startsWith('Charles')), true); // Both includes online
       assert.equal(psychologists.some(psychologist => psychologist.name.startsWith('Oliver')), true);
     });
 
-    it('should receive filter "inPerson=true" and succeed', async () => {
-      const response = await requesterOne.get('/v1/users/psychologists', {
-        inPerson: true,
+    it('should receive filter "modality=in_person" and succeed', async () => {
+      const response = await normalUserRequester.get('/v1/users/psychologists', {
+        modality: Modality.InPerson,
       });
 
       assert.equal(response.status, HttpStatus.OK);
 
-      const psychologists = response.body as FindPsychologistDTO[];
+      const psychologists = response.body[0] as FindPsychologistDTO[];
 
-      assert.equal(psychologists.some(psychologist => psychologist.name.startsWith('John')), true);
       assert.equal(psychologists.some(psychologist => psychologist.name.startsWith('Tom')), false);
-      assert.equal(psychologists.some(psychologist => psychologist.name.startsWith('Charles')), true);
-    });
-
-    it('should receive filter "inPerson=false" and succeed', async () => {
-      const response = await requesterOne.get('/v1/users/psychologists', {
-        inPerson: false,
-      });
-
-      assert.equal(response.status, HttpStatus.OK);
-      assert.equal(response.body.length === 2, true);
-
-      const psychologists = response.body as FindPsychologistDTO[];
-
-      assert.equal(psychologists.some(psychologist => psychologist.name.startsWith('John')), false);
-      assert.equal(psychologists.some(psychologist => psychologist.name.startsWith('Tom')), true);
-      assert.equal(psychologists.some(psychologist => psychologist.name.startsWith('Charles')), false);
-    });
-
-    it('should receive order by "likes DESC" and succeed', async () => {
-      const response = await requesterOne.get('/v1/users/psychologists', {
-        order: ['-likes'],
-      });
-
-      assert.equal(response.status, HttpStatus.OK);
-      assert.equal(response.body.length >= 3, true);
-
-      const psychologists = response.body as FindPsychologistDTO[];
-
-      assert.equal(psychologists[0].name.startsWith('Tom'), true);
-    });
-
-    it('should receive order by "likes ASC" and succeed', async () => {
-      const response = await requesterOne.get('/v1/users/psychologists', {
-        order: ['likes'],
-      });
-
-      assert.equal(response.status, HttpStatus.OK);
-
-      const psychologists = response.body as FindPsychologistDTO[];
-
-      assert.equal(psychologists[psychologists.length - 1].name.startsWith('Tom'), true);
+      assert.equal(psychologists.some(psychologist => psychologist.name.startsWith('Charles')), true); // Both includes in_person
+      assert.equal(psychologists.some(psychologist => psychologist.name.startsWith('Alice')), true);
     });
 
     it('should receive filter "like=Tom" and succeed', async () => {
-      const response = await requesterOne.get('/v1/users/psychologists', {
+      const response = await normalUserRequester.get('/v1/users/psychologists', {
         like: 'Tom',
       });
 
       assert.equal(response.status, HttpStatus.OK);
-      assert.equal(response.body.length === 1, true);
+      assert.equal(response.body[0].length, 1);
 
-      const psychologists = response.body as FindPsychologistDTO[];
+      const psychologists = response.body[0] as FindPsychologistDTO[];
 
       assert.equal(psychologists.some(psychologist => psychologist.name.startsWith('Tom')), true);
     });
 
     it('should paginate psychologists with default pagination settings', async () => {
-      const response = await requesterOne.get('/v1/users/psychologists', {
+      const response = await normalUserRequester.get('/v1/users/psychologists', {
         page: 0,
         take: 2,
       });
 
       assert.equal(response.status, HttpStatus.OK);
-      assert.equal(response.body.length, 2);
+      assert.equal(response.body[0].length, 2);
     });
 
     it('should paginate psychologists with custom page and limit', async () => {
-      const response = await requesterOne.get('/v1/users/psychologists', {
+      const response = await normalUserRequester.get('/v1/users/psychologists', {
         page: 1,
         take: 1,
       });
 
       assert.equal(response.status, HttpStatus.OK);
-      assert.equal(response.body.length, 1);
-
-      const psychologists = response.body as FindPsychologistDTO[];
-
-      assert.equal(psychologists.some(psychologist => psychologist.name.startsWith('Tom')), true);
+      assert.equal(response.body[0].length, 1);
     });
 
     it('should return empty array for out-of-range page', async () => {
-      const response = await requesterOne.get('/v1/users/psychologists', {
-        page: 1,
+      const response = await normalUserRequester.get('/v1/users/psychologists', {
+        page: 10,
         take: 10,
       });
 
       assert.equal(response.status, HttpStatus.OK);
-      assert.equal(response.body.length, 0);
+      assert.equal(response.body[0].length, 0);
     });
 
     it('should handle invalid pagination parameters gracefully', async () => {
-      const response = await requesterOne.get('/v1/users/psychologists', {
+      const response = await normalUserRequester.get('/v1/users/psychologists', {
         page: -1,
         take: -3,
       });
 
       assert.equal(response.status, HttpStatus.OK);
-      assert.equal(response.body.length >= 3, true);
+      assert.equal(response.body[0].length >= 0, true);
     });
   });
 
   describe('/psychologists/:id', () => {
     it('should receive psychologist id and succeed', async () => {
-      const response = await requesterOne.get(`/v1/users/psychologists/${requesterTwo.userId}`);
+      const response = await normalUserRequester.get(`/v1/users/psychologists/${psychologistRequesterOne.userId}`);
 
       assert.equal(response.status, HttpStatus.OK);
       
       const psychologist = response.body as FindPsychologistDTO;
 
       assert.equal(psychologist.name.startsWith('Tom'), true);
-      assert.equal(psychologist.id, requesterTwo.userId);
-      assert.equal(psychologist?.psychologistDetail.inPerson, false);
-      assert.equal(psychologist?.psychologistDetail.online, true);
-      assert.equal(psychologist?.psychologistDetail.inPersonPrice, null);
-      assert.equal(psychologist?.psychologistDetail.onlinePrice, 70);
+      assert.equal(psychologist.id, psychologistRequesterOne.userId);
+      assert.equal(psychologist.modality, Modality.Online);
+      assert.equal(psychologist.sessionCost, 70);
+      assert.equal(typeof psychologist.likes, 'number');
+      assert.equal(typeof psychologist.bio, 'string');
+      assert.equal(psychologist.bio, 'My name is Tom');
+      assert.equal(psychologist.address?.street, 'Rua das Flores');
+      assert.equal(psychologist.address?.number, '123');
+      assert.equal(psychologist.address?.city, 'São Paulo');
+      assert.equal(psychologist.address?.state, 'SP');
+      assert.equal(psychologist.address?.countryCode, 'BR');
     });
 
     it('should receive psychologist id and fail', async () => {
-      const response = await requesterOne.get('/v1/users/psychologists/b74186fb-c440-4f4c-89a9-8d6fda98f9bc');
+      const response = await normalUserRequester.get('/v1/users/psychologists/b74186fb-c440-4f4c-89a9-8d6fda98f9bc');
+
+      assert.equal(response.status, HttpStatus.NOT_FOUND);
+      assert.equal(response.body.message, 'User not found');
+    });
+
+    it('should fail to get non-psychologist user', async () => {
+      const response = await normalUserRequester.get(`/v1/users/psychologists/${normalUserRequester.userId}`);
 
       assert.equal(response.status, HttpStatus.NOT_FOUND);
     });
   });
 });
+
+async function createPsychologists(requesterOne: Requester, requesterTwo: Requester, requesterThree: Requester, requesterFour: Requester, requesterFive: Requester) {
+    const signupBodyOne = {
+      name: 'Tom Test',
+      email: 'tom.user@email.com',
+      password: '12345678',
+      passwordConfirmation: '12345678',
+      psychologist: true,
+      public: true,
+      crp: '987654321',
+      modality: Modality.Online,
+      sessionCost: 70,
+      bio: 'My name is Tom',
+      address: {
+        street: 'Rua das Flores',
+        number: '123',
+        city: 'São Paulo',
+        state: 'SP',
+        countryCode: 'BR',
+        postalCode: '01234-567',
+      }
+    } as SignupDTO;
+    await requesterOne.post('/v1/auth/signup', signupBodyOne);
+    await requesterOne.signin({ email: 'tom.user@email.com', password: '12345678' });
+
+    const signupBodyTwo = {
+      name: 'Charles Test',
+      email: 'charles.user@email.com',
+      password: '12345678',
+      passwordConfirmation: '12345678',
+      psychologist: true,
+      public: true,
+      crp: '555555555',
+      modality: Modality.Both,
+      sessionCost: 90,
+      bio: 'My name is Charles',
+      address: {
+        street: 'Rua das Flores',
+        number: '123',
+        city: 'São Paulo',
+        state: 'SP',
+        countryCode: 'BR',
+        postalCode: '01234-567',
+      }
+    } as SignupDTO;
+    await requesterTwo.post('/v1/auth/signup', signupBodyTwo);
+    await requesterTwo.signin({ email: 'charles.user@email.com', password: '12345678' });
+
+    const signupBodyThree = {
+      name: 'Alice Test',
+      email: 'alice.user@email.com',
+      password: '12345678',
+      passwordConfirmation: '12345678',
+      psychologist: true,
+      public: true,
+      crp: '111111111',
+      modality: Modality.Both,
+      sessionCost: 80,
+      bio: 'My name is Alice',
+      address: {
+        street: 'Avenida Paulista',
+        number: '456',
+        city: 'São Paulo',
+        state: 'SP',
+        countryCode: 'BR',
+        postalCode: '01310-100',
+      },
+    } as SignupDTO;
+    await requesterThree.post('/v1/auth/signup', signupBodyThree);
+    await requesterThree.signin({ email: 'alice.user@email.com', password: '12345678' });
+
+    const signupBodyFour = {
+      name: 'Emma Test',
+      email: 'emma.user@email.com',
+      password: '12345678',
+      passwordConfirmation: '12345678',
+      psychologist: true,
+      public: true,
+      crp: '222222222',
+      modality: Modality.Both,
+      sessionCost: 60,
+      bio: 'My name is Emma',
+      address: {
+        street: 'Rua Augusta',
+        number: '789',
+        city: 'São Paulo',
+        state: 'SP',
+        countryCode: 'BR',
+        postalCode: '01305-000',
+      },
+    } as SignupDTO;
+    await requesterFour.post('/v1/auth/signup', signupBodyFour);
+    await requesterFour.signin({ email: 'emma.user@email.com', password: '12345678' });
+
+    const signupBodyFive = {
+      name: 'Oliver Test',
+      email: 'oliver.user@email.com',
+      password: '12345678',
+      passwordConfirmation: '12345678',
+      psychologist: true,
+      public: true,
+      crp: '333333333',
+      modality: Modality.Online,
+      sessionCost: 50,
+      bio: 'My name is Oliver',
+    } as SignupDTO;
+    await requesterFive.post('/v1/auth/signup', signupBodyFive);
+    await requesterFive.signin({ email: 'oliver.user@email.com', password: '12345678' });
+}

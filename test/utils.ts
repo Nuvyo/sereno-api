@@ -3,13 +3,15 @@ import { PostgresDataSource } from '@core/datasources/postgres.datasource';
 import { AuthModule } from '@modules/auth/auth.module';
 import { Test } from '@nestjs/testing';
 import { INestApplication, ModuleMetadata, ValidationPipe } from '@nestjs/common';
-import { SigninDTO } from '@core/dtos/auth.dto';
+import { SigninDTO } from '@modules/auth/auth.dto';
 import { CustomExceptionFilter } from '@core/filters/error.filter';
-import request from 'supertest';
 import { JwtModule } from '@nestjs/jwt';
-import * as dotenv from 'dotenv';
-import * as bodyParser from 'body-parser';
+import { I18nModule } from 'nestjs-i18n';
+import request from 'supertest';
+import path from 'node:path';
 import * as useragent from 'express-useragent';
+import * as bodyParser from 'body-parser';
+import * as dotenv from 'dotenv';
 
 dotenv.config();
 
@@ -37,7 +39,6 @@ export async function createApp(options?: ModuleMetadata) {
       ...(options?.exports || []),
     ],
   }).compile();
-
   const app = moduleRef.createNestApplication();
 
   app.use(bodyParser.json({ type: ['application/json'], limit: '128mb' }));
@@ -67,7 +68,7 @@ export class Requester {
       .query(query || {});
   }
 
-  public async post(endpoint: string, body: Record<string, any>): Promise<request.Response> {
+  public async post(endpoint: string, body?: Record<string, any>): Promise<request.Response> {
     return request(this.app.getHttpServer())
       .post(endpoint)
       .set('Authorization', `Bearer ${this.accessToken}`)
@@ -93,7 +94,7 @@ export class Requester {
     const response = await this.post('/v1/auth/signin', body);
 
     if (response.status !== 201) {
-      throw new Error('Requester Login failed');
+      throw new Error('Requester Login failed: ' + response.body.message);
     }
 
     this.setTokens(response.body.accessToken, response.body.refreshToken);
@@ -104,7 +105,7 @@ export class Requester {
     const response = await this.delete('/v1/auth/signout');
 
     if (response.status !== 200) {
-      throw new Error('Requester Logout failed');
+      throw new Error('Requester Logout failed: ' + response.body.message);
     }
 
     this.setTokens('', '');
@@ -115,7 +116,7 @@ export class Requester {
     const response = await this.delete('/v1/auth/cancel-account');
 
     if (response.status !== 200) {
-      throw new Error('Requester Cancel Account failed');
+      throw new Error('Requester Cancel Account failed: ' + response.body.message);
     }
 
     this.setTokens('', '');
@@ -132,6 +133,5 @@ export class Requester {
       refreshToken: this.refreshToken,
     };
   }
-
 
 }

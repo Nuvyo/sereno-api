@@ -4,13 +4,22 @@ import { StatusModule } from '@modules/status/status.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { PostgresDataSource } from '@core/datasources/postgres.datasource';
 import { AuthModule } from '@modules/auth/auth.module';
-import * as dotenv from 'dotenv';
 import { JwtModule } from '@nestjs/jwt';
+import { I18nModule } from 'nestjs-i18n';
+import path from 'node:path';
+import * as dotenv from 'dotenv';
 
 dotenv.config();
 
 @Module({
   imports: [
+    I18nModule.forRoot({
+      fallbackLanguage: 'en',
+      loaderOptions: {
+        path: path.join(__dirname, '/i18n/'),
+        watch: true,
+      },
+    }),
     JwtModule.register({ global: true, secret: process.env.JWT_SECRET }),
     TypeOrmModule.forRoot(PostgresDataSource),
     UserModule,

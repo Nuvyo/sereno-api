@@ -1,12 +1,6 @@
 import { DataSourceOptions } from 'typeorm';
 import * as dotenv from 'dotenv';
-import { ChatConfig } from '@core/entities/chat-config.entity';
 import { ChatMessage } from '@core/entities/chat-message.entity';
-import { Chat } from '@core/entities/chat.entity';
-import { PsychologistDetail } from '@core/entities/psychologist-detail.entity';
-import { SessionNote } from '@core/entities/session-note.entity';
-import { SessionPresence } from '@core/entities/session-presence.entity';
-import { Session } from '@core/entities/session.entity';
 import { User } from '@core/entities/user.entity';
 import { Address } from '@core/entities/address.entity';
 import { RefreshToken } from '@core/entities/refresh-token.entity';
@@ -27,15 +21,9 @@ export const PostgresDataSource: DataSourceOptions = {
   entities: [
     AccessToken,
     Address,
-    ChatConfig,
     ChatMessage,
-    Chat,
     Like,
-    PsychologistDetail,
     RefreshToken,
-    SessionNote,
-    SessionPresence,
-    Session,
     User,
   ]
 };

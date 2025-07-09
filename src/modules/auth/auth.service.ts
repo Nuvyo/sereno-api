@@ -1,14 +1,14 @@
 import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { DataSource } from 'typeorm';
-import { User } from '@core/entities/user.entity';
-import { SigninDTO, SessionTokensDTO, SignupDTO, RefreshTokenDTO, SigninResponseDTO, MeDTO, PsychologistDetailDTO } from '@core/dtos/auth.dto';
+import { Modality, User } from '@core/entities/user.entity';
+import { SigninDTO, RefreshTokensResponseDTO, SignupDTO, RefreshTokenDTO, SigninResponseDTO, MeResponseDTO, UpdateMeDTO } from '@modules/auth/auth.dto';
 import { BcryptService } from '@core/services/bcrypt.service';
 import { JwtService } from '@nestjs/jwt';
 import { v4 as uuidv4 } from 'uuid';
 import { RefreshToken } from '@core/entities/refresh-token.entity';
 import { AccessToken } from '@core/entities/access-token.entity';
 import { BaseMessageDTO } from '@core/dtos/generic.dto';
-import { PsychologistDetail } from '@core/entities/psychologist-detail.entity';
+import { Address } from '@core/entities/address.entity';
 
 @Injectable()
 export class AuthService {
@@ -19,43 +19,100 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  public async me(userId: string): Promise<MeDTO> {
+  public async getMe(userId: string): Promise<MeResponseDTO> {
     const user = await this.dataSource.getRepository(User).findOneOrFail({ where: { id: userId } });
-    const data: MeDTO = {
+    const data: MeResponseDTO = {
       id: user.id,
       name: user.name,
       email: user.email
     };
 
-    if (user.isPsychologist) {
-      const psychologistDetail = await this.dataSource.getRepository(PsychologistDetail).findOne({
-        where: { user: { id: userId } },
-        select: {}
-      });
+    if (user.psychologist && user.public) {
+      data.crp = user.crp;
+      data.modality = user.modality;
+      data.sessionCost = user.sessionCost;
+      data.bio = user.bio;
 
-      if (psychologistDetail) {
-        data['psychologistDetail'] = psychologistDetail;
+      if ([Modality.InPerson, Modality.Both].includes(user.modality)) {
+        const address = await this.dataSource.getRepository(Address).findOne({ where: { user: { id: user.id } } });
+
+        data.address = new Address();
+        data.address.street = address!.street;
+        data.address.number = address!.number;
+        data.address.city = address!.city;
+        data.address.state = address!.state;
+        data.address.countryCode = address!.countryCode;
+        data.address.postalCode = address!.postalCode;
+        data.address.complement = address!.complement;
       }
     }
 
     return data;
   }
 
-  public async signup(body: SignupDTO): Promise<Partial<User>> {
+  public async updateMe(userId: string, body: UpdateMeDTO): Promise<Partial<User>> {
+    const user = await this.dataSource.getRepository(User).findOneOrFail({ where: { id: userId } });
+
+    if (body.name) {
+      user.name = body.name;
+    }
+
+    // TODO: update email and password
+
+    if (body.modality) {
+      user.modality = body.modality;
+    }
+
+    if (body.crp) {
+      user.crp = body.crp;
+    }
+
+    if (body.sessionCost) {
+      user.sessionCost = body.sessionCost;
+    }
+    
+    if (body.bio) {
+      user.bio = body.bio;
+    }
+
+    await this.dataSource.getRepository(User).save(user);
+
+    return { id: user.id };
+  }
+
+  public async signup(body: SignupDTO): Promise<BaseMessageDTO> {
     await this.validateSignupData(body);
     await this.hashPassword(body);
 
-    const data: Partial<User> = { ...body };
+    const data = new User();
 
-    if (body.isPsychologist) {
-      data.psychologistDetail = new PsychologistDetail();
+    data.name = body.name;
+    data.email = body.email;
+    data.password = body.password;
+
+    if (body.psychologist && body.public) {
+      data.psychologist = body.psychologist;
+      data.public = body.public;
+      data.crp = body.crp;
+      data.modality = body.modality;
+      data.sessionCost = body.sessionCost;
+      data.bio = body.bio;
+  
+      if (body.address) {
+        data.address = new Address();
+        data.address.street = body.address.street;
+        data.address.number = body.address.number;
+        data.address.city = body.address.city;
+        data.address.state = body.address.state;
+        data.address.countryCode = body.address.countryCode;
+        data.address.postalCode = body.address.postalCode;
+        data.address.complement = body.address.complement;
+      }
     }
 
-    const user = await this.dataSource.getRepository(User).save(data);
+    await this.dataSource.getRepository(User).save(data);
 
-    return {
-      id: user.id,
-    };
+    return { message: 'Account created successfully' };
   }
 
   public async signin(body: SigninDTO): Promise<SigninResponseDTO> {
@@ -71,10 +128,10 @@ export class AuthService {
     return {
       ...tokens,
       userId: user!.id,
-    }
+    };
   }
 
-  public async refresh(body: RefreshTokenDTO, userId: string): Promise<SessionTokensDTO> {
+  public async refresh(body: RefreshTokenDTO, userId: string): Promise<RefreshTokensResponseDTO> {
     const token = await this.dataSource.getRepository(RefreshToken)
       .createQueryBuilder('token')
       .where('token.token = :token', { token: body.refreshToken })
@@ -87,36 +144,6 @@ export class AuthService {
     }
 
     return this.generateUserTokens(token.userId);
-  }
-
-  public async updatePsychologistDetail(userId: string, body: PsychologistDetailDTO): Promise<PsychologistDetail> {
-    await this.validatePsychologistDetailData(userId, body);
-
-    const detailBody = await this.dataSource.getRepository(PsychologistDetail).findOneByOrFail({ user: { id: userId } });
-
-    detailBody.inPerson = body.inPerson;
-    detailBody.online = body.online;
-    detailBody.bio = body.bio;
-    detailBody.registerNumber = body.registerNumber;
-    detailBody.inPerson = body.inPerson;
-    detailBody.online = body.online;
-
-    if (body.inPerson) {
-      detailBody.inPersonPrice = body.inPersonPrice;
-    }
-
-    if (body.online) {
-      detailBody.onlinePrice = body.onlinePrice;
-    }
-
-    detailBody.user = new User();
-    detailBody.user.id = userId;
-
-    const userDetail = await this.dataSource.getRepository(PsychologistDetail).save(detailBody);
-
-    // TODO: criar job para validar o número de registro do psicólogo
-
-    return this.dataSource.getRepository(PsychologistDetail).findOneOrFail({ where: { id: userDetail.id } });
   }
 
   public async logout(userId: string): Promise<BaseMessageDTO> {
@@ -147,6 +174,26 @@ export class AuthService {
     if (body.password !== body.passwordConfirmation) {
       throw new BadRequestException('Password and password confirmation do not match');
     }
+
+    if (body.psychologist && body.public) {
+      if (!body.crp) {
+        throw new BadRequestException('CRP is required');
+      }
+
+      if (!body.modality) {
+        throw new BadRequestException('Modality is required');
+      }
+
+      if (!body.sessionCost) {
+        throw new BadRequestException('Session cost is required');
+      }
+
+      if ([Modality.InPerson, Modality.Both].includes(body.modality)) {
+        if (!body.address || !body.address.street || !body.address.number || !body.address.city || !body.address.state || !body.address.countryCode || !body.address.postalCode) {
+          throw new BadRequestException('Address is required');
+        }
+      }
+    }
   }
 
   private async validateSigninData(body: SigninDTO, user: User | null): Promise<void> {
@@ -167,7 +214,7 @@ export class AuthService {
     body.password = hashedPassword;
   }
 
-  private async generateUserTokens(userId: string): Promise<SessionTokensDTO> {
+  private async generateUserTokens(userId: string): Promise<RefreshTokensResponseDTO> {
     const accessToken = this.jwtService.sign({ userId }, { expiresIn: '2d' });
     const refreshToken = uuidv4();
 
@@ -206,18 +253,6 @@ export class AuthService {
     await this.dataSource.getRepository(AccessToken).delete({ user: { id: userId } });
 
     return this.dataSource.getRepository(AccessToken).save(accessTokenData);
-  }
-
-  private async validatePsychologistDetailData(userId: string, body: PsychologistDetailDTO): Promise<void> {
-    if (!body.inPerson && !body.online) {
-      throw new BadRequestException('At least one of in_person or online must be true');
-    }
-
-    const userIsPsychologist = await this.dataSource.getRepository(User).existsBy({ id: userId, isPsychologist: true });
-
-    if (!userIsPsychologist) {
-      throw new BadRequestException('User is not a psychologist');
-    }
   }
 
 }

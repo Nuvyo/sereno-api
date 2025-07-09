@@ -1,8 +1,9 @@
 import { Body, Controller, Delete, Get, Post, Put, Req, UseGuards } from '@nestjs/common';
-import { PsychologistDetailDTO, RefreshTokenDTO, SigninDTO, SignupDTO } from '@core/dtos/auth.dto';
+import { RefreshTokenDTO, SigninDTO, SignupDTO, UpdateMeDTO } from '@modules/auth/auth.dto';
 import { AuthService } from '@modules/auth/auth.service';
 import { Request } from 'express';
 import { AuthGuard } from '@core/guards/auth.guard';
+import { User } from '@core/entities/user.entity';
 
 @Controller('v1/auth')
 export class AuthController {
@@ -11,8 +12,8 @@ export class AuthController {
 
   @Get('/me')
   @UseGuards(AuthGuard)
-  public me(@Req() req: Request) {
-    return this.authService.me(req.userId);
+  public getMe(@Req() req: Request) {
+    return this.authService.getMe(req.userId);
   }
 
   @Post('/signup')
@@ -25,22 +26,22 @@ export class AuthController {
     return this.authService.signin(body);
   }
 
+  @Post('/signout')
+  @UseGuards(AuthGuard)
+  public logout(@Req() req: Request) {
+    return this.authService.logout(req.userId);
+  }
+
   @Post('/refresh')
   @UseGuards(AuthGuard)
   public refresh(@Req() req: Request, @Body() body: RefreshTokenDTO) {
     return this.authService.refresh(body, req.userId);
   }
 
-  @Put('/psychologist-detail')
+  @Put('/me')
   @UseGuards(AuthGuard)
-  public updatePsychologistDetail(@Req() req: Request, @Body() body: PsychologistDetailDTO): Promise<PsychologistDetailDTO> {
-    return this.authService.updatePsychologistDetail(req.userId, body);
-  }
-
-  @Delete('/signout')
-  @UseGuards(AuthGuard)
-  public logout(@Req() req: Request) {
-    return this.authService.logout(req.userId);
+  public updateMe(@Req() req: Request, @Body() body: UpdateMeDTO): Promise<Partial<User>> {
+    return this.authService.updateMe(req.userId, body);
   }
 
   @Delete('/cancel-account')

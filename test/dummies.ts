@@ -1,4 +1,4 @@
-import { SignupDTO } from '@core/dtos/auth.dto';
+import { SignupDTO } from '@modules/auth/auth.dto';
 import { INestApplication } from '@nestjs/common';
 import { Requester } from '@test/utils';
 
@@ -9,13 +9,13 @@ export async function registerUserDummy(app: INestApplication, email: string): P
   const emailName = email.split('@')[0];
   const name = `${capitalize(emailName)} ${names[Math.floor(Math.random() * names.length)]}`;
   const password = '123456456';
-  const body: SignupDTO = {
+  const body = {
     email,
     name,
     password,
     passwordConfirmation: '123456456',
-    isPsychologist: true,
-  };
+    psychologist: true,
+  } as SignupDTO;
 
   await requester.post('/v1/auth/signup', body);
   await requester.signin({
