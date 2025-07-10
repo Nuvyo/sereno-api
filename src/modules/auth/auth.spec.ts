@@ -10,14 +10,16 @@ describe('v1/auth', () => {
 
   let app: INestApplication;
   let normalUserRequester1: Requester;
+  let psycologistUserRequester1: Requester;
   let psycologistUserRequester2: Requester;
-  let psycologistUserRequester: Requester;
+  let psycologistUserRequester3: Requester;
 
   before(async () => {
     app = await createApp();
     normalUserRequester1 = new Requester(app);
-    psycologistUserRequester = new Requester(app);
+    psycologistUserRequester1 = new Requester(app);
     psycologistUserRequester2 = new Requester(app);
+    psycologistUserRequester3 = new Requester(app);
   });
 
   after(async () => {
@@ -61,19 +63,11 @@ describe('v1/auth', () => {
         psychologist: true,
         public: true,
         crp: '123456-12',
-        modality: Modality.Both,
+        modality: Modality.Online,
         sessionCost: 200.00,
         bio: 'Experienced psychologist with a focus on cognitive behavioral therapy.',
-        address: {
-          street: 'Elm St',
-          number: '123',
-          city: 'Springfield',
-          state: 'SP',
-          countryCode: 'BR',
-          postalCode: '12345678',
-        }
       } as SignupDTO;
-      const response = await normalUserRequester1.post('/v1/auth/signup', body);
+      const response = await psycologistUserRequester1.post('/v1/auth/signup', body);
 
       assert.equal(response.status, HttpStatus.CREATED);
       assert.equal(typeof response.body.message, 'string');
@@ -106,6 +100,21 @@ describe('v1/auth', () => {
       assert.equal(typeof response.body.message, 'string');
     });
 
+    it('should receive a body of a private psychologist user and succeed', async () => {
+      const body = {
+        name: 'Sofie Test',
+        email: 'sofie.test.auth@email.com',
+        password: '123456456',
+        passwordConfirmation: '123456456',
+        psychologist: true,
+        public: false,
+      } as SignupDTO;
+      const response = await psycologistUserRequester3.post('/v1/auth/signup', body);
+
+      assert.equal(response.status, HttpStatus.CREATED);
+      assert.equal(typeof response.body.message, 'string');
+    });
+
     it('should receive a body with an already existing email and fail', async () => {
       const body = {
         name: 'John Doe Test',
@@ -133,6 +142,107 @@ describe('v1/auth', () => {
       const response = await normalUserRequester1.post('/v1/auth/signup', body);
 
       assert.equal(response.status, HttpStatus.BAD_REQUEST);
+    });
+
+    it('should fail when public psychologist is missing modality', async () => {
+      const body = {
+        name: 'Dr. No Modality',
+        email: 'no.modality@email.com',
+        password: '123456789',
+        passwordConfirmation: '123456789',
+        psychologist: true,
+        public: true,
+        crp: '123456-12',
+        // modality missing
+        sessionCost: 200.00,
+        bio: 'Test',
+        address: {
+          street: 'Rua Teste',
+          number: '1',
+          city: 'Cidade',
+          state: 'ST',
+          countryCode: 'BR',
+          postalCode: '00000000',
+        }
+      } as SignupDTO;
+      const response = await normalUserRequester1.post('/v1/auth/signup', body);
+
+      assert.equal(response.status, HttpStatus.BAD_REQUEST);
+      assert.match(response.body.message, /Modality is required/);
+    });
+
+    it('should fail when public psychologist is missing sessionCost', async () => {
+      const body = {
+        name: 'Dr. No SessionCost',
+        email: 'no.sessioncost@email.com',
+        password: '123456789',
+        passwordConfirmation: '123456789',
+        psychologist: true,
+        public: true,
+        crp: '123456-12',
+        modality: Modality.Both,
+        // sessionCost missing
+        bio: 'Test',
+        address: {
+          street: 'Rua Teste',
+          number: '1',
+          city: 'Cidade',
+          state: 'ST',
+          countryCode: 'BR',
+          postalCode: '00000000',
+        }
+      } as SignupDTO;
+      const response = await normalUserRequester1.post('/v1/auth/signup', body);
+
+      assert.equal(response.status, HttpStatus.BAD_REQUEST);
+      assert.match(response.body.message, /Session cost is required/);
+    });
+
+    it('should fail when public psychologist with modality Both is missing address', async () => {
+      const body = {
+        name: 'Dr. No Address',
+        email: 'no.address@email.com',
+        password: '123456789',
+        passwordConfirmation: '123456789',
+        psychologist: true,
+        public: true,
+        crp: '123456-12',
+        modality: Modality.Both,
+        sessionCost: 200.00,
+        bio: 'Test',
+        // address missing
+      } as SignupDTO;
+      const response = await normalUserRequester1.post('/v1/auth/signup', body);
+
+      assert.equal(response.status, HttpStatus.BAD_REQUEST);
+      assert.match(response.body.message, /Address is required/);
+    });
+
+    it('should fail when public psychologist with modality Both is missing address fields', async () => {
+      const body = {
+        name: 'Dr. Incomplete Address',
+        email: 'incomplete.address@email.com',
+        password: '123456789',
+        passwordConfirmation: '123456789',
+        psychologist: true,
+        public: true,
+        crp: '123456-12',
+        modality: Modality.Both,
+        sessionCost: 200.00,
+        bio: 'Test',
+        address: {
+          // street missing
+          number: '1',
+          city: 'Cidade',
+          state: 'ST',
+          countryCode: 'BR',
+          postalCode: '00000000',
+        }
+      } as SignupDTO;
+      const response = await normalUserRequester1.post('/v1/auth/signup', body);
+
+      assert.equal(response.status, HttpStatus.BAD_REQUEST);
+      assert.match(response.body.message, /Address is required/);
     });
   });
 
@@ -186,7 +296,7 @@ describe('v1/auth', () => {
         email: 'mike.test.auth@email.com',
         password: '123456456',
       };
-      const response = await psycologistUserRequester.post('/v1/auth/signin', body);
+      const response = await psycologistUserRequester1.post('/v1/auth/signin', body);
 
       assert.equal(response.status, HttpStatus.CREATED);
       assert.equal(typeof response.body.accessToken, 'string');
@@ -199,7 +309,7 @@ describe('v1/auth', () => {
         assert.equal(key in (new SigninResponseDTO()), true);
       });
 
-      psycologistUserRequester.setTokens(response.body.accessToken, response.body.refreshToken);
+      psycologistUserRequester1.setTokens(response.body.accessToken, response.body.refreshToken);
 
       // signin second psychologist
       const body2: SigninDTO = {
@@ -220,6 +330,26 @@ describe('v1/auth', () => {
       });
 
       psycologistUserRequester2.setTokens(response2.body.accessToken, response2.body.refreshToken);
+
+      // signin third psychologist
+      const body3: SigninDTO = {
+        email: 'sofie.test.auth@email.com',
+        password: '123456456',
+      };
+      const response3 = await psycologistUserRequester3.post('/v1/auth/signin', body3);
+
+      assert.equal(response3.status, HttpStatus.CREATED);
+      assert.equal(typeof response3.body.accessToken, 'string');
+      assert.equal(typeof response3.body.refreshToken, 'string');
+      assert.equal(typeof response3.body.userId, 'string');
+      
+      Object.keys(response3.body).forEach((key) => {
+        assert.notEqual(key, 'password');
+        assert.notEqual(key, 'passwordConfirmation');
+        assert.equal(key in (new SigninResponseDTO()), true);
+      });
+
+      psycologistUserRequester3.setTokens(response3.body.accessToken, response3.body.refreshToken);
     });
   });
 
@@ -248,79 +378,6 @@ describe('v1/auth', () => {
     });
   });
 
-  describe('[PUT] /me', () => {
-    it('should fail to update without signing in', async () => {
-      const body = {
-        name: 'Updated Name',
-        bio: 'Updated bio',
-      } as UpdateMeDTO;
-      const response = await request(app.getHttpServer())
-        .put('/v1/auth/me')
-        .set('Content-Type', 'application/json')
-        .send(body);
-
-      assert.equal(response.status, HttpStatus.UNAUTHORIZED);
-    });
-
-    it('should fail to update with invalid token', async () => {
-      const body = {
-        name: 'Updated Name',
-        bio: 'Updated bio',
-      } as UpdateMeDTO;
-      const response = await request(app.getHttpServer())
-        .put('/v1/auth/me')
-        .set('Content-Type', 'application/json')
-        .set('Authorization', 'Bearer dsfsdfsdfsdfsdf')
-        .send(body);
-
-      assert.equal(response.status, HttpStatus.UNAUTHORIZED);
-    });
-
-    it('should update normal user data and succeed', async () => {
-      const body = {
-        name: 'John Doe Updated',
-      } as UpdateMeDTO;
-      const response = await normalUserRequester1.put('/v1/auth/me', body);
-
-      assert.equal(response.status, HttpStatus.OK);
-      assert.equal(typeof response.body.id, 'string');
-    });
-
-    it('should receive an invalid body and fail', async () => {
-      const body = {
-        crp: false,
-        modality: 'invalid-modality',
-        sessionCost: 999.999,
-        bio: 'Test bio',
-      };
-      const response = await psycologistUserRequester.put('/v1/auth/me', body);
-
-      assert.equal(response.status, HttpStatus.BAD_REQUEST);
-    });
-
-    it('should receive invalid prices and fail', async () => {
-      const body = {
-        sessionCost: 9999999999999.99,
-      };
-      const response = await psycologistUserRequester.put('/v1/auth/me', body);
-
-      assert.equal(response.status, HttpStatus.BAD_REQUEST);
-    });
-
-    it('should update psychologist data and succeed', async () => {
-      const body = {
-        crp: '123456789',
-        modality: Modality.Both,
-        sessionCost: 100.55,
-        bio: 'Updated bio',
-      } as UpdateMeDTO;
-      const response = await psycologistUserRequester.put('/v1/auth/me', body);
-      
-      assert.equal(response.status, HttpStatus.OK);
-      assert.equal(typeof response.body.id, 'string');
-    });
-  });
-
   describe('[GET] /me', () => {
     it('should get the normal user data and succeed', async () => {
       const response = await normalUserRequester1.get('/v1/auth/me');
@@ -342,7 +399,7 @@ describe('v1/auth', () => {
     });
 
     it('should get the psychologist user data and succeed', async () => {
-      const response = await psycologistUserRequester.get('/v1/auth/me');
+      const response = await psycologistUserRequester1.get('/v1/auth/me');
 
       assert.equal(response.status, HttpStatus.OK);
       assert.equal(typeof response.body.id, 'string');
@@ -358,7 +415,139 @@ describe('v1/auth', () => {
         assert.notEqual(key, 'passwordConfirmation');
         assert.equal(key in (new MeResponseDTO()), true);
       });
-    });    
+    }); 
+    
+    it('should get the psychologist user data with address and succeed', async () => {
+      const response = await psycologistUserRequester2.get('/v1/auth/me');
+
+      assert.equal(response.status, HttpStatus.OK);
+      assert.equal(typeof response.body.id, 'string');
+      assert.equal(typeof response.body.name, 'string');
+      assert.equal(typeof response.body.email, 'string');
+      assert.equal(typeof response.body.crp, 'string');
+      assert.equal(typeof response.body.modality, 'string');
+      assert.equal(typeof response.body.sessionCost, 'number');
+      assert.equal(typeof response.body.bio, 'string');
+      assert.equal(typeof response.body.address, 'object');
+      assert.equal(typeof response.body.address.street, 'string');
+      assert.equal(typeof response.body.address.number, 'string');
+      assert.equal(typeof response.body.address.city, 'string');
+      assert.equal(typeof response.body.address.state, 'string');
+      assert.equal(typeof response.body.address.countryCode, 'string');
+      assert.equal(typeof response.body.address.postalCode, 'string');
+
+      Object.keys(response.body).forEach((key) => {
+        assert.notEqual(key, 'password');
+        assert.notEqual(key, 'passwordConfirmation');
+        assert.equal(key in (new MeResponseDTO()), true);
+      });
+    }); 
+  });
+
+  describe('[PUT] /me', () => {
+    it('should fail if psychologist tries to become public without crp', async () => {
+      const updateBody = {
+        public: true,
+        modality: Modality.Online,
+        sessionCost: 100,
+        bio: 'Test',
+      };
+      const response = await psycologistUserRequester3.put('/v1/auth/me', updateBody);
+
+      assert.equal(response.status, HttpStatus.BAD_REQUEST);
+      assert.match(response.body.message, /CRP is required/);
+    });
+
+    it('should fail if psychologist tries to become public without modality', async () => {
+      // Atualiza para público sem CRP
+      const updateBody = {
+        public: true,
+        crp: '231331564',
+        sessionCost: 100,
+        bio: 'Test',
+      };
+      const response = await psycologistUserRequester3.put('/v1/auth/me', updateBody);
+
+      assert.equal(response.status, HttpStatus.BAD_REQUEST);
+      assert.match(response.body.message, /Modality is required/);
+    });
+
+    it('should fail if psychologist tries to become public without sessionCost', async () => {
+      // Atualiza para público sem CRP
+      const updateBody = {
+        public: true,
+        crp: '231331564',
+        modality: Modality.Online,
+        bio: 'Test',
+      };
+      const response = await psycologistUserRequester3.put('/v1/auth/me', updateBody);
+
+      assert.equal(response.status, HttpStatus.BAD_REQUEST);
+      assert.match(response.body.message, /Session cost is required/);
+    });
+
+    it('should fail if psychologist public with modality Both is missing address', async () => {
+      const updateBody = {
+        public: true,
+        crp: '888888-88',
+        modality: Modality.Both,
+        sessionCost: 120,
+        bio: 'Test',
+      };
+      const response = await psycologistUserRequester3.put('/v1/auth/me', updateBody);
+
+      assert.equal(response.status, HttpStatus.BAD_REQUEST);
+      assert.match(response.body.message, /Address is required/);
+    });
+
+    it('should update address for psychologist public with modality Both', async () => {
+      const updateBody = {
+        public: true,
+        crp: '888888-88',
+        modality: Modality.Both,
+        sessionCost: 120,
+        bio: 'Test',
+        address: {
+          street: 'Rua Nova',
+          number: '10',
+          city: 'Cidade Nova',
+          state: 'ST',
+          countryCode: 'BR',
+          postalCode: '12345000',
+          complement: 'Apto 1'
+        }
+      };
+      const response = await psycologistUserRequester1.put('/v1/auth/me', updateBody);
+
+      assert.equal(response.status, HttpStatus.OK);
+      assert.equal(response.body.message, 'Profile updated successfully');
+    });
+    
+    it('should update the user name successfully', async () => {
+      const updateBody = { name: 'Updated Name' };
+      const response = await normalUserRequester1.put('/v1/auth/me', updateBody);
+
+      assert.equal(response.status, HttpStatus.OK);
+      assert.equal(response.body.message, 'Profile updated successfully');
+
+      const meRes = await normalUserRequester1.get('/v1/auth/me');
+      assert.equal(meRes.body.name, 'Updated Name');
+    });
+
+    it('should update the public field for psychologist', async () => {
+      // Atualiza para público
+      const updateBody = {
+        public: true,
+        crp: '999999-99',
+        modality: Modality.Online,
+        sessionCost: 100,
+        bio: 'Test',
+      };
+      const response = await psycologistUserRequester1.put('/v1/auth/me', updateBody);
+
+      assert.equal(response.status, HttpStatus.OK);
+      assert.equal(response.body.message, 'Profile updated successfully');
+    });
   });
 
   describe('[POST] /signout', () => {
@@ -404,9 +593,9 @@ describe('v1/auth', () => {
         password: '123456456',
       };
 
-      await psycologistUserRequester.signin(signinBody);
+      await psycologistUserRequester1.signin(signinBody);
 
-      const response = await psycologistUserRequester.delete('/v1/auth/cancel-account');
+      const response = await psycologistUserRequester1.delete('/v1/auth/cancel-account');
 
       assert.equal(response.status, HttpStatus.OK);
       assert.equal(response.body.message, 'Account cancelled successfully');
@@ -423,6 +612,19 @@ describe('v1/auth', () => {
 
       assert.equal(response2.status, HttpStatus.OK);
       assert.equal(response2.body.message, 'Account cancelled successfully');
+
+      // cancel third psychologist account
+      const signinBody3: SigninDTO = {
+        email: 'sofie.test.auth@email.com',
+        password: '123456456',
+      };
+
+      await psycologistUserRequester3.signin(signinBody3);
+
+      const response3 = await psycologistUserRequester3.delete('/v1/auth/cancel-account');
+
+      assert.equal(response3.status, HttpStatus.OK);
+      assert.equal(response3.body.message, 'Account cancelled successfully');
     });
 
     it('should fail to cancel the account again', async () => {

@@ -14,10 +14,10 @@
     "services:up": "docker compose up -d",
     "services:stop": "docker compose stop",
     "services:down": "docker compose down",
-    "test": "cross-env NODE_ENV=test node -r ts-node/register -r tsconfig-paths/register --test ./src/**/*.spec.ts",
-    "test:file": "cross-env NODE_ENV=test node -r ts-node/register -r tsconfig-paths/register --test ",
+    "test": "cross-env NODE_ENV=test node -r ts-node/register -r tsconfig-paths/register --test ",
+    "tests": "cross-env NODE_ENV=test node -r ts-node/register -r tsconfig-paths/register --test ./src/**/*.spec.ts",
     "test:cov": "c8 npm run test",
-    "test:file:cov": "c8 npm run test:file"
+    "tests:cov": "c8 npm run tests"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",

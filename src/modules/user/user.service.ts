@@ -15,8 +15,8 @@ export class UserService {
     const queryBuilder = this.dataSource.getRepository(User).createQueryBuilder('user')
       .where('user.psychologist = :psychologist', { psychologist: true })
       // .andWhere('user.validCRP = :validCRP', { validCRP: true })
-      .limit(query.take || 10)
-      .offset(query.skip || 0)
+      .limit(query.take)
+      .offset(query.skip)
 
     if (query.where) {
       if ('modality' in query.where) {
@@ -52,7 +52,7 @@ export class UserService {
     
     const userDTO = Object.assign(new FindPsychologistDTO(), user);
 
-    userDTO.likes = likesCount || 0;
+    userDTO.likes = likesCount;
 
     return userDTO;
   }

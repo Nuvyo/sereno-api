@@ -50,8 +50,10 @@ export class AuthService {
     return data;
   }
 
-  public async updateMe(userId: string, body: UpdateMeDTO): Promise<Partial<User>> {
+  public async updateMe(userId: string, body: UpdateMeDTO): Promise<BaseMessageDTO> {
     const user = await this.dataSource.getRepository(User).findOneOrFail({ where: { id: userId } });
+
+    this.validateUpdateMeData(body, user);
 
     if (body.name) {
       user.name = body.name;
@@ -59,39 +61,58 @@ export class AuthService {
 
     // TODO: update email and password
 
-    if (body.modality) {
-      user.modality = body.modality;
-    }
+    if (user.psychologist && (user.public || body.public)) {
+      if (typeof body.public === 'boolean') {
+        user.public = body.public;
+      }
 
-    if (body.crp) {
-      user.crp = body.crp;
-    }
+      if (body.modality) {
+        user.modality = body.modality;
+      }
 
-    if (body.sessionCost) {
-      user.sessionCost = body.sessionCost;
-    }
-    
-    if (body.bio) {
-      user.bio = body.bio;
+      if (body.crp || body.crp === '') {
+        user.crp = body.crp;
+      }
+
+      if (body.sessionCost || body.sessionCost === 0) {
+        user.sessionCost = body.sessionCost;
+      }
+
+      if (body.bio || body.bio === '') {
+        user.bio = body.bio;
+      }
+
+      if (body.address) {
+        if (!user.address) {
+          user.address = new Address();
+        }
+
+        user.address.street = body.address.street;
+        user.address.number = body.address.number;
+        user.address.city = body.address.city;
+        user.address.state = body.address.state;
+        user.address.countryCode = body.address.countryCode;
+        user.address.postalCode = body.address.postalCode;
+        user.address.complement = body.address.complement;
+      }
     }
 
     await this.dataSource.getRepository(User).save(user);
 
-    return { id: user.id };
+    return { message: 'Profile updated successfully' };
   }
 
   public async signup(body: SignupDTO): Promise<BaseMessageDTO> {
     await this.validateSignupData(body);
-    await this.hashPassword(body);
 
     const data = new User();
 
     data.name = body.name;
     data.email = body.email;
-    data.password = body.password;
+    data.psychologist = body.psychologist;
+    data.password = await this.bcryptService.hash(body.password);
 
     if (body.psychologist && body.public) {
-      data.psychologist = body.psychologist;
       data.public = body.public;
       data.crp = body.crp;
       data.modality = body.modality;
@@ -184,12 +205,20 @@ export class AuthService {
         throw new BadRequestException('Modality is required');
       }
 
-      if (!body.sessionCost) {
+      if (body.sessionCost == null) {
         throw new BadRequestException('Session cost is required');
       }
 
       if ([Modality.InPerson, Modality.Both].includes(body.modality)) {
-        if (!body.address || !body.address.street || !body.address.number || !body.address.city || !body.address.state || !body.address.countryCode || !body.address.postalCode) {
+        if (
+          !body.address ||
+          !body.address.street ||
+          !body.address.number ||
+          !body.address.city ||
+          !body.address.state ||
+          !body.address.countryCode ||
+          !body.address.postalCode
+        ) {
           throw new BadRequestException('Address is required');
         }
       }
@@ -208,10 +237,28 @@ export class AuthService {
     }
   }
 
-  private async hashPassword(body: SignupDTO): Promise<void> {
-    const hashedPassword = await this.bcryptService.hash(body.password);
+  private validateUpdateMeData(body: UpdateMeDTO, user: User): void {
+    const willBePublic = body.public && !user.public;
 
-    body.password = hashedPassword;
+    if (user.psychologist && willBePublic) {
+      if (!user.crp && (!body.crp || body.crp === '')) {
+        throw new BadRequestException('CRP is required');
+      }
+
+      if (!user.modality && !body.modality) {
+        throw new BadRequestException('Modality is required');
+      }
+
+      if (!body.sessionCost && body.sessionCost !== 0 && !user.sessionCost) {
+        throw new BadRequestException('Session cost is required');
+      }
+
+      if (body.modality && [Modality.InPerson, Modality.Both].includes(body.modality)) {
+        if (!body.address) {
+          throw new BadRequestException('Address is required');
+        }
+      }
+    }
   }
 
   private async generateUserTokens(userId: string): Promise<RefreshTokensResponseDTO> {

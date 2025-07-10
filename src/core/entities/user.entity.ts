@@ -65,7 +65,7 @@ export class User extends CustomBaseEntity {
   @OneToMany(() => Like, (like) => like.toUser)
   likesReceived: Like[];
 
-  @OneToOne(() => Address, (address) => address.user, { cascade: true })
+  @OneToOne(() => Address, (address) => address.user, { cascade: true, eager: true })
   address: Address;
 
 }
