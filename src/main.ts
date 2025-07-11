@@ -6,12 +6,17 @@ import * as dotenv from 'dotenv';
 import * as bodyParser from 'body-parser';
 import * as useragent from 'express-useragent';
 import cors from 'cors';
+import { I18nService } from 'nestjs-i18n';
+import { ResponseInterceptor } from '@core/interceptors/response.interceptor';
+import { DictionaryService } from '@core/services/dictionary.service';
 
 dotenv.config();
 
 async function bootstrap() {
   const port = Number(process.env.PORT);
   const app = await NestFactory.create(AppModule);
+  const i18n = app.get<I18nService>(I18nService);
+  const dictionary = new DictionaryService(i18n);
   const corsOptions: cors.CorsOptions = {
     allowedHeaders: [
       'Origin',
@@ -31,7 +36,8 @@ async function bootstrap() {
   app.use(bodyParser.urlencoded({ limit: '128mb', extended: true }));
   app.use(useragent.express());
   app.useGlobalPipes(new ValidationPipe());
-  app.useGlobalFilters(new CustomExceptionFilter());
+  app.useGlobalFilters(new CustomExceptionFilter(dictionary));
+  app.useGlobalInterceptors(new ResponseInterceptor(dictionary));
 
   await app.listen(port);
 }

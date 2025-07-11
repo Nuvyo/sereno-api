@@ -39,6 +39,10 @@ export class AddressDTO {
 
 export class SignupDTO {
 
+  @IsOptional()
+  @IsString()
+  photo: string;
+
   @IsNotEmpty()
   @IsString()
   name: string;
@@ -99,6 +103,10 @@ export class UpdateMeDTO {
   @IsOptional()
   @IsString()
   email: string;
+
+  @IsOptional()
+  @IsString()
+  photo: string;
 
   @IsOptional()
   @IsBoolean()
@@ -169,6 +177,7 @@ export class MeResponseDTO {
   id: string;
   name: string;
   email: string;
+  photo?: string;
   crp?: string;
   modality?: Modality;
   sessionCost?: number;

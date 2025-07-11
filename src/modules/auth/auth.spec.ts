@@ -56,6 +56,7 @@ describe('v1/auth', () => {
 
     it('should receive a body of psychologist user and succeed', async () => {
       const body = {
+        photo: 'https://example.com/photo.jpg',
         name: 'Mike Wool Test',
         email: 'mike.test.auth@email.com',
         password: '123456456',
@@ -75,6 +76,7 @@ describe('v1/auth', () => {
 
     it('should receive a body of public psychologist user and succeed', async () => {
       const body = {
+        photo: 'https://example.com/photo.jpg',
         name: 'Dr. Sarah Connor',
         email: 'sarah.connor.auth@email.com',
         password: '123456789',
@@ -448,6 +450,7 @@ describe('v1/auth', () => {
     it('should fail if psychologist tries to become public without crp', async () => {
       const updateBody = {
         public: true,
+        photo: 'https://example.com/photo.jpg',
         modality: Modality.Online,
         sessionCost: 100,
         bio: 'Test',
@@ -523,8 +526,8 @@ describe('v1/auth', () => {
       assert.equal(response.body.message, 'Profile updated successfully');
     });
     
-    it('should update the user name successfully', async () => {
-      const updateBody = { name: 'Updated Name' };
+    it('should update the user name and photo successfully', async () => {
+      const updateBody = { name: 'Updated Name', photo: 'https://example.com/updated-photo.jpg' };
       const response = await normalUserRequester1.put('/v1/auth/me', updateBody);
 
       assert.equal(response.status, HttpStatus.OK);
@@ -532,6 +535,7 @@ describe('v1/auth', () => {
 
       const meRes = await normalUserRequester1.get('/v1/auth/me');
       assert.equal(meRes.body.name, 'Updated Name');
+      assert.equal(meRes.body.photo, 'https://example.com/updated-photo.jpg');
     });
 
     it('should update the public field for psychologist', async () => {

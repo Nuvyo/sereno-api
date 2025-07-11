@@ -46,36 +46,42 @@ describe('v1/users', () => {
   describe('/psychologists/:id/like', () => {
     it('should receive psychologist id and add like successfully', async () => {
       const response = await normalUserRequester.put(`/v1/users/psychologists/${psychologistRequesterOne.userId}/like`);
+      const message = ['Usuário curtido'];
 
       assert.equal(response.status, HttpStatus.OK);
-      assert.equal(response.body.message, 'Like added successfully');
+      assert.equal(message.includes(response.body.message), true);
     });
 
     it('should receive psychologist id and remove like successfully', async () => {
       const response = await normalUserRequester.put(`/v1/users/psychologists/${psychologistRequesterOne.userId}/like`);
+      const message = ['Usuário descurtido'];
 
       assert.equal(response.status, HttpStatus.OK);
-      assert.equal(response.body.message, 'Like removed successfully');
+      assert.equal(message.includes(response.body.message), true);
     });
 
     it('should receive psychologist id and add like successfully again', async () => {
       const response = await normalUserRequester.put(`/v1/users/psychologists/${psychologistRequesterOne.userId}/like`);
+      const message = ['Usuário curtido'];
 
       assert.equal(response.status, HttpStatus.OK);
-      assert.equal(response.body.message, 'Like added successfully');
+      assert.equal(message.includes(response.body.message), true);
     });
 
     it('should fail to like himself', async () => {
       const response = await psychologistRequesterOne.put(`/v1/users/psychologists/${psychologistRequesterOne.userId}/like`);
-
+      const message = ['Você não pode curtir seu próprio perfil'];
+      
       assert.equal(response.status, HttpStatus.BAD_REQUEST);
-      assert.equal(response.body.message, 'You cannot like yourself');
+      assert.equal(message.includes(response.body.message), true);
     });
 
     it('should receive invalid psychologist id and fail', async () => {
       const response = await normalUserRequester.put('/v1/users/psychologists/b74186fb-c441-4f4c-89a8-8d6fda98f9bc/like');
+      const message = ['Usuário não encontrado'];
 
       assert.equal(response.status, HttpStatus.NOT_FOUND);
+      assert.equal(message.includes(response.body.message), true);
     });
   });
 
@@ -214,9 +220,9 @@ describe('v1/users', () => {
 
     it('should receive psychologist id and fail', async () => {
       const response = await normalUserRequester.get('/v1/users/psychologists/b74186fb-c440-4f4c-89a9-8d6fda98f9bc');
-
+      const message = ['Usuário não encontrado'];
       assert.equal(response.status, HttpStatus.NOT_FOUND);
-      assert.equal(response.body.message, 'User not found');
+      assert.equal(message.includes(response.body.message), true);
     });
 
     it('should fail to get non-psychologist user', async () => {

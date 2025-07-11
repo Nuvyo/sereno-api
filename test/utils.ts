@@ -6,17 +6,27 @@ import { INestApplication, ModuleMetadata, ValidationPipe } from '@nestjs/common
 import { SigninDTO } from '@modules/auth/auth.dto';
 import { CustomExceptionFilter } from '@core/filters/error.filter';
 import { JwtModule } from '@nestjs/jwt';
-import { I18nModule } from 'nestjs-i18n';
+import { HeaderResolver, I18nModule, I18nService } from 'nestjs-i18n';
 import request from 'supertest';
 import path from 'node:path';
 import * as useragent from 'express-useragent';
 import * as bodyParser from 'body-parser';
 import * as dotenv from 'dotenv';
+import { ResponseInterceptor } from '@core/interceptors/response.interceptor';
+import { DictionaryService } from '@core/services/dictionary.service';
 
 dotenv.config();
 
 const BaseApp = {
   imports: [
+    I18nModule.forRoot({
+      fallbackLanguage: 'pt-br',
+      loaderOptions: {
+        path: path.join(__dirname, '../src/i18n/'),
+        watch: true,
+      },
+      resolvers: [{ use: HeaderResolver, options: ['language'] }],
+    }),
     JwtModule.register({ global: true, secret: process.env.JWT_SECRET }),
     TypeOrmModule.forRoot(PostgresDataSource),
     AuthModule
@@ -40,12 +50,15 @@ export async function createApp(options?: ModuleMetadata) {
     ],
   }).compile();
   const app = moduleRef.createNestApplication();
+  const i18n = app.get<I18nService>(I18nService);
+  const dictionary = new DictionaryService(i18n);
 
   app.use(bodyParser.json({ type: ['application/json'], limit: '128mb' }));
   app.use(bodyParser.urlencoded({ limit: '128mb', extended: true }));
   app.use(useragent.express());
   app.useGlobalPipes(new ValidationPipe());
-  app.useGlobalFilters(new CustomExceptionFilter());
+  app.useGlobalFilters(new CustomExceptionFilter(dictionary));
+  app.useGlobalInterceptors(new ResponseInterceptor(dictionary));
 
   await app.init();
 

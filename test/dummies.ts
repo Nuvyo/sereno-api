@@ -2,7 +2,7 @@ import { SignupDTO } from '@modules/auth/auth.dto';
 import { INestApplication } from '@nestjs/common';
 import { Requester } from '@test/utils';
 
-export async function registerUserDummy(app: INestApplication, email: string): Promise<Requester> {
+export async function registerUserDummy(app: INestApplication, email: string, psychologist: boolean = false): Promise<Requester> {
   const capitalize = (str: string) => str.charAt(0).toUpperCase() + str.slice(1);
   const requester = new Requester(app);
   const names = ['Dummy', 'Junny', 'Sunny', 'Bunny', 'Gunny', 'Punny', 'Runny', 'Tunny'];
@@ -14,7 +14,7 @@ export async function registerUserDummy(app: INestApplication, email: string): P
     name,
     password,
     passwordConfirmation: '123456456',
-    psychologist: true,
+    psychologist,
   } as SignupDTO;
 
   await requester.post('/v1/auth/signup', body);

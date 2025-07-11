@@ -1,17 +1,18 @@
 import { ArgumentsHost, Catch, ExceptionFilter, HttpException, HttpStatus } from '@nestjs/common';
 import { Response } from 'express';
 import { TypeORMError } from 'typeorm';
+import { DictionaryService } from '@core/services/dictionary.service';
 
 @Catch()
 export class CustomExceptionFilter implements ExceptionFilter {
 
-  constructor() {}
+  constructor(private readonly dictionary: DictionaryService) {}
 
   public catch(exception: any, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
     let status = HttpStatus.BAD_REQUEST;
-    let message = 'Bad Request';
+    let message: string | Record<string, any> | undefined;
 
     if (exception instanceof TypeORMError) {
       const isNotFound = exception.stack?.startsWith('EntityNotFoundError');
@@ -20,11 +21,23 @@ export class CustomExceptionFilter implements ExceptionFilter {
 
       if (isNotFound) {
         status = HttpStatus.NOT_FOUND;
-        message = 'Not found';
+
+        if (message.includes('Could not find any entity of type "User"')) {
+          message = 'user.not_found';
+        }
       }
     } else if (exception instanceof HttpException) {
       status = Number(exception.getStatus());
       message = exception.message;
+    }
+
+    if (this.dictionary.isTranslationKey(message as any)) {
+      message = this.dictionary.translate(message as any);
+    } else if (this.dictionary.isTranslationObject(message as any)) {
+      const key = (message as Record<string, any>).key;
+      const args = (message as Record<string, any>).args || {};
+
+      message = this.dictionary.translate(key, args);
     }
 
     response.status(status).json({ statusCode: status, message });

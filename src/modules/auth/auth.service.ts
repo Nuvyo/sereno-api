@@ -24,7 +24,8 @@ export class AuthService {
     const data: MeResponseDTO = {
       id: user.id,
       name: user.name,
-      email: user.email
+      email: user.email,
+      photo: user.photo,
     };
 
     if (user.psychologist && user.public) {
@@ -59,9 +60,13 @@ export class AuthService {
       user.name = body.name;
     }
 
+    if ('photo' in body) {
+      user.photo = body.photo;
+    }
+
     // TODO: update email and password
 
-    if (user.psychologist && (user.public || body.public)) {
+    if (user.psychologist) {
       if (typeof body.public === 'boolean') {
         user.public = body.public;
       }
@@ -70,19 +75,19 @@ export class AuthService {
         user.modality = body.modality;
       }
 
-      if (body.crp || body.crp === '') {
+      if ('crp' in body) {
         user.crp = body.crp;
       }
 
-      if (body.sessionCost || body.sessionCost === 0) {
+      if ('sessionCost' in body) {
         user.sessionCost = body.sessionCost;
       }
 
-      if (body.bio || body.bio === '') {
+      if ('bio' in body) {
         user.bio = body.bio;
       }
 
-      if (body.address) {
+      if ('address' in body) {
         if (!user.address) {
           user.address = new Address();
         }
@@ -107,6 +112,7 @@ export class AuthService {
 
     const data = new User();
 
+    data.photo = body.photo;
     data.name = body.name;
     data.email = body.email;
     data.psychologist = body.psychologist;
@@ -118,7 +124,7 @@ export class AuthService {
       data.modality = body.modality;
       data.sessionCost = body.sessionCost;
       data.bio = body.bio;
-  
+
       if (body.address) {
         data.address = new Address();
         data.address.street = body.address.street;

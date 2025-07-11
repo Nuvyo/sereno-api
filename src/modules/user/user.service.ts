@@ -41,11 +41,7 @@ export class UserService {
       .where('user.id = :id', { id })
       .andWhere('user.psychologist = :psychologist', { psychologist: true })
       .leftJoinAndSelect('user.address', 'address')
-      .getOne();
-
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
+      .getOneOrFail();
 
     const likesCount = await this.dataSource.getRepository(Like)
       .count({ where: { toUser: { id: user.id } } });
@@ -59,7 +55,7 @@ export class UserService {
 
   public async likePsychologist(psychologistId: string, userId: string): Promise<BaseMessageDTO> {
     if (psychologistId === userId) {
-      throw new BadRequestException('You cannot like yourself');
+      throw new BadRequestException('user.cannot_like_own_profile');
     }
 
     await this.dataSource.getRepository(User).findOneOrFail({
@@ -79,7 +75,7 @@ export class UserService {
     }
 
     return {
-      message: alreadyLiked ? 'Like removed successfully' : 'Like added successfully'
+      message: alreadyLiked ? 'user.user_disliked' : 'user.user_liked',
     };
   }
 

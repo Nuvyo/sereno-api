@@ -1,0 +1,6 @@
+{
+  "not_found": "Usuário não encontrado",
+  "cannot_like_own_profile": "Você não pode curtir seu próprio perfil",
+  "user_liked": "Usuário curtido",
+  "user_disliked": "Usuário descurtido"
+}
