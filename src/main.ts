@@ -27,8 +27,23 @@ async function bootstrap() {
       'timezone',
     ],
     credentials: true,
-    methods: 'GET,POST,PUT,DELETE',
-    origin: '*'
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+
+      if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
+        return callback(null, true);
+      }
+
+      const allowedOrigins = process.env.CORS_ALLOWED_ORIGINS
+        ? process.env.CORS_ALLOWED_ORIGINS.split(',')
+        : [];
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(null, true);
+    }
   };
 
   app.use(cors(corsOptions));
