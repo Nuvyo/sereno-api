@@ -2,10 +2,8 @@ import { DataSourceOptions } from 'typeorm';
 import * as dotenv from 'dotenv';
 import { ChatMessage } from '@core/entities/chat-message.entity';
 import { User } from '@core/entities/user.entity';
-import { Address } from '@core/entities/address.entity';
 import { RefreshToken } from '@core/entities/refresh-token.entity';
 import { AccessToken } from '@core/entities/access-token.entity';
-import { Like } from '@core/entities/like.entity';
 
 dotenv.config();
 
@@ -20,9 +18,7 @@ export const PostgresDataSource: DataSourceOptions = {
   logging: false,
   entities: [
     AccessToken,
-    Address,
     ChatMessage,
-    Like,
     RefreshToken,
     User,
   ]

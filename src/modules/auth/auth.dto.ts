@@ -1,9 +1,7 @@
-import { IsBoolean, IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString, IsUUID, Max, Min, MinLength } from 'class-validator';
+import { IsArray, IsBoolean, IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString, IsUUID, Max, Min, MinLength } from 'class-validator';
 import { IsValidPrice } from '@core/decorators/is-valid-price.decorator';
 import 'reflect-metadata';
-import { ValidateNested } from 'class-validator';
-import { Modality } from '@core/entities/user.entity';
-import { Address } from '@core/entities/address.entity';
+import { Modality, Specialization } from '@core/entities/user.entity';
 
 export class AddressDTO {
 
@@ -37,19 +35,59 @@ export class AddressDTO {
 
 }
 
-export class SignupDTO {
+export class UpdateMeDTO {
+  
+  @IsOptional()
+  @IsString()
+  name: string;
 
   @IsOptional()
   @IsString()
   photo: string;
 
-  @IsNotEmpty()
+  @IsOptional()
+  @IsBoolean()
+  public: boolean;
+
+  @IsOptional()
   @IsString()
-  name: string;
+  crp: string;
+
+  @IsOptional()
+  @IsEnum(Modality)
+  modality: Modality;
+
+  @IsOptional()
+  @IsArray()
+  @IsEnum(Specialization, { each: true })
+  specializations: Specialization[];
+
+  @IsOptional()
+  @IsString()
+  whatsapp: string;
+
+  @IsOptional()
+  @IsValidPrice({ message: 'sessionCost must be a valid price' })
+  @IsNumber()
+  @Min(0.00)
+  @Max(99999.99)
+  sessionCost: number;
+
+  @IsOptional()
+  @IsString()
+  bio: string;
+
+}
+
+export class SignupDTO extends UpdateMeDTO {
 
   @IsNotEmpty()
   @IsString()
   email: string;
+
+  @IsOptional()
+  @IsBoolean()
+  psychologist: boolean;
 
   @IsNotEmpty()
   @IsString()
@@ -60,80 +98,6 @@ export class SignupDTO {
   @IsString()
   @MinLength(8)
   passwordConfirmation: string;
-
-  @IsOptional()
-  @IsBoolean()
-  psychologist: boolean;
-
-  @IsOptional()
-  @IsBoolean()
-  public: boolean;
-
-  @IsOptional()
-  @IsString()
-  crp: string;
-
-  @IsOptional()
-  @IsEnum(Modality)
-  modality: Modality;
-
-  @IsOptional()
-  @IsValidPrice({ message: 'sessionCost must be a valid price' })
-  @IsNumber()
-  @Min(0.00)
-  @Max(99999.99)
-  sessionCost: number;
-
-  @IsOptional()
-  @IsString()
-  bio: string;
-
-  @IsOptional()
-  @ValidateNested({ each: true })
-  address: AddressDTO;
-
-}
-
-export class UpdateMeDTO {
-  
-  @IsOptional()
-  @IsString()
-  name: string;
-
-  @IsOptional()
-  @IsString()
-  email: string;
-
-  @IsOptional()
-  @IsString()
-  photo: string;
-
-  @IsOptional()
-  @IsBoolean()
-  public: boolean;
-
-  @IsOptional()
-  @IsString()
-  crp: string;
-
-  @IsOptional()
-  @IsEnum(Modality)
-  modality: Modality;
-
-  @IsOptional()
-  @IsValidPrice({ message: 'sessionCost must be a valid price' })
-  @IsNumber()
-  @Min(0.00)
-  @Max(99999.99)
-  sessionCost: number;
-
-  @IsOptional()
-  @IsString()
-  bio: string;
-
-  @IsOptional()
-  @ValidateNested({ each: true })
-  address: AddressDTO;
 
 }
 
@@ -182,7 +146,9 @@ export class MeResponseDTO {
   modality?: Modality;
   sessionCost?: number;
   bio?: string;
-  address?: Address;
+  public?: boolean;
+  specializations?: Specialization[];
+  whatsapp?: string;
 
 }
 

@@ -8,7 +8,6 @@ import { v4 as uuidv4 } from 'uuid';
 import { RefreshToken } from '@core/entities/refresh-token.entity';
 import { AccessToken } from '@core/entities/access-token.entity';
 import { BaseMessageDTO } from '@core/dtos/generic.dto';
-import { Address } from '@core/entities/address.entity';
 
 @Injectable()
 export class AuthService {
@@ -33,19 +32,6 @@ export class AuthService {
       data.modality = user.modality;
       data.sessionCost = user.sessionCost;
       data.bio = user.bio;
-
-      if ([Modality.InPerson, Modality.Both].includes(user.modality)) {
-        const address = await this.dataSource.getRepository(Address).findOne({ where: { user: { id: user.id } } });
-
-        data.address = new Address();
-        data.address.street = address!.street;
-        data.address.number = address!.number;
-        data.address.city = address!.city;
-        data.address.state = address!.state;
-        data.address.countryCode = address!.countryCode;
-        data.address.postalCode = address!.postalCode;
-        data.address.complement = address!.complement;
-      }
     }
 
     return data;
@@ -86,20 +72,6 @@ export class AuthService {
       if ('bio' in body) {
         user.bio = body.bio;
       }
-
-      if ('address' in body) {
-        if (!user.address) {
-          user.address = new Address();
-        }
-
-        user.address.street = body.address.street;
-        user.address.number = body.address.number;
-        user.address.city = body.address.city;
-        user.address.state = body.address.state;
-        user.address.countryCode = body.address.countryCode;
-        user.address.postalCode = body.address.postalCode;
-        user.address.complement = body.address.complement;
-      }
     }
 
     await this.dataSource.getRepository(User).save(user);
@@ -122,19 +94,10 @@ export class AuthService {
       data.public = body.public;
       data.crp = body.crp;
       data.modality = body.modality;
+      data.specializations = body.specializations;
+      data.whatsapp = body.whatsapp;
       data.sessionCost = body.sessionCost;
       data.bio = body.bio;
-
-      if (body.address) {
-        data.address = new Address();
-        data.address.street = body.address.street;
-        data.address.number = body.address.number;
-        data.address.city = body.address.city;
-        data.address.state = body.address.state;
-        data.address.countryCode = body.address.countryCode;
-        data.address.postalCode = body.address.postalCode;
-        data.address.complement = body.address.complement;
-      }
     }
 
     await this.dataSource.getRepository(User).save(data);
@@ -214,20 +177,6 @@ export class AuthService {
       if (body.sessionCost == null) {
         throw new BadRequestException('Session cost is required');
       }
-
-      if ([Modality.InPerson, Modality.Both].includes(body.modality)) {
-        if (
-          !body.address ||
-          !body.address.street ||
-          !body.address.number ||
-          !body.address.city ||
-          !body.address.state ||
-          !body.address.countryCode ||
-          !body.address.postalCode
-        ) {
-          throw new BadRequestException('Address is required');
-        }
-      }
     }
   }
 
@@ -257,12 +206,6 @@ export class AuthService {
 
       if (!body.sessionCost && body.sessionCost !== 0 && !user.sessionCost) {
         throw new BadRequestException('Session cost is required');
-      }
-
-      if (body.modality && [Modality.InPerson, Modality.Both].includes(body.modality)) {
-        if (!body.address) {
-          throw new BadRequestException('Address is required');
-        }
       }
     }
   }

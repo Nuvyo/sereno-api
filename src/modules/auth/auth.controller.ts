@@ -3,8 +3,7 @@ import { MeResponseDTO, RefreshTokenDTO, SigninDTO, SigninResponseDTO, SignupDTO
 import { AuthService } from '@modules/auth/auth.service';
 import { Request } from 'express';
 import { AuthGuard } from '@core/guards/auth.guard';
-import { User } from '@core/entities/user.entity';
-import { BaseMessageDTO } from '../../core/dtos/generic.dto';
+import { BaseMessageDTO } from '@core/dtos/generic.dto';
 
 @Controller('v1/auth')
 export class AuthController {

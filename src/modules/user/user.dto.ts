@@ -1,5 +1,4 @@
-import { Modality } from '@core/entities/user.entity';
-import { Address } from '@core/entities/address.entity';
+import { Modality, Specialization } from '@core/entities/user.entity';
 
 
 export class FindPsychologistDTO {
@@ -8,6 +7,6 @@ export class FindPsychologistDTO {
   modality: Modality;
   sessionCost: number;
   bio: string;
-  likes?: number;
-  address?: Address;
+  specializations?: Specialization[];
+  whatsapp?: string;
 }

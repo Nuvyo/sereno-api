@@ -43,48 +43,6 @@ describe('v1/users', () => {
     await app.close();
   });
 
-  describe('/psychologists/:id/like', () => {
-    it('should receive psychologist id and add like successfully', async () => {
-      const response = await normalUserRequester.put(`/v1/users/psychologists/${psychologistRequesterOne.userId}/like`);
-      const message = ['Usuário curtido'];
-
-      assert.equal(response.status, HttpStatus.OK);
-      assert.equal(message.includes(response.body.message), true);
-    });
-
-    it('should receive psychologist id and remove like successfully', async () => {
-      const response = await normalUserRequester.put(`/v1/users/psychologists/${psychologistRequesterOne.userId}/like`);
-      const message = ['Usuário descurtido'];
-
-      assert.equal(response.status, HttpStatus.OK);
-      assert.equal(message.includes(response.body.message), true);
-    });
-
-    it('should receive psychologist id and add like successfully again', async () => {
-      const response = await normalUserRequester.put(`/v1/users/psychologists/${psychologistRequesterOne.userId}/like`);
-      const message = ['Usuário curtido'];
-
-      assert.equal(response.status, HttpStatus.OK);
-      assert.equal(message.includes(response.body.message), true);
-    });
-
-    it('should fail to like himself', async () => {
-      const response = await psychologistRequesterOne.put(`/v1/users/psychologists/${psychologistRequesterOne.userId}/like`);
-      const message = ['Você não pode curtir seu próprio perfil'];
-      
-      assert.equal(response.status, HttpStatus.BAD_REQUEST);
-      assert.equal(message.includes(response.body.message), true);
-    });
-
-    it('should receive invalid psychologist id and fail', async () => {
-      const response = await normalUserRequester.put('/v1/users/psychologists/b74186fb-c441-4f4c-89a8-8d6fda98f9bc/like');
-      const message = ['Usuário não encontrado'];
-
-      assert.equal(response.status, HttpStatus.NOT_FOUND);
-      assert.equal(message.includes(response.body.message), true);
-    });
-  });
-
   describe('/psychologists', () => {
     it('should receive no query param and succeed', async () => {
       const response = await normalUserRequester.get('/v1/users/psychologists');
@@ -208,14 +166,8 @@ describe('v1/users', () => {
       assert.equal(psychologist.id, psychologistRequesterOne.userId);
       assert.equal(psychologist.modality, Modality.Online);
       assert.equal(psychologist.sessionCost, 70);
-      assert.equal(typeof psychologist.likes, 'number');
       assert.equal(typeof psychologist.bio, 'string');
       assert.equal(psychologist.bio, 'My name is Tom');
-      assert.equal(psychologist.address?.street, 'Rua das Flores');
-      assert.equal(psychologist.address?.number, '123');
-      assert.equal(psychologist.address?.city, 'São Paulo');
-      assert.equal(psychologist.address?.state, 'SP');
-      assert.equal(psychologist.address?.countryCode, 'BR');
     });
 
     it('should receive psychologist id and fail', async () => {
@@ -245,14 +197,6 @@ async function createPsychologists(requesterOne: Requester, requesterTwo: Reques
       modality: Modality.Online,
       sessionCost: 70,
       bio: 'My name is Tom',
-      address: {
-        street: 'Rua das Flores',
-        number: '123',
-        city: 'São Paulo',
-        state: 'SP',
-        countryCode: 'BR',
-        postalCode: '01234-567',
-      }
     } as SignupDTO;
     await requesterOne.post('/v1/auth/signup', signupBodyOne);
     await requesterOne.signin({ email: 'tom.user@email.com', password: '12345678' });
@@ -268,14 +212,6 @@ async function createPsychologists(requesterOne: Requester, requesterTwo: Reques
       modality: Modality.Both,
       sessionCost: 90,
       bio: 'My name is Charles',
-      address: {
-        street: 'Rua das Flores',
-        number: '123',
-        city: 'São Paulo',
-        state: 'SP',
-        countryCode: 'BR',
-        postalCode: '01234-567',
-      }
     } as SignupDTO;
     await requesterTwo.post('/v1/auth/signup', signupBodyTwo);
     await requesterTwo.signin({ email: 'charles.user@email.com', password: '12345678' });
@@ -291,14 +227,6 @@ async function createPsychologists(requesterOne: Requester, requesterTwo: Reques
       modality: Modality.Both,
       sessionCost: 80,
       bio: 'My name is Alice',
-      address: {
-        street: 'Avenida Paulista',
-        number: '456',
-        city: 'São Paulo',
-        state: 'SP',
-        countryCode: 'BR',
-        postalCode: '01310-100',
-      },
     } as SignupDTO;
     await requesterThree.post('/v1/auth/signup', signupBodyThree);
     await requesterThree.signin({ email: 'alice.user@email.com', password: '12345678' });
@@ -314,14 +242,6 @@ async function createPsychologists(requesterOne: Requester, requesterTwo: Reques
       modality: Modality.Both,
       sessionCost: 60,
       bio: 'My name is Emma',
-      address: {
-        street: 'Rua Augusta',
-        number: '789',
-        city: 'São Paulo',
-        state: 'SP',
-        countryCode: 'BR',
-        postalCode: '01305-000',
-      },
     } as SignupDTO;
     await requesterFour.post('/v1/auth/signup', signupBodyFour);
     await requesterFour.signin({ email: 'emma.user@email.com', password: '12345678' });
