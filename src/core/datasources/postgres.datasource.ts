@@ -9,11 +9,12 @@ dotenv.config();
 
 export const PostgresDataSource: DataSourceOptions = {
   type: 'postgres',
-  host: process.env.POSTGRES_HOST,
-  port: Number(process.env.POSTGRES_PORT),
-  username: process.env.POSTGRES_USER,
-  password: process.env.POSTGRES_PASSWORD,
-  database: process.env.NODE_ENV === 'test' ? process.env.POSTGRES_DB_TEST : process.env.POSTGRES_DB,
+  host: process.env.PGHOST,
+  port: Number(process.env.PGPORT),
+  username: process.env.PGUSER,
+  password: process.env.PGPASSWORD,
+  database: process.env.NODE_ENV === 'test' ? process.env.PGDATABASE_TEST : process.env.PGDATABASE,
+  ssl: process.env.PGSSLMODE === 'require' ? { rejectUnauthorized: false } : false,
   synchronize: true,
   logging: false,
   entities: [

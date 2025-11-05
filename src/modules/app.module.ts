@@ -8,6 +8,8 @@ import { JwtModule } from '@nestjs/jwt';
 import { I18nModule, HeaderResolver } from 'nestjs-i18n';
 import path from 'node:path';
 import * as dotenv from 'dotenv';
+import { AppController } from '@modules/app.controller';
+import { AppService } from '@modules/app.service';
 
 dotenv.config();
 
@@ -26,6 +28,8 @@ dotenv.config();
     UserModule,
     StatusModule,
     AuthModule
-  ]
+  ],
+  controllers: [AppController],
+  providers: [AppService],
 })
 export class AppModule {}
