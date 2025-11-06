@@ -1,16 +1,13 @@
 {
-  "builds": [
-    {
-      "src": "api/index.js",
-      "use": "@vercel/node"
+  "functions": {
+    "api/index.ts": {
+      "runtime": "@vercel/node@20"
     }
-  ],
-  "routes": [
+  },
+  "rewrites": [
     {
-      "src": "/(.*)",
-      "dest": "/api/index.js"
+      "source": "/(.*)",
+      "destination": "/api"
     }
-  ],
-  "installCommand": "npm install",
-  "buildCommand": "npm run build"
+  ]
 }
