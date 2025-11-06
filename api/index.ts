@@ -1,20 +1,24 @@
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe } from '@nestjs/common';
-import { AppModule } from '@modules/app.module';
-import { CustomExceptionFilter } from '@core/filters/error.filter';
+import { ValidationPipe, INestApplication } from '@nestjs/common';
+import { AppModule } from '../src/modules/app.module';
+import { CustomExceptionFilter } from '../src/core/filters/error.filter';
+import { ResponseInterceptor } from '../src/core/interceptors/response.interceptor';
+import { DictionaryService } from '../src/core/services/dictionary.service';
+import { I18nService } from 'nestjs-i18n';
 import * as dotenv from 'dotenv';
 import * as bodyParser from 'body-parser';
 import * as useragent from 'express-useragent';
-import cors from 'cors';
-import { I18nService } from 'nestjs-i18n';
-import { ResponseInterceptor } from '@core/interceptors/response.interceptor';
-import { DictionaryService } from '@core/services/dictionary.service';
-import { INestApplication } from '@nestjs/common';
+import * as cors from 'cors';
 
 dotenv.config();
 
-async function bootstrap() {
-  const port = Number(process.env.PORT) || 3000;
+let cachedApp: INestApplication | null = null;
+
+async function createNestApp() {
+  if (cachedApp) {
+    return cachedApp;
+  }
+
   const app = await NestFactory.create(AppModule);
   const i18n = app.get<I18nService>(I18nService);
   const dictionary = new DictionaryService(i18n);
@@ -66,7 +70,22 @@ async function bootstrap() {
   app.useGlobalFilters(new CustomExceptionFilter(dictionary));
   app.useGlobalInterceptors(new ResponseInterceptor(dictionary));
 
-  await app.listen(port);
+  await app.init();
+  cachedApp = app;
+  return app;
 }
 
-void bootstrap();
+// Handler para Vercel
+export default async function handler(req: any, res: any) {
+  try {
+    const app = await createNestApp();
+    const expressInstance = app.getHttpAdapter().getInstance();
+    return expressInstance(req, res);
+  } catch (error) {
+    console.error('Error creating app:', error);
+    res.status(500).json({ 
+      error: 'Internal server error',
+      details: error.message 
+    });
+  }
+}
