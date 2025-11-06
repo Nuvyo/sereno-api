@@ -29,6 +29,11 @@ async function bootstrap() {
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     origin: (origin, callback) => {
+      console.log('CORS Origin Check:', { 
+        origin, 
+        allowedOrigins: process.env.CORS_ALLOWED_ORIGINS 
+      });
+      
       if (!origin) return callback(null, true);
 
       if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
@@ -36,13 +41,18 @@ async function bootstrap() {
       }
 
       const allowedOrigins = process.env.CORS_ALLOWED_ORIGINS
-        ? process.env.CORS_ALLOWED_ORIGINS.split(',')
+        ? process.env.CORS_ALLOWED_ORIGINS.split(',').map(o => o.trim())
         : [];
+      
+      console.log('Parsed allowed origins:', allowedOrigins);
+      
       if (allowedOrigins.includes(origin)) {
+        console.log('Origin allowed:', origin);
         return callback(null, true);
       }
 
-      return callback(null, true);
+      console.log('Origin blocked:', origin);
+      return callback(new Error(`CORS policy: Origin ${origin} not allowed`), false);
     }
   };
 
