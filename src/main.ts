@@ -9,14 +9,21 @@ import cors from 'cors';
 import { I18nService } from 'nestjs-i18n';
 import { ResponseInterceptor } from '@core/interceptors/response.interceptor';
 import { DictionaryService } from '@core/services/dictionary.service';
+import { INestApplication } from '@nestjs/common';
 
 dotenv.config();
 
-async function bootstrap() {
-  const port = Number(process.env.PORT);
+let cachedApp: INestApplication | null = null;
+
+async function createNestApp() {
+  if (cachedApp) {
+    return cachedApp;
+  }
+
   const app = await NestFactory.create(AppModule);
   const i18n = app.get<I18nService>(I18nService);
   const dictionary = new DictionaryService(i18n);
+  
   const corsOptions: cors.CorsOptions = {
     allowedHeaders: [
       'Origin',
@@ -36,7 +43,7 @@ async function bootstrap() {
       
       if (!origin) return callback(null, true);
 
-      if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
+      if (origin && (origin.includes('localhost') || origin.includes('127.0.0.1'))) {
         return callback(null, true);
       }
 
@@ -64,7 +71,25 @@ async function bootstrap() {
   app.useGlobalFilters(new CustomExceptionFilter(dictionary));
   app.useGlobalInterceptors(new ResponseInterceptor(dictionary));
 
+  await app.init();
+  cachedApp = app;
+  return app;
+}
+
+async function bootstrap() {
+  const port = Number(process.env.PORT) || 3000;
+  const app = await createNestApp();
   await app.listen(port);
 }
 
-void bootstrap();
+// Para execução local
+if (require.main === module) {
+  void bootstrap();
+}
+
+// Para Vercel (exporta como handler serverless)
+module.exports = async (req: any, res: any) => {
+  const app = await createNestApp();
+  const expressInstance = app.getHttpAdapter().getInstance();
+  return expressInstance(req, res);
+};
