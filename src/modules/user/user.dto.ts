@@ -1,4 +1,4 @@
-import { Modality, Specialization } from '@core/entities/user.entity';
+import { Modality, Specialization } from '../../core/entities/user.entity';
 
 
 export class FindPsychologistDTO {

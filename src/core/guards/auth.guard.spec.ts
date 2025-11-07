@@ -1,10 +1,10 @@
 import { HttpStatus, INestApplication } from '@nestjs/common';
 import * as assert from 'node:assert/strict';
 import { describe, before, it, after } from 'node:test';
-import { createApp, Requester } from '@test/utils';
+import { createApp, Requester } from '../../../test/utils';
 import request from 'supertest';
-import { SigninDTO } from '@modules/auth/auth.dto';
-import { registerUserDummy } from '@test/dummies';
+import { SigninDTO } from '../../modules/auth/auth.dto';
+import { registerUserDummy } from '../../../test/dummies';
 
 describe('[Decorator] Auth Guard', () => {
   let app: INestApplication;

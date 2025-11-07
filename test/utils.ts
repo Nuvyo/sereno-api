@@ -1,10 +1,10 @@
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { PostgresDataSource } from '@core/datasources/postgres.datasource';
-import { AuthModule } from '@modules/auth/auth.module';
+import { PostgresDataSource } from '../src/core/datasources/postgres.datasource';
+import { AuthModule } from '../src/modules/auth/auth.module';
 import { Test } from '@nestjs/testing';
 import { INestApplication, ModuleMetadata, ValidationPipe } from '@nestjs/common';
-import { SigninDTO } from '@modules/auth/auth.dto';
-import { CustomExceptionFilter } from '@core/filters/error.filter';
+import { SigninDTO } from '../src/modules/auth/auth.dto';
+import { CustomExceptionFilter } from '../src/core/filters/error.filter';
 import { JwtModule } from '@nestjs/jwt';
 import { HeaderResolver, I18nModule, I18nService } from 'nestjs-i18n';
 import request from 'supertest';
@@ -12,8 +12,8 @@ import path from 'node:path';
 import * as useragent from 'express-useragent';
 import * as bodyParser from 'body-parser';
 import * as dotenv from 'dotenv';
-import { ResponseInterceptor } from '@core/interceptors/response.interceptor';
-import { DictionaryService } from '@core/services/dictionary.service';
+import { ResponseInterceptor } from '../src/core/interceptors/response.interceptor';
+import { DictionaryService } from '../src/core/services/dictionary.service';
 
 dotenv.config();
 

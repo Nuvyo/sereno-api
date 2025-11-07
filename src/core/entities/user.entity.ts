@@ -1,9 +1,9 @@
 import { Column, Entity, JoinColumn, OneToMany, OneToOne } from 'typeorm';
-import { ChatMessage } from '@core/entities/chat-message.entity';
-import { RefreshToken } from '@core/entities/refresh-token.entity';
-import { AccessToken } from '@core/entities/access-token.entity';
-import { CustomBaseEntity } from '@core/entities/utils/base.entity';
-import { ColumnDecimalTransformer } from '@core/entities/utils/transformers';
+import { ChatMessage } from '../entities/chat-message.entity';
+import { RefreshToken } from '../entities/refresh-token.entity';
+import { AccessToken } from '../entities/access-token.entity';
+import { CustomBaseEntity } from '../entities/utils/base.entity';
+import { ColumnDecimalTransformer } from '../entities/utils/transformers';
 
 export enum Modality {
   Online = 'online',

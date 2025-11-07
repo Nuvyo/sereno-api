@@ -1,7 +1,7 @@
 import { IsArray, IsBoolean, IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString, IsUUID, Max, Min, MinLength } from 'class-validator';
-import { IsValidPrice } from '@core/decorators/is-valid-price.decorator';
+import { IsValidPrice } from '../../core/decorators/is-valid-price.decorator';
 import 'reflect-metadata';
-import { Modality, Specialization } from '@core/entities/user.entity';
+import { Modality, Specialization } from '../../core/entities/user.entity';
 
 export class AddressDTO {
 

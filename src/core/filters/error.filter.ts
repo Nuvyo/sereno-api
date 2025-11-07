@@ -1,7 +1,7 @@
 import { ArgumentsHost, Catch, ExceptionFilter, HttpException, HttpStatus } from '@nestjs/common';
 import { Response } from 'express';
 import { TypeORMError } from 'typeorm';
-import { DictionaryService } from '@core/services/dictionary.service';
+import { DictionaryService } from '../services/dictionary.service';
 
 @Catch()
 export class CustomExceptionFilter implements ExceptionFilter {

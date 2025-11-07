@@ -1,7 +1,7 @@
 import { Injectable, NestInterceptor, ExecutionContext, CallHandler } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { DictionaryService } from '@core/services/dictionary.service';
+import { DictionaryService } from '../services/dictionary.service';
 
 @Injectable()
 export class ResponseInterceptor<T> implements NestInterceptor<T, any> {

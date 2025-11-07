@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { DataSource } from 'typeorm';
-import { ServerStatusDTO } from '@modules/app.dto';
+import { ServerStatusDTO } from './app.dto';
 
 @Injectable()
 export class AppService {

@@ -1,6 +1,6 @@
 import { Controller, Get } from '@nestjs/common';
-import { ServerStatusDTO } from '@modules/app.dto';
-import { AppService } from '@modules/app.service';
+import { ServerStatusDTO } from './app.dto';
+import { AppService } from './app.service';
 
 @Controller()
 export class AppController {

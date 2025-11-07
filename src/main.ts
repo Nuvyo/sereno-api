@@ -1,24 +1,22 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
-import { AppModule } from '@modules/app.module';
-import { CustomExceptionFilter } from '@core/filters/error.filter';
+import { AppModule } from './modules/app.module';
+import { CustomExceptionFilter } from './core/filters/error.filter';
 import * as dotenv from 'dotenv';
 import * as bodyParser from 'body-parser';
 import * as useragent from 'express-useragent';
 import cors from 'cors';
 import { I18nService } from 'nestjs-i18n';
-import { ResponseInterceptor } from '@core/interceptors/response.interceptor';
-import { DictionaryService } from '@core/services/dictionary.service';
-import { INestApplication } from '@nestjs/common';
+import { ResponseInterceptor } from './core/interceptors/response.interceptor';
+import { DictionaryService } from './core/services/dictionary.service';
 
 dotenv.config();
 
 async function bootstrap() {
-  const port = Number(process.env.PORT) || 3000;
+  const port = Number(process.env.PORT);
   const app = await NestFactory.create(AppModule);
   const i18n = app.get<I18nService>(I18nService);
   const dictionary = new DictionaryService(i18n);
-  
   const corsOptions: cors.CorsOptions = {
     allowedHeaders: [
       'Origin',
@@ -31,30 +29,20 @@ async function bootstrap() {
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     origin: (origin, callback) => {
-      console.log('CORS Origin Check:', { 
-        origin, 
-        allowedOrigins: process.env.CORS_ALLOWED_ORIGINS 
-      });
-      
       if (!origin) return callback(null, true);
 
-      if (origin && (origin.includes('localhost') || origin.includes('127.0.0.1'))) {
+      if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
         return callback(null, true);
       }
 
       const allowedOrigins = process.env.CORS_ALLOWED_ORIGINS
-        ? process.env.CORS_ALLOWED_ORIGINS.split(',').map(o => o.trim())
+        ? process.env.CORS_ALLOWED_ORIGINS.trim().split(',')
         : [];
-      
-      console.log('Parsed allowed origins:', allowedOrigins);
-      
       if (allowedOrigins.includes(origin)) {
-        console.log('Origin allowed:', origin);
         return callback(null, true);
       }
 
-      console.log('Origin blocked:', origin);
-      return callback(new Error(`CORS policy: Origin ${origin} not allowed`), false);
+      return callback(null, true);
     }
   };
 

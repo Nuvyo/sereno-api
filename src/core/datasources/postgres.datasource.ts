@@ -1,9 +1,9 @@
 import { DataSourceOptions } from 'typeorm';
 import * as dotenv from 'dotenv';
-import { ChatMessage } from '@core/entities/chat-message.entity';
-import { User } from '@core/entities/user.entity';
-import { RefreshToken } from '@core/entities/refresh-token.entity';
-import { AccessToken } from '@core/entities/access-token.entity';
+import { ChatMessage } from '../entities/chat-message.entity';
+import { User } from '../entities/user.entity';
+import { RefreshToken } from '../entities/refresh-token.entity';
+import { AccessToken } from '../entities/access-token.entity';
 
 dotenv.config();
 

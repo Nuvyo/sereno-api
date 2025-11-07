@@ -1,9 +1,9 @@
 import { Body, Controller, Delete, Get, Post, Put, Req, UseGuards } from '@nestjs/common';
-import { MeResponseDTO, RefreshTokenDTO, SigninDTO, SigninResponseDTO, SignupDTO, UpdateMeDTO } from '@modules/auth/auth.dto';
-import { AuthService } from '@modules/auth/auth.service';
+import { MeResponseDTO, RefreshTokenDTO, SigninDTO, SigninResponseDTO, SignupDTO, UpdateMeDTO } from '../auth/auth.dto';
+import { AuthService } from '../auth/auth.service';
 import { Request } from 'express';
-import { AuthGuard } from '@core/guards/auth.guard';
-import { BaseMessageDTO } from '@core/dtos/generic.dto';
+import { AuthGuard } from '../../core/guards/auth.guard';
+import { BaseMessageDTO } from '../../core/dtos/generic.dto';
 
 @Controller('v1/auth')
 export class AuthController {

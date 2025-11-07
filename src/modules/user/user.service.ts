@@ -1,9 +1,8 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { DataSource, In } from 'typeorm';
-import { Modality, User } from '@core/entities/user.entity';
-import { QueryData } from '@core/pipes/query.pipe';
-import { FindPsychologistDTO } from '@modules/user/user.dto';
-import { BaseMessageDTO } from '@core/dtos/generic.dto';
+import { Modality, User } from '../../core/entities/user.entity';
+import { QueryData } from '../../core/pipes/query.pipe';
+import { FindPsychologistDTO } from '../user/user.dto';
 
 @Injectable()
 export class UserService {

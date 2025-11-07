@@ -22,17 +22,6 @@
     "noImplicitAny": true,
     "strictBindCallApply": true,
     "noFallthroughCasesInSwitch": true,
-    "paths": {
-      "@modules/*": [
-        "src/modules/*"
-      ],
-      "@core/*": [
-        "src/core/*"
-      ],
-      "@test/*": [
-        "test/*"
-      ],
-    }
   },
   "ts-node": {
     "files": true

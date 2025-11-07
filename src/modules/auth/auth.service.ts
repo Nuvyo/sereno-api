@@ -1,13 +1,21 @@
 import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { DataSource } from 'typeorm';
-import { Modality, User } from '@core/entities/user.entity';
-import { SigninDTO, RefreshTokensResponseDTO, SignupDTO, RefreshTokenDTO, SigninResponseDTO, MeResponseDTO, UpdateMeDTO } from '@modules/auth/auth.dto';
-import { BcryptService } from '@core/services/bcrypt.service';
+import { User } from '../../core/entities/user.entity';
+import {
+  SigninDTO,
+  RefreshTokensResponseDTO,
+  SignupDTO,
+  RefreshTokenDTO,
+  SigninResponseDTO,
+  MeResponseDTO,
+  UpdateMeDTO
+} from '../auth/auth.dto';
+import { BcryptService } from '../../core/services/bcrypt.service';
 import { JwtService } from '@nestjs/jwt';
 import { v4 as uuidv4 } from 'uuid';
-import { RefreshToken } from '@core/entities/refresh-token.entity';
-import { AccessToken } from '@core/entities/access-token.entity';
-import { BaseMessageDTO } from '@core/dtos/generic.dto';
+import { RefreshToken } from '../../core/entities/refresh-token.entity';
+import { AccessToken } from '../../core/entities/access-token.entity';
+import { BaseMessageDTO } from '../../core/dtos/generic.dto';
 
 @Injectable()
 export class AuthService {

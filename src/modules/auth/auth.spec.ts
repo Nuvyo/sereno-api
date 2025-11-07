@@ -1,9 +1,16 @@
 import * as assert from 'node:assert/strict';
 import { describe, before, it, after } from 'node:test';
-import { MeResponseDTO, RefreshTokenDTO, RefreshTokensResponseDTO, SigninDTO, SigninResponseDTO, SignupDTO, UpdateMeDTO } from '@modules/auth/auth.dto';
+import {
+  MeResponseDTO,
+  RefreshTokenDTO,
+  RefreshTokensResponseDTO,
+  SigninDTO,
+  SigninResponseDTO,
+  SignupDTO,
+} from '../auth/auth.dto';
 import { HttpStatus, INestApplication } from '@nestjs/common';
-import { createApp, Requester } from '@test/utils';
-import { Modality, Specialization } from '@core/entities/user.entity';
+import { createApp, Requester } from '../../../test/utils';
+import { Modality, Specialization } from '../../core/entities/user.entity';
 
 describe('v1/auth', () => {
 

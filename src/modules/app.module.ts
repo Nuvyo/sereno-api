@@ -1,15 +1,15 @@
 import { Module } from '@nestjs/common';
-import { UserModule } from '@modules/user/user.module';
-import { StatusModule } from '@modules/status/status.module';
+import { UserModule } from './user/user.module';
+import { StatusModule } from './status/status.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { PostgresDataSource } from '@core/datasources/postgres.datasource';
-import { AuthModule } from '@modules/auth/auth.module';
+import { PostgresDataSource } from '../core/datasources/postgres.datasource';
+import { AuthModule } from './auth/auth.module';
 import { JwtModule } from '@nestjs/jwt';
 import { I18nModule, HeaderResolver } from 'nestjs-i18n';
 import path from 'node:path';
 import * as dotenv from 'dotenv';
-import { AppController } from '@modules/app.controller';
-import { AppService } from '@modules/app.service';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
 
 dotenv.config();
 

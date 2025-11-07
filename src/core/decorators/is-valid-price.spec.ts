@@ -1,6 +1,6 @@
 import * as assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { IsValidPriceConstraint } from '@core/decorators/is-valid-price.decorator';
+import { IsValidPriceConstraint } from '../decorators/is-valid-price.decorator';
 
 describe('QueryPipe', () => {
   const isValidPrice = new IsValidPriceConstraint();

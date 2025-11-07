@@ -1,6 +1,6 @@
 import { Controller, Get, Param, ParseUUIDPipe, Put, Query, Req, UseGuards } from '@nestjs/common';
-import { UserService } from '@modules/user/user.service';
-import { QueryData, QueryPipe } from '@core/pipes/query.pipe';
+import { UserService } from '../user/user.service';
+import { QueryData, QueryPipe } from '../../core/pipes/query.pipe';
 
 @Controller('v1/users')
 export class UserController {

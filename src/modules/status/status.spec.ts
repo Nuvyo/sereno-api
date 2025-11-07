@@ -1,8 +1,8 @@
 import * as assert from 'node:assert/strict';
 import { describe, before, it, after } from 'node:test';
 import { HttpStatus, INestApplication } from '@nestjs/common';
-import { createApp, Requester } from '@test/utils';
-import { StatusModule } from '@modules/status/status.module';
+import { createApp, Requester } from '../../../test/utils';
+import { StatusModule } from '../status/status.module';
 
 describe('v1/status', () => {
   let app: INestApplication;

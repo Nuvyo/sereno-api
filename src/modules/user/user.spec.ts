@@ -1,12 +1,12 @@
 import * as assert from 'node:assert/strict';
 import { describe, before, it, after } from 'node:test';
 import { HttpStatus, INestApplication } from '@nestjs/common';
-import { createApp, Requester } from '@test/utils';
-import { registerUserDummy } from '@test/dummies';
-import { UserModule } from '@modules/user/user.module';
-import { FindPsychologistDTO } from '@modules/user/user.dto';
-import { SignupDTO } from '@modules/auth/auth.dto';
-import { Modality } from '@core/entities/user.entity';
+import { createApp, Requester } from '../../../test/utils';
+import { registerUserDummy } from '../../../test/dummies';
+import { UserModule } from '../user/user.module';
+import { FindPsychologistDTO } from '../user/user.dto';
+import { SignupDTO } from '../auth/auth.dto';
+import { Modality } from '../../core/entities/user.entity';
 
 describe('v1/users', () => {
   let app: INestApplication;
