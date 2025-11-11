@@ -7,14 +7,13 @@ dotenv.config();
 @Injectable()
 export class BcryptService {
 
-  private readonly saltOrRounds = 14;
-
   constructor() {}
 
   public async hash(value: string): Promise<string> {
     const valueWithPepper = value + process.env.PEPPER;
+    const rounds = process.env.NODE_ENV === 'test' ? 1 : 10;
 
-    return bcrypt.hash(valueWithPepper, this.saltOrRounds);
+    return bcrypt.hash(valueWithPepper, rounds);
   }
 
   public async compare(value: string, hash: string): Promise<boolean> {

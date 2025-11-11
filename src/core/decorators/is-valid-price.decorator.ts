@@ -9,7 +9,7 @@ import {
 @ValidatorConstraint({ name: 'isValidPrice' })
 export class IsValidPriceConstraint implements ValidatorConstraintInterface {
   
-  validate(value: number, args?: ValidationArguments) {
+  validate(value: number, _args?: ValidationArguments) {
     if (isNaN(value) || isNaN(Number(value))) {
       return false;
     }

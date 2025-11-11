@@ -16,6 +16,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { RefreshToken } from '../../core/entities/refresh-token.entity';
 import { AccessToken } from '../../core/entities/access-token.entity';
 import { BaseMessageDTO } from '../../core/dtos/generic.dto';
+import { DictionaryService } from '../../core/services/dictionary.service';
 
 @Injectable()
 export class AuthService {
@@ -24,6 +25,7 @@ export class AuthService {
     private readonly dataSource: DataSource,
     private readonly bcryptService: BcryptService,
     private readonly jwtService: JwtService,
+    private readonly dictionaryService: DictionaryService,
   ) {}
 
   public async getMe(userId: string): Promise<MeResponseDTO> {
@@ -84,7 +86,7 @@ export class AuthService {
 
     await this.dataSource.getRepository(User).save(user);
 
-    return { message: 'Profile updated successfully' };
+    return { message: this.dictionaryService.translate('auth.profile_updated') };
   }
 
   public async signup(body: SignupDTO): Promise<BaseMessageDTO> {
@@ -110,7 +112,7 @@ export class AuthService {
 
     await this.dataSource.getRepository(User).save(data);
 
-    return { message: 'Account created successfully' };
+    return { message: this.dictionaryService.translate('auth.signup_successful') };
   }
 
   public async signin(body: SigninDTO): Promise<SigninResponseDTO> {
@@ -138,7 +140,7 @@ export class AuthService {
       .getOne();
 
     if (!token) {
-      throw new UnauthorizedException('Invalid refresh token');
+      throw new UnauthorizedException({ key: 'auth.invalid_refresh_token' });
     }
 
     return this.generateUserTokens(token.userId);
@@ -149,7 +151,7 @@ export class AuthService {
     await this.dataSource.getRepository(AccessToken).delete({ user: { id: userId } });
 
     return {
-      message: 'Logout successful',
+      message: this.dictionaryService.translate('auth.logout_successful'),
     };
   }
 
@@ -158,7 +160,7 @@ export class AuthService {
     await this.dataSource.getRepository(User).delete({ id: userId });
 
     return {
-      message: 'Account cancelled successfully',
+      message: this.dictionaryService.translate('auth.account_cancellation_successful'),
     };
   }
 
@@ -166,37 +168,37 @@ export class AuthService {
     const userAlreadyExists = await this.dataSource.getRepository(User).exists({ where: { email: body.email } });
 
     if (userAlreadyExists) {
-      throw new BadRequestException('User already exists');
+      throw new BadRequestException(this.dictionaryService.translate('auth.email_already_in_use'));
     }
 
     if (body.password !== body.passwordConfirmation) {
-      throw new BadRequestException('Password and password confirmation do not match');
+      throw new BadRequestException(this.dictionaryService.translate('auth.passwords_do_not_match'));
     }
 
     if (body.psychologist && body.public) {
       if (!body.crp) {
-        throw new BadRequestException('CRP is required');
+        throw new BadRequestException(this.dictionaryService.translate('auth.crp_is_required'));
       }
 
       if (!body.modality) {
-        throw new BadRequestException('Modality is required');
+        throw new BadRequestException(this.dictionaryService.translate('auth.modality_is_required'));
       }
 
       if (body.sessionCost == null) {
-        throw new BadRequestException('Session cost is required');
+        throw new BadRequestException(this.dictionaryService.translate('auth.session_cost_is_required'));
       }
     }
   }
 
   private async validateSigninData(body: SigninDTO, user: User | null): Promise<void> {
     if (!user) {
-      throw new UnauthorizedException('Invalid credentials');
+      throw new UnauthorizedException({ key: 'auth.invalid_credentials' });
     }
 
     const isPasswordValid = await this.bcryptService.compare(body.password, user.password);
 
     if (!isPasswordValid) {
-      throw new UnauthorizedException('Invalid credentials');
+      throw new UnauthorizedException({ key: 'auth.invalid_credentials' });
     }
   }
 
@@ -205,15 +207,16 @@ export class AuthService {
 
     if (user.psychologist && willBePublic) {
       if (!user.crp && (!body.crp || body.crp === '')) {
-        throw new BadRequestException('CRP is required');
+        throw new BadRequestException({ key: 'auth.crp_is_required' });
       }
 
       if (!user.modality && !body.modality) {
-        throw new BadRequestException('Modality is required');
+        throw new BadRequestException({ key: 'auth.modality_is_required' });
       }
 
-      if (!body.sessionCost && body.sessionCost !== 0 && !user.sessionCost) {
-        throw new BadRequestException('Session cost is required');
+      // Require sessionCost in the request when becoming public
+      if (body.sessionCost == null) {
+        throw new BadRequestException({ key: 'auth.session_cost_is_required' });
       }
     }
   }

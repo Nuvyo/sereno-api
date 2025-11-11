@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 import { UserModule } from './user/user.module';
-import { StatusModule } from './status/status.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { PostgresDataSource } from '../core/datasources/postgres.datasource';
 import { AuthModule } from './auth/auth.module';
@@ -26,7 +25,6 @@ dotenv.config();
     JwtModule.register({ global: true, secret: process.env.JWT_SECRET }),
     TypeOrmModule.forRoot(PostgresDataSource),
     UserModule,
-    StatusModule,
     AuthModule
   ],
   controllers: [AppController],

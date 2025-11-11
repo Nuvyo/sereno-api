@@ -79,7 +79,6 @@ describe('app', () => {
 
 describe('AppController (Unit)', () => {
   let controller: AppController;
-  let service: AppService;
   let mockDataSource: Partial<DataSource>;
 
   before(async () => {
@@ -110,8 +109,7 @@ describe('AppController (Unit)', () => {
       ],
     }).compile();
 
-    controller = module.get<AppController>(AppController);
-    service = module.get<AppService>(AppService);
+  controller = module.get<AppController>(AppController);
   });
 
   describe('getStatus', () => {

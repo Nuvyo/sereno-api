@@ -20,7 +20,7 @@ dotenv.config();
 const BaseApp = {
   imports: [
     I18nModule.forRoot({
-      fallbackLanguage: 'pt-br',
+      fallbackLanguage: 'en',
       loaderOptions: {
         path: path.join(__dirname, '../src/i18n/'),
         watch: true,
@@ -76,6 +76,7 @@ export class Requester {
   public get(path: string, query?: Record<string, any>): Promise<request.Response> {
     return request(this.app.getHttpServer())
       .get(path)
+      .set('language', 'en')
       .set('Authorization', `Bearer ${this.accessToken}`)
       .set('Content-Type', 'application/json')
       .query(query || {});
@@ -84,6 +85,7 @@ export class Requester {
   public async post(endpoint: string, body?: Record<string, any>): Promise<request.Response> {
     return request(this.app.getHttpServer())
       .post(endpoint)
+      .set('language', 'en')
       .set('Authorization', `Bearer ${this.accessToken}`)
       .set('Content-Type', 'application/json')
       .send(body);
@@ -92,6 +94,7 @@ export class Requester {
   public async put(endpoint: string, body?: Record<string, any>): Promise<request.Response> {
     return request(this.app.getHttpServer())
       .put(endpoint)
+      .set('language', 'en')
       .set('Authorization', `Bearer ${this.accessToken}`)
       .set('Content-Type', 'application/json')
       .send(body);
@@ -100,7 +103,8 @@ export class Requester {
   public async delete(endpoint: string): Promise<request.Response> {
     return request(this.app.getHttpServer())
       .delete(endpoint)
-      .set('Authorization', `Bearer ${this.accessToken}`)
+      .set('language', 'en')
+      .set('Authorization', `Bearer ${this.accessToken}`);
   }
 
   public async signin(body: SigninDTO): Promise<void> {

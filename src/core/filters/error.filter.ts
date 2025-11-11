@@ -28,7 +28,24 @@ export class CustomExceptionFilter implements ExceptionFilter {
       }
     } else if (exception instanceof HttpException) {
       status = Number(exception.getStatus());
-      message = exception.message;
+      const responsePayload = exception.getResponse();
+
+      if (typeof responsePayload === 'object' && responsePayload !== null) {
+        // Try message property
+        const maybeMessage = (responsePayload as any).message;
+
+        if (maybeMessage) {
+          message = maybeMessage;
+        } else if ('key' in (responsePayload as any)) {
+          message = { key: (responsePayload as any).key, args: (responsePayload as any).args };
+        } else {
+          message = exception.message;
+        }
+      } else if (typeof responsePayload === 'string') {
+        message = responsePayload;
+      } else {
+        message = exception.message;
+      }
     }
 
     if (this.dictionary.isTranslationKey(message as any)) {

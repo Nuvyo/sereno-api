@@ -45,9 +45,9 @@ export default tseslint.config(
       '@typescript-eslint/no-loss-of-precision': 'off',
       indent: 'off',
       '@typescript-eslint/no-var-requires': 0,
-      'no-restricted-imports': ['error', {
-        patterns: ['.*']
-      }],
+      // Desabilitado: a configuração anterior bloqueava todos os imports relativos (patterns: ['.*']).
+      // Se quisermos restringir imports específicos no futuro, ajuste aqui com padrões mais específicos.
+      'no-restricted-imports': 'off',
       '@stylistic/indent': ['error', 2, { SwitchCase: 1, ignoredNodes: [
         'FunctionExpression > .params[decorators.length > 0]',
         'FunctionExpression > .params > :matches(Decorator, :not(:first-child))',

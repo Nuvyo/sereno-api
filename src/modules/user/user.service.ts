@@ -1,5 +1,5 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import { DataSource, In } from 'typeorm';
+import { Injectable } from '@nestjs/common';
+import { DataSource } from 'typeorm';
 import { Modality, User } from '../../core/entities/user.entity';
 import { QueryData } from '../../core/pipes/query.pipe';
 import { FindPsychologistDTO } from '../user/user.dto';
@@ -14,7 +14,7 @@ export class UserService {
       .where('user.psychologist = :psychologist', { psychologist: true })
       // .andWhere('user.validCRP = :validCRP', { validCRP: true })
       .limit(query.take)
-      .offset(query.skip)
+      .offset(query.skip);
 
     if (query.where) {
       if ('modality' in query.where) {
@@ -38,9 +38,7 @@ export class UserService {
     const user = await this.dataSource.getRepository(User).createQueryBuilder('user')
       .where('user.id = :id', { id })
       .andWhere('user.psychologist = :psychologist', { psychologist: true })
-      .getOneOrFail();
- 
-    const userDTO = Object.assign(new FindPsychologistDTO(), user);
+      .getOneOrFail();    const userDTO = Object.assign(new FindPsychologistDTO(), user);
 
     return userDTO;
   }

@@ -103,6 +103,7 @@ export class QueryPipe implements PipeTransform<QueryDataInput, QueryData> {
   private isJsonString(value: string): boolean {
     try {
       JSON.parse(value);
+
       return true;
     } catch {
       return false;

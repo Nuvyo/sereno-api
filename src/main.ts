@@ -38,6 +38,7 @@ async function bootstrap() {
       const allowedOrigins = process.env.CORS_ALLOWED_ORIGINS
         ? process.env.CORS_ALLOWED_ORIGINS.trim().split(',')
         : [];
+
       if (allowedOrigins.includes(origin)) {
         return callback(null, true);
       }

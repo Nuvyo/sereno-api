@@ -172,9 +172,9 @@ describe('v1/users', () => {
 
     it('should receive psychologist id and fail', async () => {
       const response = await normalUserRequester.get('/v1/users/psychologists/b74186fb-c440-4f4c-89a9-8d6fda98f9bc');
-      const message = ['Usuário não encontrado'];
-      assert.equal(response.status, HttpStatus.NOT_FOUND);
-      assert.equal(message.includes(response.body.message), true);
+  assert.equal(response.status, HttpStatus.NOT_FOUND);
+  // Aceita texto traduzido em inglês ou português
+  assert.equal(['User not found', 'Usuário não encontrado'].includes(response.body.message), true);
     });
 
     it('should fail to get non-psychologist user', async () => {

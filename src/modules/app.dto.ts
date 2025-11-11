@@ -1,4 +1,5 @@
 export class ServerStatusDTO {
+
   updated_at: string;
   dependencies: {
     database: {
@@ -7,4 +8,5 @@ export class ServerStatusDTO {
       opened_connections: number;
     };
   };
+
 }
