@@ -5,7 +5,6 @@ import { of, firstValueFrom } from 'rxjs';
 import { ExecutionContext, CallHandler } from '@nestjs/common';
 
 function createContextStub(): ExecutionContext {
-  // Para este teste, o contexto não é utilizado pelo interceptor
   return {
     switchToHttp: () => ({} as any),
   } as any as ExecutionContext;

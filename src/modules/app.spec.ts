@@ -34,21 +34,16 @@ describe('app', () => {
       
       const body = response.body as ServerStatusDTO;
       
-      // Verifica se a estrutura do response está correta
       assert.ok(body.updated_at);
       assert.ok(body.dependencies);
       assert.ok(body.dependencies.database);
-      
-      // Verifica se os campos do banco estão presentes
       assert.ok(body.dependencies.database.version);
       assert.ok(typeof body.dependencies.database.max_connections === 'number');
       assert.ok(typeof body.dependencies.database.opened_connections === 'number');
       
-      // Verifica se updated_at é uma data válida
       const updatedAt = new Date(body.updated_at);
+  
       assert.ok(updatedAt instanceof Date && !isNaN(updatedAt.getTime()));
-      
-      // Verifica se os valores do banco são válidos
       assert.ok(body.dependencies.database.max_connections > 0);
       assert.ok(body.dependencies.database.opened_connections >= 0);
       assert.ok(body.dependencies.database.version.length > 0);
@@ -64,12 +59,9 @@ describe('app', () => {
       const body1 = response1.body as ServerStatusDTO;
       const body2 = response2.body as ServerStatusDTO;
 
-      // Verifica se a estrutura é consistente entre as chamadas
       assert.equal(typeof body1.dependencies.database.version, typeof body2.dependencies.database.version);
       assert.equal(typeof body1.dependencies.database.max_connections, typeof body2.dependencies.database.max_connections);
       assert.equal(typeof body1.dependencies.database.opened_connections, typeof body2.dependencies.database.opened_connections);
-
-      // Verifica se alguns valores permanecem os mesmos (como max_connections e version)
       assert.equal(body1.dependencies.database.version, body2.dependencies.database.version);
       assert.equal(body1.dependencies.database.max_connections, body2.dependencies.database.max_connections);
     });
@@ -82,7 +74,6 @@ describe('AppController (Unit)', () => {
   let mockDataSource: Partial<DataSource>;
 
   before(async () => {
-    // Mock do DataSource para testes unitários
     mockDataSource = {
       query: async (sql: string): Promise<any> => {
         if (sql.includes('version()')) {
@@ -127,8 +118,7 @@ describe('AppController (Unit)', () => {
 
     it('should return a new timestamp on each call', async () => {
       const result1 = await controller.getStatus();
-      
-      // Pequeno delay para garantir timestamps diferentes
+
       await new Promise(resolve => setTimeout(resolve, 10));
       
       const result2 = await controller.getStatus();
@@ -143,7 +133,6 @@ describe('AppService (Unit)', () => {
   let mockDataSource: Partial<DataSource>;
 
   before(async () => {
-    // Mock do DataSource
     mockDataSource = {
       query: async (sql: string): Promise<any> => {
         if (sql.includes('version()')) {
@@ -182,15 +171,14 @@ describe('AppService (Unit)', () => {
       assert.equal(result.dependencies.database.max_connections, 200);
       assert.equal(result.dependencies.database.opened_connections, 10);
 
-      // Verifica se updated_at é uma data ISO válida
       const date = new Date(result.updated_at);
+
       assert.ok(!isNaN(date.getTime()));
     });
 
     it('should convert string database values to numbers', async () => {
       const result = await service.getStatus();
 
-      // Verifica se os valores são numbers após conversão
       assert.equal(typeof result.dependencies.database.max_connections, 'number');
       assert.equal(typeof result.dependencies.database.opened_connections, 'number');
       assert.ok(result.dependencies.database.max_connections > 0);

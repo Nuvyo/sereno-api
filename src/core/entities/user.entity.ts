@@ -5,12 +5,6 @@ import { AccessToken } from '../entities/access-token.entity';
 import { CustomBaseEntity } from '../entities/utils/base.entity';
 import { ColumnDecimalTransformer } from '../entities/utils/transformers';
 
-export enum Modality {
-  Online = 'online',
-  InPerson = 'in_person',
-  Both = 'both',
-}
-
 export enum Specialization {
   Ansiety = 'anxiety',
   Depression = 'depression',
@@ -60,9 +54,6 @@ export class User extends CustomBaseEntity {
 
   @Column({ type: 'boolean', nullable: true })
   validCRP: boolean;
-
-  @Column({ type: 'enum', enum: Modality, nullable: true })
-  modality: Modality;
 
   @Column({ type: 'simple-array', nullable: true })
   specializations: Specialization[];

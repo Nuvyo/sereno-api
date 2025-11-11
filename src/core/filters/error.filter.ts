@@ -31,7 +31,6 @@ export class CustomExceptionFilter implements ExceptionFilter {
       const responsePayload = exception.getResponse();
 
       if (typeof responsePayload === 'object' && responsePayload !== null) {
-        // Try message property
         const maybeMessage = (responsePayload as any).message;
 
         if (maybeMessage) {

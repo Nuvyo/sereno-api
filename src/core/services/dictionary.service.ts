@@ -10,8 +10,6 @@ export class DictionaryService {
 
   private ensureCache(): void {
     if (!this.cache) {
-      // Load JSON dictionaries directly (split per locale)
-       
       const authEn = require('../../i18n/en/auth.json');
       const authPt = require('../../i18n/pt-br/auth.json');
       const userEn = require('../../i18n/en/user.json');
@@ -29,7 +27,6 @@ export class DictionaryService {
     let text: string | undefined = bundle?.[lang]?.[innerKey];
 
     if (typeof text !== 'string' || text.length === 0) {
-      // Fallback to i18nService if available and configured differently
       try {
         const maybe = this.i18nService.translate(key, { lang, args: args || {} }) as unknown as string;
 
@@ -42,12 +39,10 @@ export class DictionaryService {
     }
 
     if (typeof text !== 'string' || text.length === 0) {
-      // Final fallback to key
       text = key;
     }
 
     if (args) {
-      // Substituição simples por tokens exatos {{key}} para evitar regex e falsos positivos do linter
       for (const [k, v] of Object.entries(args)) {
         const token = `{{${k}}}`;
 

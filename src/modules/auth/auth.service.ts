@@ -39,7 +39,6 @@ export class AuthService {
 
     if (user.psychologist && user.public) {
       data.crp = user.crp;
-      data.modality = user.modality;
       data.sessionCost = user.sessionCost;
       data.bio = user.bio;
     }
@@ -60,15 +59,9 @@ export class AuthService {
       user.photo = body.photo;
     }
 
-    // TODO: update email and password
-
     if (user.psychologist) {
       if (typeof body.public === 'boolean') {
         user.public = body.public;
-      }
-
-      if (body.modality) {
-        user.modality = body.modality;
       }
 
       if ('crp' in body) {
@@ -103,7 +96,6 @@ export class AuthService {
     if (body.psychologist && body.public) {
       data.public = body.public;
       data.crp = body.crp;
-      data.modality = body.modality;
       data.specializations = body.specializations;
       data.whatsapp = body.whatsapp;
       data.sessionCost = body.sessionCost;
@@ -156,7 +148,6 @@ export class AuthService {
   }
 
   public async cancelAccount(userId: string): Promise<BaseMessageDTO> {
-    // TODO: criar job para deletar o usuário após 30 dias
     await this.dataSource.getRepository(User).delete({ id: userId });
 
     return {
@@ -178,10 +169,6 @@ export class AuthService {
     if (body.psychologist && body.public) {
       if (!body.crp) {
         throw new BadRequestException(this.dictionaryService.translate('auth.crp_is_required'));
-      }
-
-      if (!body.modality) {
-        throw new BadRequestException(this.dictionaryService.translate('auth.modality_is_required'));
       }
 
       if (body.sessionCost == null) {
@@ -210,11 +197,6 @@ export class AuthService {
         throw new BadRequestException({ key: 'auth.crp_is_required' });
       }
 
-      if (!user.modality && !body.modality) {
-        throw new BadRequestException({ key: 'auth.modality_is_required' });
-      }
-
-      // Require sessionCost in the request when becoming public
       if (body.sessionCost == null) {
         throw new BadRequestException({ key: 'auth.session_cost_is_required' });
       }

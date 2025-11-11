@@ -42,7 +42,7 @@ describe('CustomExceptionFilter', () => {
     const { host, getStatus, getBody } = createHostStub();
 
     const err = new TypeORMError('Could not find any entity of type "User"');
-    // Simula stack iniciando com EntityNotFoundError
+
     (err as any).stack = 'EntityNotFoundError: ...';
 
     filter.catch(err as any, host);
@@ -91,7 +91,6 @@ describe('CustomExceptionFilter', () => {
     const ex = new HttpException({ other: true }, HttpStatus.BAD_REQUEST);
     filter.catch(ex, host);
 
-    // HttpException.message default form includes status code and description
     assert.equal(getStatus(), 400);
     assert.ok(typeof getBody().message === 'string' && getBody().message.length > 0);
   });

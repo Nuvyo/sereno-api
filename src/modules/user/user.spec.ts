@@ -6,7 +6,6 @@ import { registerUserDummy } from '../../../test/dummies';
 import { UserModule } from '../user/user.module';
 import { FindPsychologistDTO } from '../user/user.dto';
 import { SignupDTO } from '../auth/auth.dto';
-import { Modality } from '../../core/entities/user.entity';
 
 describe('v1/users', () => {
   let app: INestApplication;
@@ -61,43 +60,10 @@ describe('v1/users', () => {
       const charles = psychologists.find(psychologist => psychologist.name.startsWith('Charles'));
 
       assert.equal(typeof tom?.id, 'string');
-      assert.equal(typeof tom?.modality, 'string');
       assert.equal(typeof tom?.sessionCost, 'number');
       assert.equal(typeof tom?.bio, 'string');
-
-      assert.equal(tom?.modality, Modality.Online);
       assert.equal(tom?.sessionCost, 70);
-
-      assert.equal(charles?.modality, Modality.Both);
       assert.equal(charles?.sessionCost, 90);
-    });
-
-    it('should receive filter "modality=online" and succeed', async () => {
-      const response = await normalUserRequester.get('/v1/users/psychologists', {
-        modality: Modality.Online,
-      });
-
-      assert.equal(response.status, HttpStatus.OK);
-
-      const psychologists = response.body[0] as FindPsychologistDTO[];
-
-      assert.equal(psychologists.some(psychologist => psychologist.name.startsWith('Tom')), true);
-      assert.equal(psychologists.some(psychologist => psychologist.name.startsWith('Charles')), true); // Both includes online
-      assert.equal(psychologists.some(psychologist => psychologist.name.startsWith('Oliver')), true);
-    });
-
-    it('should receive filter "modality=in_person" and succeed', async () => {
-      const response = await normalUserRequester.get('/v1/users/psychologists', {
-        modality: Modality.InPerson,
-      });
-
-      assert.equal(response.status, HttpStatus.OK);
-
-      const psychologists = response.body[0] as FindPsychologistDTO[];
-
-      assert.equal(psychologists.some(psychologist => psychologist.name.startsWith('Tom')), false);
-      assert.equal(psychologists.some(psychologist => psychologist.name.startsWith('Charles')), true); // Both includes in_person
-      assert.equal(psychologists.some(psychologist => psychologist.name.startsWith('Alice')), true);
     });
 
     it('should receive filter "like=Tom" and succeed', async () => {
@@ -164,7 +130,6 @@ describe('v1/users', () => {
 
       assert.equal(psychologist.name.startsWith('Tom'), true);
       assert.equal(psychologist.id, psychologistRequesterOne.userId);
-      assert.equal(psychologist.modality, Modality.Online);
       assert.equal(psychologist.sessionCost, 70);
       assert.equal(typeof psychologist.bio, 'string');
       assert.equal(psychologist.bio, 'My name is Tom');
@@ -172,9 +137,9 @@ describe('v1/users', () => {
 
     it('should receive psychologist id and fail', async () => {
       const response = await normalUserRequester.get('/v1/users/psychologists/b74186fb-c440-4f4c-89a9-8d6fda98f9bc');
-  assert.equal(response.status, HttpStatus.NOT_FOUND);
-  // Aceita texto traduzido em inglês ou português
-  assert.equal(['User not found', 'Usuário não encontrado'].includes(response.body.message), true);
+
+      assert.equal(response.status, HttpStatus.NOT_FOUND);
+      assert.equal(['User not found', 'Usuário não encontrado'].includes(response.body.message), true);
     });
 
     it('should fail to get non-psychologist user', async () => {
@@ -194,7 +159,6 @@ async function createPsychologists(requesterOne: Requester, requesterTwo: Reques
       psychologist: true,
       public: true,
       crp: '987654321',
-      modality: Modality.Online,
       sessionCost: 70,
       bio: 'My name is Tom',
     } as SignupDTO;
@@ -209,7 +173,6 @@ async function createPsychologists(requesterOne: Requester, requesterTwo: Reques
       psychologist: true,
       public: true,
       crp: '555555555',
-      modality: Modality.Both,
       sessionCost: 90,
       bio: 'My name is Charles',
     } as SignupDTO;
@@ -224,7 +187,6 @@ async function createPsychologists(requesterOne: Requester, requesterTwo: Reques
       psychologist: true,
       public: true,
       crp: '111111111',
-      modality: Modality.Both,
       sessionCost: 80,
       bio: 'My name is Alice',
     } as SignupDTO;
@@ -239,7 +201,6 @@ async function createPsychologists(requesterOne: Requester, requesterTwo: Reques
       psychologist: true,
       public: true,
       crp: '222222222',
-      modality: Modality.Both,
       sessionCost: 60,
       bio: 'My name is Emma',
     } as SignupDTO;
@@ -254,7 +215,6 @@ async function createPsychologists(requesterOne: Requester, requesterTwo: Reques
       psychologist: true,
       public: true,
       crp: '333333333',
-      modality: Modality.Online,
       sessionCost: 50,
       bio: 'My name is Oliver',
     } as SignupDTO;

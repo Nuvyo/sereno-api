@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { DataSource } from 'typeorm';
-import { Modality, User } from '../../core/entities/user.entity';
+import { User } from '../../core/entities/user.entity';
 import { QueryData } from '../../core/pipes/query.pipe';
 import { FindPsychologistDTO } from '../user/user.dto';
 
@@ -17,12 +17,7 @@ export class UserService {
       .offset(query.skip);
 
     if (query.where) {
-      if ('modality' in query.where) {
-        queryBuilder.andWhere('user.modality = :modality OR user.modality = :both', {
-          modality: query.where.modality,
-          both: Modality.Both,
-        });
-      }
+      // build filters
     }
 
     if (query.like) {
@@ -38,7 +33,8 @@ export class UserService {
     const user = await this.dataSource.getRepository(User).createQueryBuilder('user')
       .where('user.id = :id', { id })
       .andWhere('user.psychologist = :psychologist', { psychologist: true })
-      .getOneOrFail();    const userDTO = Object.assign(new FindPsychologistDTO(), user);
+      .getOneOrFail();
+    const userDTO = Object.assign(new FindPsychologistDTO(), user);
 
     return userDTO;
   }

@@ -1,7 +1,7 @@
 import { IsArray, IsBoolean, IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString, IsUUID, Max, Min, MinLength } from 'class-validator';
 import { IsValidPrice } from '../../core/decorators/is-valid-price.decorator';
 import 'reflect-metadata';
-import { Modality, Specialization } from '../../core/entities/user.entity';
+import { Specialization } from '../../core/entities/user.entity';
 
 export class AddressDTO {
 
@@ -52,10 +52,6 @@ export class UpdateMeDTO {
   @IsOptional()
   @IsString()
   crp: string;
-
-  @IsOptional()
-  @IsEnum(Modality)
-  modality: Modality;
 
   @IsOptional()
   @IsArray()
@@ -143,7 +139,6 @@ export class MeResponseDTO {
   email: string;
   photo?: string;
   crp?: string;
-  modality?: Modality;
   sessionCost?: number;
   bio?: string;
   public?: boolean;

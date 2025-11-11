@@ -5,7 +5,6 @@ import { BcryptService } from './bcrypt.service';
 const originalEnv = { ...process.env };
 
 function getCostFactorFromHash(hash: string): number {
-  // Bcrypt hash format: $2b$10$...
   const parts = hash.split('$');
   return parseInt(parts[2], 10);
 }
@@ -26,9 +25,7 @@ describe('BcryptService', () => {
     const hash = await svc.hash('value');
 
     assert.match(hash, /^\$2[aby]?\$\d{2}\$/);
-  // Bcrypt enforces a minimum cost factor of 4
-  assert.equal(getCostFactorFromHash(hash), 4);
-    // sanity check compare
+    assert.equal(getCostFactorFromHash(hash), 4);
     assert.equal(await svc.compare('value', hash), true);
     assert.equal(await svc.compare('wrong', hash), false);
   });
@@ -47,7 +44,6 @@ describe('BcryptService', () => {
     const svc = new BcryptService();
     const hash = await svc.hash('value');
 
-    // if pepper not applied, compare would fail
     const ok = await svc.compare('value', hash);
     assert.equal(ok, true);
   });
