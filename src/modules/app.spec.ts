@@ -77,7 +77,7 @@ describe('AppController (Unit)', () => {
     mockDataSource = {
       query: async (sql: string): Promise<any> => {
         if (sql.includes('version()')) {
-          return [{ version: 'PostgreSQL 14.0 on test' }];
+          return [{ version: 'PostgreSQL 14.0' }];
         }
         if (sql.includes('max_connections')) {
           return [{ max_connections: '100' }];
@@ -111,7 +111,7 @@ describe('AppController (Unit)', () => {
       assert.ok(result.updated_at);
       assert.ok(result.dependencies);
       assert.ok(result.dependencies.database);
-      assert.equal(result.dependencies.database.version, 'PostgreSQL 14.0 on test');
+      assert.equal(result.dependencies.database.version, 'PostgreSQL 14.0');
       assert.equal(result.dependencies.database.max_connections, 100);
       assert.equal(result.dependencies.database.opened_connections, 5);
     });
@@ -136,7 +136,7 @@ describe('AppService (Unit)', () => {
     mockDataSource = {
       query: async (sql: string): Promise<any> => {
         if (sql.includes('version()')) {
-          return [{ version: 'PostgreSQL 16.0 on unit test' }];
+          return [{ version: 'PostgreSQL 16.0' }];
         }
         if (sql.includes('max_connections')) {
           return [{ max_connections: '200' }];
@@ -167,7 +167,7 @@ describe('AppService (Unit)', () => {
 
       assert.ok(result);
       assert.equal(typeof result.updated_at, 'string');
-      assert.equal(result.dependencies.database.version, 'PostgreSQL 16.0 on unit test');
+      assert.equal(result.dependencies.database.version, 'PostgreSQL 16.0');
       assert.equal(result.dependencies.database.max_connections, 200);
       assert.equal(result.dependencies.database.opened_connections, 10);
 

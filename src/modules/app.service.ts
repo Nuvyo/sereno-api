@@ -13,11 +13,14 @@ export class AppService {
     const dbVersion = await this.dataSource.query('SELECT version()');
     const dbMaxConnections = await this.dataSource.query('SHOW max_connections');
     const dbOpenedConnections = await this.dataSource.query('SELECT count(*) FROM pg_stat_activity');
+    const fullVersion: string = dbVersion[0].version;
+    const shortVersionMatch = /PostgreSQL\s+(\d+(?:\.\d+)?)/i.exec(fullVersion);
+    const shortVersion = shortVersionMatch ? shortVersionMatch[0] : fullVersion;
     const data: ServerStatusDTO = {
       updated_at: new Date().toISOString(),
       dependencies: {
         database: {
-          version: dbVersion[0].version,
+          version: shortVersion,
           max_connections: parseInt(dbMaxConnections[0].max_connections, 10),
           opened_connections: parseInt(dbOpenedConnections[0].count, 10),
         },
