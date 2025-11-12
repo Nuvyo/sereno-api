@@ -46,13 +46,13 @@ jobs:
       run: sudo /etc/init.d/redis-server start
 
     - name: Install dependencies
-      run: npm install
-
-    - name: Run linter
-      run: npm run lint
+      run: npm ci
 
     - name: Run build
       run: npm run build
+
+    - name: Run linter
+      run: npm run lint
 
     - name: Run migration
       run: npm run migration:run
