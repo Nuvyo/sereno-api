@@ -1,15 +1,20 @@
-name: Main CI
+name: Dev CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main,dev ]
   pull_request:
-    branches: [ main ]
+    branches: [ main,dev ]
 
 jobs:
   build:
 
     runs-on: ubuntu-latest
+
+    env:
+      DB_DATABASE: local_db
+      DB_USER: local_user
+      DB_PASSWORD: local_password
 
     steps:
     - uses: actions/checkout@v4
