@@ -30,10 +30,14 @@ jobs:
     - name: Set up config
       run: cp .env.example .env
 
+    - name: Install POSTGRESQL
+      run: sudo apt-get install -y postgresql postgresql-contrib
+
     - name: Set up POSTGRESQL
       run: |
-        sudo /etc/init.d/mysql start
-        mysql -e 'CREATE DATABASE ${{ env.DB_DATABASE }};' -u${{ env.DB_USER }} -p${{ env.DB_PASSWORD }}
+        sudo /etc/init.d/postgresql start
+        sudo -u postgres psql -c "CREATE USER ${{ env.DB_USER }} WITH PASSWORD '${{ env.DB_PASSWORD }}';"
+        sudo -u postgres psql -c "CREATE DATABASE ${{ env.DB_DATABASE }} OWNER ${{ env.DB_USER }};"
 
     - name: Install redis
       run: sudo apt-get install -y redis-tools redis-server
