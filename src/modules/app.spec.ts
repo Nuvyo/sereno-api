@@ -38,8 +38,8 @@ describe('app', () => {
       assert.ok(body.dependencies);
       assert.ok(body.dependencies.database);
       assert.ok(body.dependencies.database.version);
-      assert.ok(typeof body.dependencies.database.max_connections === 'string');
-      assert.ok(typeof body.dependencies.database.opened_connections === 'number');
+      assert.equal(typeof body.dependencies.database.max_connections, 'string');
+      assert.equal(typeof body.dependencies.database.opened_connections, 'number');
       
       const updatedAt = new Date(body.updated_at);
   
