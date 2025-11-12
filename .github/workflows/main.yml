@@ -30,8 +30,16 @@ jobs:
     - name: Set up config
       run: cp .env.example .env
 
-    - name: Set up MySQL
-      run: npm run services:up
+    - name: Set up POSTGRESQL
+      run: |
+        sudo /etc/init.d/mysql start
+        mysql -e 'CREATE DATABASE ${{ env.DB_DATABASE }};' -u${{ env.DB_USER }} -p${{ env.DB_PASSWORD }}
+
+    - name: Install redis
+      run: sudo apt-get install -y redis-tools redis-server
+
+    - name: Set up Redis
+      run: sudo /etc/init.d/redis-server start
 
     - name: Install dependencies
       run: npm install
