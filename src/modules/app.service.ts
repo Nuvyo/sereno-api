@@ -12,7 +12,12 @@ export class AppService {
   public async getStatus(): Promise<ServerStatusDTO> {
     const dbVersion = await this.dataSource.query('SELECT version()');
     const dbMaxConnections = await this.dataSource.query('SHOW max_connections');
-    const dbOpenedConnections = await this.dataSource.query('SELECT count(*) FROM pg_stat_activity');
+    // Conta somente conexões desta aplicação (filtra por application_name configurado em extra.application_name)
+    const applicationName = process.env.PGAPPNAME || 'sereno-api';
+    const dbOpenedConnections = await this.dataSource.query(
+      'SELECT count(*) FROM pg_stat_activity WHERE application_name = $1',
+      [applicationName],
+    );
     const fullVersion: string = dbVersion[0].version;
     const shortVersionMatch = /PostgreSQL\s+(\d+(?:\.\d+)?)/i.exec(fullVersion);
     const shortVersion = shortVersionMatch ? shortVersionMatch[0] : fullVersion;

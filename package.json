@@ -18,7 +18,9 @@
     "test": "cross-env NODE_ENV=test node -r ts-node/register -r tsconfig-paths/register --test ",
     "tests": "cross-env NODE_ENV=test node -r ts-node/register -r tsconfig-paths/register --test ./src/**/*.spec.ts",
     "test:cov": "c8 npm run test",
-    "tests:cov": "c8 npm run tests"
+    "tests:cov": "c8 npm run tests",
+    "migration:run": "npx typeorm-ts-node-commonjs migration:run -d src/core/datasources/postgres.datasource.ts",
+    "migration:generate": "npx typeorm-ts-node-commonjs migration:generate ./src/core/migration/Migration -d src/core/datasources/postgres.datasource.ts"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",

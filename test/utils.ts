@@ -1,5 +1,5 @@
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { PostgresDataSource } from '../src/core/datasources/postgres.datasource';
+import { PostgresConfig } from '../src/core/datasources/postgres.datasource';
 import { AuthModule } from '../src/modules/auth/auth.module';
 import { Test } from '@nestjs/testing';
 import { INestApplication, ModuleMetadata, ValidationPipe } from '@nestjs/common';
@@ -28,7 +28,7 @@ const BaseApp = {
       resolvers: [{ use: HeaderResolver, options: ['language'] }],
     }),
     JwtModule.register({ global: true, secret: process.env.JWT_SECRET }),
-    TypeOrmModule.forRoot(PostgresDataSource),
+    TypeOrmModule.forRoot(PostgresConfig),
     AuthModule
   ]
 };

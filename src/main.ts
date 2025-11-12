@@ -55,6 +55,19 @@ async function bootstrap() {
   app.useGlobalFilters(new CustomExceptionFilter(dictionary));
   app.useGlobalInterceptors(new ResponseInterceptor(dictionary));
 
+  // Garante fechamento correto de conexões ao receber sinais de shutdown (Docker/K8s etc.)
+  app.enableShutdownHooks();
+
+  // Opcional: log simples de desligamento
+  const closeApp = async (signal: string) => {
+    // eslint-disable-next-line no-console
+    console.log(`[shutdown] signal=${signal} encerrando aplicação...`);
+    await app.close();
+    process.exit(0);
+  };
+  
+  ['SIGINT', 'SIGTERM'].forEach(sig => process.on(sig, () => void closeApp(sig)));
+
   await app.listen(port);
 }
 
