@@ -12,7 +12,8 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      DB_DATABASE: local_db_test
+      DB_DATABASE: local_db
+      DB_DATABASE_TEST: local_db_test
       DB_USER: local_user
       DB_PASSWORD: local_password
 
@@ -38,6 +39,7 @@ jobs:
         sudo /etc/init.d/postgresql start
         sudo -u postgres psql -c "CREATE USER ${{ env.DB_USER }} WITH PASSWORD '${{ env.DB_PASSWORD }}';"
         sudo -u postgres psql -c "CREATE DATABASE ${{ env.DB_DATABASE }} OWNER ${{ env.DB_USER }};"
+        sudo -u postgres psql -c "CREATE DATABASE ${{ env.DB_DATABASE_TEST }} OWNER ${{ env.DB_USER }};"
 
     - name: Install redis
       run: sudo apt-get install -y redis-tools redis-server
