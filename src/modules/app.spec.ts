@@ -9,14 +9,13 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { DataSource } from 'typeorm';
 
 describe('app', () => {
-
   let app: INestApplication;
   let requester: Requester;
 
   before(async () => {
     app = await createApp({
       controllers: [AppController],
-      providers: [AppService]
+      providers: [AppService],
     });
     requester = new Requester(app);
   });
@@ -31,18 +30,18 @@ describe('app', () => {
 
       assert.equal(response.status, HttpStatus.OK);
       assert.ok(response.body);
-      
+
       const body = response.body as ServerStatusDTO;
-      
+
       assert.ok(body.updated_at);
       assert.ok(body.dependencies);
       assert.ok(body.dependencies.database);
       assert.ok(body.dependencies.database.version);
       assert.deepEqual(typeof body.dependencies.database.max_connections, 'number');
       assert.deepEqual(typeof body.dependencies.database.opened_connections, 'number');
-      
+
       const updatedAt = new Date(body.updated_at);
-  
+
       assert.ok(updatedAt instanceof Date && !isNaN(updatedAt.getTime()));
       assert.ok(body.dependencies.database.max_connections > 0);
       assert.ok(body.dependencies.database.opened_connections >= 0);
@@ -60,13 +59,18 @@ describe('app', () => {
       const body2 = response2.body as ServerStatusDTO;
 
       assert.equal(typeof body1.dependencies.database.version, typeof body2.dependencies.database.version);
-      assert.equal(typeof body1.dependencies.database.max_connections, typeof body2.dependencies.database.max_connections);
-      assert.equal(typeof body1.dependencies.database.opened_connections, typeof body2.dependencies.database.opened_connections);
+      assert.equal(
+        typeof body1.dependencies.database.max_connections,
+        typeof body2.dependencies.database.max_connections,
+      );
+      assert.equal(
+        typeof body1.dependencies.database.opened_connections,
+        typeof body2.dependencies.database.opened_connections,
+      );
       assert.equal(body1.dependencies.database.version, body2.dependencies.database.version);
       assert.equal(body1.dependencies.database.max_connections, body2.dependencies.database.max_connections);
     });
   });
-
 });
 
 describe('AppController (Unit)', () => {
@@ -86,7 +90,7 @@ describe('AppController (Unit)', () => {
           return [{ count: '5' }];
         }
         return [];
-      }
+      },
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -100,7 +104,7 @@ describe('AppController (Unit)', () => {
       ],
     }).compile();
 
-  controller = module.get<AppController>(AppController);
+    controller = module.get<AppController>(AppController);
   });
 
   describe('getStatus', () => {
@@ -119,8 +123,8 @@ describe('AppController (Unit)', () => {
     it('should return a new timestamp on each call', async () => {
       const result1 = await controller.getStatus();
 
-      await new Promise(resolve => setTimeout(resolve, 10));
-      
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
       const result2 = await controller.getStatus();
 
       assert.notEqual(result1.updated_at, result2.updated_at);
@@ -145,7 +149,7 @@ describe('AppService (Unit)', () => {
           return [{ count: '10' }];
         }
         return [];
-      }
+      },
     };
 
     const module: TestingModule = await Test.createTestingModule({

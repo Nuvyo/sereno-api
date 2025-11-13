@@ -18,14 +18,7 @@ async function bootstrap() {
   const i18n = app.get<I18nService>(I18nService);
   const dictionary = new DictionaryService(i18n);
   const corsOptions: cors.CorsOptions = {
-    allowedHeaders: [
-      'Origin',
-      'Content-Type',
-      'Accept',
-      'Authorization',
-      'language',
-      'timezone',
-    ],
+    allowedHeaders: ['Origin', 'Content-Type', 'Accept', 'Authorization', 'language', 'timezone'],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     origin: (origin, callback) => {
@@ -35,16 +28,14 @@ async function bootstrap() {
         return callback(null, true);
       }
 
-      const allowedOrigins = process.env.CORS_ALLOWED_ORIGINS
-        ? process.env.CORS_ALLOWED_ORIGINS.trim().split(',')
-        : [];
+      const allowedOrigins = process.env.CORS_ALLOWED_ORIGINS ? process.env.CORS_ALLOWED_ORIGINS.trim().split(',') : [];
 
       if (allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
 
       return callback(null, true);
-    }
+    },
   };
 
   app.use(cors(corsOptions));
@@ -65,8 +56,8 @@ async function bootstrap() {
     await app.close();
     process.exit(0);
   };
-  
-  ['SIGINT', 'SIGTERM'].forEach(sig => process.on(sig, () => void closeApp(sig)));
+
+  ['SIGINT', 'SIGTERM'].forEach((sig) => process.on(sig, () => void closeApp(sig)));
 
   await app.listen(port);
 }

@@ -1,4 +1,16 @@
-import { IsArray, IsBoolean, IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString, IsUUID, Max, Min, MinLength } from 'class-validator';
+import {
+  IsArray,
+  IsBoolean,
+  IsEnum,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+  IsUUID,
+  Max,
+  Min,
+  MinLength,
+} from 'class-validator';
 import { IsValidPrice } from '../../core/decorators/is-valid-price.decorator';
 import 'reflect-metadata';
 import { Specialization } from '../../core/entities/user.entity';
@@ -36,7 +48,7 @@ export class AddressDTO {
 }
 
 export class UpdateMeDTO {
-  
+
   @IsOptional()
   @IsString()
   name: string;
@@ -65,7 +77,7 @@ export class UpdateMeDTO {
   @IsOptional()
   @IsValidPrice({ message: 'sessionCost must be a valid price' })
   @IsNumber()
-  @Min(0.00)
+  @Min(0.0)
   @Max(99999.99)
   sessionCost: number;
 
@@ -98,7 +110,7 @@ export class SignupDTO extends UpdateMeDTO {
 }
 
 export class SigninDTO {
-  
+
   @IsNotEmpty()
   @IsString()
   email: string;
@@ -146,4 +158,3 @@ export class MeResponseDTO {
   whatsapp?: string;
 
 }
-

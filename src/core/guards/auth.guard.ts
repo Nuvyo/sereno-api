@@ -6,7 +6,7 @@ import { AccessToken } from '../entities/access-token.entity';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
-  
+
   constructor(
     private readonly jwtService: JwtService,
     private readonly dataSource: DataSource,
@@ -23,7 +23,9 @@ export class AuthGuard implements CanActivate {
       }
 
       const decoded = this.jwtService.verify<{ [key: string]: string }>(token);
-      const currentAccessToken = await this.dataSource.getRepository(AccessToken).findOneBy({ user: { id: decoded.userId } });
+      const currentAccessToken = await this.dataSource
+        .getRepository(AccessToken)
+        .findOneBy({ user: { id: decoded.userId } });
 
       if (!currentAccessToken || token !== currentAccessToken.token) {
         throw new UnauthorizedException('Invalid token');

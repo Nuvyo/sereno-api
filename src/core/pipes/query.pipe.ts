@@ -12,7 +12,13 @@ export class QueryData {
 
   public where: Record<string, string | number | boolean | Date | any[]>;
 
-  constructor(where: Record<string, any>, like: string, skip: number, take: number, order: Record<string, 'ASC' | 'DESC'>) {
+  constructor(
+    where: Record<string, any>,
+    like: string,
+    skip: number,
+    take: number,
+    order: Record<string, 'ASC' | 'DESC'>,
+  ) {
     this.where = where;
     this.like = like;
     this.skip = skip;
@@ -37,7 +43,7 @@ export class QueryPipe implements PipeTransform<QueryDataInput, QueryData> {
   constructor() {}
 
   public transform(value: QueryDataInput): QueryData {
-    Object.keys(value).forEach(key => {
+    Object.keys(value).forEach((key) => {
       (value as Record<string, any>)[key] = this.formatValue((value as Record<string, any>)[key]);
     });
 
@@ -52,7 +58,7 @@ export class QueryPipe implements PipeTransform<QueryDataInput, QueryData> {
   private getFilter(value: QueryDataInput): Record<string, any> {
     const where: Record<string, any> = {};
 
-    Object.keys(value).map(key => {
+    Object.keys(value).map((key) => {
       const queryInputObject = new QueryDataInput();
 
       if (!Object.keys(queryInputObject).includes(key)) {
@@ -90,16 +96,14 @@ export class QueryPipe implements PipeTransform<QueryDataInput, QueryData> {
     } else if (this.isJsonString(value)) {
       const parsedValue: any[] = JSON.parse(value);
 
-      return Array.isArray(parsedValue)
-        ? parsedValue.map(item => this.formatValue(item))
-        : parsedValue;
+      return Array.isArray(parsedValue) ? parsedValue.map((item) => this.formatValue(item)) : parsedValue;
     } else if (!isNaN(Date.parse(value))) {
       return new Date(value);
     }
-  
+
     return value;
   }
-  
+
   private isJsonString(value: string): boolean {
     try {
       JSON.parse(value);
@@ -116,7 +120,7 @@ export class QueryPipe implements PipeTransform<QueryDataInput, QueryData> {
     if (value) {
       const orderArray = value.split(',');
 
-      orderArray.forEach(orderItem => {
+      orderArray.forEach((orderItem) => {
         const isDesc = orderItem.startsWith('-');
         const isAsc = orderItem.startsWith('+') || !isDesc;
         const orderKey = orderItem.replace(/^[-+]/, '');

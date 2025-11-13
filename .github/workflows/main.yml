@@ -2,9 +2,9 @@ name: Dev CI
 
 on:
   push:
-    branches: [ main,dev ]
+    branches: [main, dev]
   pull_request:
-    branches: [ main,dev ]
+    branches: [main, dev]
 
 jobs:
   build:
@@ -18,46 +18,49 @@ jobs:
       DB_PASSWORD: local_password
 
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Use Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: 22
+      - uses: actions/checkout@v4
 
-    - name: Apt-get update
-      run: sudo apt-get update
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
 
-    - name: Set up config
-      run: cp .env.example .env
+      - name: Apt-get update
+        run: sudo apt-get update
 
-    - name: Install POSTGRESQL
-      run: sudo apt-get install -y postgresql postgresql-contrib
+      - name: Set up config
+        run: cp .env.example .env
 
-    - name: Set up POSTGRESQL
-      run: |
-        sudo /etc/init.d/postgresql start
-        sudo -u postgres psql -c "CREATE USER ${{ env.DB_USER }} WITH PASSWORD '${{ env.DB_PASSWORD }}';"
-        sudo -u postgres psql -c "CREATE DATABASE ${{ env.DB_DATABASE }} OWNER ${{ env.DB_USER }};"
-        sudo -u postgres psql -c "CREATE DATABASE ${{ env.DB_DATABASE_TEST }} OWNER ${{ env.DB_USER }};"
+      - name: Install POSTGRESQL
+        run: sudo apt-get install -y postgresql postgresql-contrib
 
-    - name: Install redis
-      run: sudo apt-get install -y redis-tools redis-server
+      - name: Set up POSTGRESQL
+        run: |
+          sudo /etc/init.d/postgresql start
+          sudo -u postgres psql -c "CREATE USER ${{ env.DB_USER }} WITH PASSWORD '${{ env.DB_PASSWORD }}';"
+          sudo -u postgres psql -c "CREATE DATABASE ${{ env.DB_DATABASE }} OWNER ${{ env.DB_USER }};"
+          sudo -u postgres psql -c "CREATE DATABASE ${{ env.DB_DATABASE_TEST }} OWNER ${{ env.DB_USER }};"
 
-    - name: Set up Redis
-      run: sudo /etc/init.d/redis-server start
+      - name: Install redis
+        run: sudo apt-get install -y redis-tools redis-server
 
-    - name: Install dependencies
-      run: npm ci
+      - name: Set up Redis
+        run: sudo /etc/init.d/redis-server start
 
-    - name: Run build
-      run: npm run build
+      - name: Install dependencies
+        run: npm ci
 
-    - name: Run linter
-      run: npm run lint
+      - name: Run build
+        run: npm run build
 
-    - name: Run migration
-      run: npm run migration:run
+      - name: Run prettier linter
+        run: npm run lint:prettier
 
-    - name: Run tests
-      run: npm run tests
+      - name: Run eslint linter
+        run: npm run lint
+
+      - name: Run migration
+        run: npm run migration:run
+
+      - name: Run tests
+        run: npm run tests

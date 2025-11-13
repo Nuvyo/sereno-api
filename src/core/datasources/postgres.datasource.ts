@@ -18,12 +18,7 @@ export const PostgresConfig: DataSourceOptions = {
   synchronize: process.env.TYPEORM_SYNCHRONIZE === 'true',
   logging: false,
   migrations: [__dirname + '/../migration/*.{ts,js}'],
-  entities: [
-    AccessToken,
-    ChatMessage,
-    RefreshToken,
-    User,
-  ],
+  entities: [AccessToken, ChatMessage, RefreshToken, User],
   extra: {
     max: Number(process.env.PGPOOLSIZE) || 10,
     idleTimeoutMillis: Number(process.env.PG_IDLE_TIMEOUT) || 30000,

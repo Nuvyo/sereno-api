@@ -44,7 +44,7 @@ describe('QueryPipe', () => {
 
     it('should return true for non-number input (string)', () => {
       // @ts-expect-error testing runtime behavior
-      assert.strictEqual(isValidPrice.validate("123.45"), true);
+      assert.strictEqual(isValidPrice.validate('123.45'), true);
     });
 
     it('should return false for non-number input (null)', () => {

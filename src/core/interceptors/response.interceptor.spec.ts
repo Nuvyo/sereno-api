@@ -6,19 +6,20 @@ import { ExecutionContext, CallHandler } from '@nestjs/common';
 
 function createContextStub(): ExecutionContext {
   return {
-    switchToHttp: () => ({} as any),
+    switchToHttp: () => ({}) as any,
   } as any as ExecutionContext;
 }
 
 describe('ResponseInterceptor', () => {
   const dictionary = {
-    isTranslationKey: (value?: string) => typeof value === 'string' && (value.startsWith('auth.') || value.startsWith('user.')),
+    isTranslationKey: (value?: string) =>
+      typeof value === 'string' && (value.startsWith('auth.') || value.startsWith('user.')),
     isTranslationObject: (value?: Record<string, any>) => !!value && typeof (value as any).key === 'string',
     translate: (key: string) => {
       if (key === 'auth.signup_successful') return 'Signup successful';
       if (key === 'user.not_found') return 'User not found';
       return key;
-    }
+    },
   } as any;
 
   it('translates string message keys', async () => {
