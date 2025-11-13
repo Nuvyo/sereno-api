@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      DB_DATABASE: local_db
+      DB_DATABASE: local_db_test
       DB_USER: local_user
       DB_PASSWORD: local_password
 
