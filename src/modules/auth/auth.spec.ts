@@ -13,7 +13,6 @@ import { createApp, Requester } from '../../../test/utils';
 import { Specialization } from '../../core/entities/user.entity';
 
 describe('v1/auth', () => {
-
   let app: INestApplication;
   let normalUserRequester1: Requester;
   let psycologistUserRequester1: Requester;
@@ -56,7 +55,7 @@ describe('v1/auth', () => {
       } as SignupDTO;
       const response = await normalUserRequester1.post('/v1/auth/signup', body);
 
-  assert.equal(response.status, HttpStatus.CREATED);
+      assert.equal(response.status, HttpStatus.CREATED);
       assert.equal(typeof response.body.message, 'string');
     });
 
@@ -71,7 +70,7 @@ describe('v1/auth', () => {
         public: true,
         crp: '123456-12',
         specializations: [Specialization.Ansiety, Specialization.Depression],
-        sessionCost: 200.00,
+        sessionCost: 200.0,
         bio: 'Experienced psychologist with a focus on cognitive behavioral therapy.',
       } as SignupDTO;
       const response = await psycologistUserRequester2.post('/v1/auth/signup', body);
@@ -79,7 +78,7 @@ describe('v1/auth', () => {
       if (response.status !== HttpStatus.CREATED) {
         console.log('DEBUG signup public failure:', response.body);
       }
-  
+
       assert.equal(response.status, HttpStatus.CREATED);
       assert.equal(typeof response.body.message, 'string');
     });
@@ -94,12 +93,11 @@ describe('v1/auth', () => {
         psychologist: true,
         public: true,
         crp: '12345-12',
-        sessionCost: 150.00,
+        sessionCost: 150.0,
         bio: 'Experienced psychologist specialized in cognitive behavioral therapy.',
       } as SignupDTO;
       const response = await psycologistUserRequester3.post('/v1/auth/signup', body);
       if (response.status !== HttpStatus.CREATED) {
-         
         console.log('DEBUG signup private failure:', response.body);
       }
       assert.equal(response.status, HttpStatus.CREATED);
@@ -204,7 +202,7 @@ describe('v1/auth', () => {
       Object.keys(response.body).forEach((key) => {
         assert.notEqual(key, 'password');
         assert.notEqual(key, 'passwordConfirmation');
-        assert.equal(key in (new SigninResponseDTO()), true);
+        assert.equal(key in new SigninResponseDTO(), true);
       });
 
       normalUserRequester1.setTokens(response.body.accessToken, response.body.refreshToken);
@@ -225,7 +223,7 @@ describe('v1/auth', () => {
       Object.keys(response.body).forEach((key) => {
         assert.notEqual(key, 'password');
         assert.notEqual(key, 'passwordConfirmation');
-        assert.equal(key in (new SigninResponseDTO()), true);
+        assert.equal(key in new SigninResponseDTO(), true);
       });
 
       psycologistUserRequester1.setTokens(response.body.accessToken, response.body.refreshToken);
@@ -235,16 +233,16 @@ describe('v1/auth', () => {
         password: '123456789',
       };
       const response2 = await psycologistUserRequester2.post('/v1/auth/signin', body2);
-      
+
       assert.equal(response2.status, HttpStatus.CREATED);
       assert.equal(typeof response2.body.accessToken, 'string');
       assert.equal(typeof response2.body.refreshToken, 'string');
       assert.equal(typeof response2.body.userId, 'string');
-      
+
       Object.keys(response2.body).forEach((key) => {
         assert.notEqual(key, 'password');
         assert.notEqual(key, 'passwordConfirmation');
-        assert.equal(key in (new SigninResponseDTO()), true);
+        assert.equal(key in new SigninResponseDTO(), true);
       });
 
       psycologistUserRequester2.setTokens(response2.body.accessToken, response2.body.refreshToken);
@@ -259,11 +257,11 @@ describe('v1/auth', () => {
       assert.equal(typeof response3.body.accessToken, 'string');
       assert.equal(typeof response3.body.refreshToken, 'string');
       assert.equal(typeof response3.body.userId, 'string');
-      
+
       Object.keys(response3.body).forEach((key) => {
         assert.notEqual(key, 'password');
         assert.notEqual(key, 'passwordConfirmation');
-        assert.equal(key in (new SigninResponseDTO()), true);
+        assert.equal(key in new SigninResponseDTO(), true);
       });
 
       psycologistUserRequester3.setTokens(response3.body.accessToken, response3.body.refreshToken);
@@ -280,7 +278,7 @@ describe('v1/auth', () => {
       assert.equal(typeof response.body.refreshToken, 'string');
 
       Object.keys(response.body).forEach((key) => {
-        assert.equal(key in (new RefreshTokensResponseDTO()), true);
+        assert.equal(key in new RefreshTokensResponseDTO(), true);
       });
 
       normalUserRequester1.setTokens(response.body.accessToken, response.body.refreshToken);
@@ -289,7 +287,7 @@ describe('v1/auth', () => {
     it('should not find the refresh token and fail', async () => {
       const body: RefreshTokenDTO = { refreshToken: '0de903fb-cd85-4fc8-b648-f625f994a515' };
       const response = await normalUserRequester1.post('/v1/auth/refresh', body);
-      
+
       assert.equal(response.status, HttpStatus.UNAUTHORIZED);
       assert.match(response.body.message, /Invalid refresh token/);
     });
@@ -310,7 +308,7 @@ describe('v1/auth', () => {
       Object.keys(response.body).forEach((key) => {
         assert.notEqual(key, 'password');
         assert.notEqual(key, 'passwordConfirmation');
-        assert.equal(key in (new MeResponseDTO()), true);
+        assert.equal(key in new MeResponseDTO(), true);
       });
     });
 
@@ -328,7 +326,7 @@ describe('v1/auth', () => {
       Object.keys(response.body).forEach((key) => {
         assert.notEqual(key, 'password');
         assert.notEqual(key, 'passwordConfirmation');
-        assert.equal(key in (new MeResponseDTO()), true);
+        assert.equal(key in new MeResponseDTO(), true);
       });
     });
   });
@@ -347,7 +345,6 @@ describe('v1/auth', () => {
       assert.match(response.body.message, /CRP is required/);
     });
 
-
     it('should fail if psychologist tries to become public without sessionCost', async () => {
       const updateBody = {
         public: true,
@@ -359,7 +356,7 @@ describe('v1/auth', () => {
       assert.equal(response.status, HttpStatus.BAD_REQUEST);
       assert.match(response.body.message, /Session cost is required/);
     });
-    
+
     it('should update the user name and photo successfully', async () => {
       const updateBody = { name: 'Updated Name', photo: 'https://example.com/updated-photo.jpg' };
       const response = await normalUserRequester1.put('/v1/auth/me', updateBody);

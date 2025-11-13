@@ -83,7 +83,7 @@ describe('QueryPipe', () => {
     it('should handle non-array JSON objects correctly', () => {
       const input: QueryDataInput = { customField: '{"key":"value"}' } as any;
       const result = queryPipe.transform(input);
-    
+
       assert.deepEqual(result.where, { customField: { key: 'value' } });
     });
   });

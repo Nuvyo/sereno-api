@@ -4,7 +4,7 @@ import { User } from '../entities/user.entity';
 
 @Entity({ name: 'access_tokens' })
 export class AccessToken extends CustomBaseEntity {
-  
+
   @Column({ type: 'varchar', length: 255, nullable: false })
   token: string;
 

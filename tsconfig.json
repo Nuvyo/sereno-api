@@ -1,9 +1,6 @@
 {
   "compilerOptions": {
-    "typeRoots": [
-      "./types/**/*.ts",
-      "./node_modules/@types"
-    ],
+    "typeRoots": ["./types/**/*.ts", "./node_modules/@types"],
     "esModuleInterop": true,
     "module": "commonjs",
     "declaration": true,
@@ -21,14 +18,10 @@
     "forceConsistentCasingInFileNames": true,
     "noImplicitAny": true,
     "strictBindCallApply": true,
-    "noFallthroughCasesInSwitch": true,
+    "noFallthroughCasesInSwitch": true
   },
   "ts-node": {
     "files": true
   },
-  "include": [
-    "src/**/*.ts",
-    "test/**/*.ts",
-    "./**/*.d.ts"
-  ]
+  "include": ["src/**/*.ts", "test/**/*.ts", "./**/*.d.ts"]
 }

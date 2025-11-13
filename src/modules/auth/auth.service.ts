@@ -8,7 +8,7 @@ import {
   RefreshTokenDTO,
   SigninResponseDTO,
   MeResponseDTO,
-  UpdateMeDTO
+  UpdateMeDTO,
 } from '../auth/auth.dto';
 import { BcryptService } from '../../core/services/bcrypt.service';
 import { JwtService } from '@nestjs/jwt';
@@ -124,7 +124,8 @@ export class AuthService {
   }
 
   public async refresh(body: RefreshTokenDTO, userId: string): Promise<RefreshTokensResponseDTO> {
-    const token = await this.dataSource.getRepository(RefreshToken)
+    const token = await this.dataSource
+      .getRepository(RefreshToken)
       .createQueryBuilder('token')
       .where('token.token = :token', { token: body.refreshToken })
       .andWhere('token.userId = :userId', { userId })

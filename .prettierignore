@@ -1,0 +1,21 @@
+# Build and dependencies
+node_modules
+.dist
+/dist
+coverage
+.tmp
+/tmp
+src/**/*.ts
+test/**/*.ts
+types/**/*.d.ts
+
+# Logs and caches
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+.cache
+
+# Misc
+.DS_Store

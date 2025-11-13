@@ -5,7 +5,9 @@ import { DictionaryService } from './dictionary.service';
 const mockI18nServiceFactory = () => {
   let behavior: 'ok' | 'throw' | 'echo' = 'ok';
   return {
-    setBehavior(value: 'ok' | 'throw' | 'echo') { behavior = value; },
+    setBehavior(value: 'ok' | 'throw' | 'echo') {
+      behavior = value;
+    },
     translate(key: string) {
       if (behavior === 'throw') {
         throw new Error('i18n error');
@@ -17,7 +19,7 @@ const mockI18nServiceFactory = () => {
         return 'Hello, {{name}}';
       }
       return '[i18n] ' + key;
-    }
+    },
   };
 };
 
@@ -26,8 +28,8 @@ describe('DictionaryService', () => {
   let service: DictionaryService;
 
   beforeEach(() => {
-  i18n = mockI18nServiceFactory();
-  service = new DictionaryService(i18n as any);
+    i18n = mockI18nServiceFactory();
+    service = new DictionaryService(i18n as any);
   });
 
   it('returns cached translation for known key', () => {
@@ -36,19 +38,19 @@ describe('DictionaryService', () => {
   });
 
   it('falls back to i18nService for unknown key and applies args replacement', () => {
-  i18n.setBehavior('ok');
+    i18n.setBehavior('ok');
     const text = service.translate('auth.dynamic', { name: 'Tom' }, 'en');
     assert.equal(text, 'Hello, Tom');
   });
 
   it('falls back to key when i18nService throws', () => {
-  i18n.setBehavior('throw');
+    i18n.setBehavior('throw');
     const text = service.translate('auth.unknown_key', undefined, 'en');
     assert.equal(text, 'auth.unknown_key');
   });
 
   it('falls back to key when i18n returns original key', () => {
-  i18n.setBehavior('echo');
+    i18n.setBehavior('echo');
     const text = service.translate('auth.any_key', undefined, 'en');
     assert.equal(text, 'auth.any_key');
   });

@@ -16,7 +16,7 @@ export class CustomExceptionFilter implements ExceptionFilter {
 
     if (exception instanceof TypeORMError) {
       const isNotFound = exception.stack?.startsWith('EntityNotFoundError');
-      
+
       message = exception.message;
 
       if (isNotFound) {

@@ -1,6 +1,5 @@
 import { Specialization } from '../../core/entities/user.entity';
 
-
 export class FindPsychologistDTO {
 
   id: string;

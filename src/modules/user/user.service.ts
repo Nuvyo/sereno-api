@@ -6,11 +6,13 @@ import { FindPsychologistDTO } from '../user/user.dto';
 
 @Injectable()
 export class UserService {
-  
+
   constructor(private readonly dataSource: DataSource) {}
 
   public async listPsychologists(query: QueryData): Promise<[FindPsychologistDTO[], number]> {
-    const queryBuilder = this.dataSource.getRepository(User).createQueryBuilder('user')
+    const queryBuilder = this.dataSource
+      .getRepository(User)
+      .createQueryBuilder('user')
       .where('user.psychologist = :psychologist', { psychologist: true })
       // .andWhere('user.validCRP = :validCRP', { validCRP: true })
       .limit(query.take)
@@ -30,7 +32,9 @@ export class UserService {
   }
 
   public async getPsychologistById(id: string): Promise<FindPsychologistDTO> {
-    const user = await this.dataSource.getRepository(User).createQueryBuilder('user')
+    const user = await this.dataSource
+      .getRepository(User)
+      .createQueryBuilder('user')
       .where('user.id = :id', { id })
       .andWhere('user.psychologist = :psychologist', { psychologist: true })
       .getOneOrFail();

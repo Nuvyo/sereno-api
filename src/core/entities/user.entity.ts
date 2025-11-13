@@ -12,7 +12,7 @@ export enum Specialization {
   Trauma = 'trauma',
   ChildPsychology = 'child_psychology',
   Addiction = 'addiction',
-  StressManagement = 'stress_management'
+  StressManagement = 'stress_management',
 }
 
 @Entity({ name: 'users' })
@@ -61,7 +61,14 @@ export class User extends CustomBaseEntity {
   @Column({ type: 'varchar', length: 20, nullable: true })
   whatsapp: string;
 
-  @Column({ type: 'decimal', precision: 7, scale: 2, default: null, nullable: true, transformer: new ColumnDecimalTransformer() })
+  @Column({
+    type: 'decimal',
+    precision: 7,
+    scale: 2,
+    default: null,
+    nullable: true,
+    transformer: new ColumnDecimalTransformer(),
+  })
   sessionCost: number;
 
   @Column({ type: 'text', nullable: true })

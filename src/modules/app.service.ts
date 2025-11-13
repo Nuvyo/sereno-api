@@ -5,9 +5,7 @@ import { ServerStatusDTO } from './app.dto';
 @Injectable()
 export class AppService {
 
-  constructor(
-    private readonly dataSource: DataSource,
-  ) {}
+  constructor(private readonly dataSource: DataSource) {}
 
   public async getStatus(): Promise<ServerStatusDTO> {
     const dbVersion = await this.dataSource.query('SELECT version()');

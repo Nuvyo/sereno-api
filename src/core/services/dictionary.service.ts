@@ -15,7 +15,7 @@ export class DictionaryService {
       const userEn = require('../../i18n/en/user.json');
       const userPt = require('../../i18n/pt-br/user.json');
 
-      this.cache = { auth: { 'en': authEn, 'pt-br': authPt }, user: { 'en': userEn, 'pt-br': userPt } };
+      this.cache = { auth: { en: authEn, 'pt-br': authPt }, user: { en: userEn, 'pt-br': userPt } };
     }
   }
 

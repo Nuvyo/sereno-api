@@ -16,7 +16,7 @@ function createHostStub() {
     json(payload: any) {
       jsonBody = payload;
       return this as any;
-    }
+    },
   } as any;
 
   const host: Partial<ArgumentsHost> = {
@@ -28,13 +28,14 @@ function createHostStub() {
 
 describe('CustomExceptionFilter', () => {
   const dictionary = {
-    isTranslationKey: (value?: string) => typeof value === 'string' && (value.startsWith('auth.') || value.startsWith('user.')),
+    isTranslationKey: (value?: string) =>
+      typeof value === 'string' && (value.startsWith('auth.') || value.startsWith('user.')),
     isTranslationObject: (value?: Record<string, any>) => !!value && typeof (value as any).key === 'string',
     translate: (key: string) => {
       if (key === 'user.not_found') return 'User not found';
       if (key === 'auth.invalid_credentials') return 'Invalid credentials';
       return key;
-    }
+    },
   } as any;
 
   it('maps TypeORM EntityNotFoundError for User to translated user.not_found with 404', () => {

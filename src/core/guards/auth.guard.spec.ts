@@ -25,46 +25,44 @@ describe('[Decorator] Auth Guard', () => {
 
   describe('Guard', () => {
     it('should fail to access a protected route without authorization header', async () => {
-      const response = await request(app.getHttpServer())
-        .get('/v1/auth/me')
-        .set('Content-Type', 'application/json');
-  
+      const response = await request(app.getHttpServer()).get('/v1/auth/me').set('Content-Type', 'application/json');
+
       assert.equal(response.status, HttpStatus.UNAUTHORIZED);
     });
-  
+
     it('should fail to access a protected route without bearer token', async () => {
       const response = await request(app.getHttpServer())
         .get('/v1/auth/me')
         .set('Authorization', 'ddgdgsaadfd')
         .set('Content-Type', 'application/json');
-  
+
       assert.equal(response.status, HttpStatus.UNAUTHORIZED);
     });
-    
+
     it('should fail to access a protected route without authentication', async () => {
       const response = await normalUserRequester.get('/v1/auth/me');
-  
+
       assert.equal(response.status, HttpStatus.UNAUTHORIZED);
     });
-  
+
     it('should fail to access a protected route with an invalid token', async () => {
       normalUserRequester.setTokens('invalid-token', 'invalid-token');
-  
+
       const response = await normalUserRequester.get('/v1/auth/me');
-  
+
       assert.equal(response.status, HttpStatus.UNAUTHORIZED);
     });
-  
+
     it('should succeed to access a protected route with a valid token', async () => {
       const signInBody: SigninDTO = {
         email: 'john.auth.guard@email.com',
         password: '123456456',
       };
-      
+
       await normalUserRequester.signin(signInBody);
-  
+
       const response = await normalUserRequester.get('/v1/auth/me');
-  
+
       assert.equal(response.status, HttpStatus.OK);
     });
   });

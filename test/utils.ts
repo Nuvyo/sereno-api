@@ -29,25 +29,16 @@ const BaseApp = {
     }),
     JwtModule.register({ global: true, secret: process.env.JWT_SECRET }),
     TypeOrmModule.forRoot(PostgresConfig),
-    AuthModule
-  ]
+    AuthModule,
+  ],
 };
 
 export async function createApp(options?: ModuleMetadata) {
   const moduleRef = await Test.createTestingModule({
-    imports: [
-      ...BaseApp.imports,
-      ...(options?.imports || []),
-    ],
-    controllers: [
-      ...(options?.controllers || []),
-    ],
-    providers: [
-      ...(options?.providers || []),
-    ],
-    exports: [
-      ...(options?.exports || []),
-    ],
+    imports: [...BaseApp.imports, ...(options?.imports || [])],
+    controllers: [...(options?.controllers || [])],
+    providers: [...(options?.providers || [])],
+    exports: [...(options?.exports || [])],
   }).compile();
   const app = moduleRef.createNestApplication();
   const i18n = app.get<I18nService>(I18nService);
@@ -144,7 +135,7 @@ export class Requester {
     this.refreshToken = refreshToken;
   }
 
-  public getTokens(): { accessToken: string | null, refreshToken: string | null } {
+  public getTokens(): { accessToken: string | null; refreshToken: string | null } {
     return {
       accessToken: this.accessToken,
       refreshToken: this.refreshToken,
