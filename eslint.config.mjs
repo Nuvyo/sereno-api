@@ -4,7 +4,6 @@ import unusedImports from 'eslint-plugin-unused-imports';
 import stylistic from '@stylistic/eslint-plugin';
 
 export default tseslint.config(
-  // Global ignores (aplicado antes de qualquer outra configuração)
   { ignores: ['dist/**'] },
   eslint.configs.recommended,
   ...tseslint.configs.recommended,

@@ -221,7 +221,7 @@ export class AuthService {
     const refreshTokenData = new RefreshToken();
     const expiresAt = new Date();
 
-    expiresAt.setDate(expiresAt.getDate() + 3); // 3 days
+    expiresAt.setDate(expiresAt.getDate() + 3);
 
     refreshTokenData.token = token;
     refreshTokenData.user = new User();
