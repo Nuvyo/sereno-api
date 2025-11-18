@@ -22,8 +22,7 @@ export const PostgresConfig: DataSourceOptions = {
   extra: {
     max: Number(process.env.PGPOOLSIZE) || 10,
     idleTimeoutMillis: Number(process.env.PG_IDLE_TIMEOUT) || 30000,
-    connectionTimeoutMillis: Number(process.env.PG_CONN_TIMEOUT) || 5000,
-    application_name: process.env.PGAPPNAME,
+    connectionTimeoutMillis: Number(process.env.PG_CONN_TIMEOUT) || 5000
   },
 };
 
