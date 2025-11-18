@@ -2,12 +2,6 @@
   "version": 2,
   "installCommand": "npm ci",
   "buildCommand": "npm run build && npm run migration:run",
-  "builds": [
-    {
-      "src": "src/main.ts",
-      "use": "@vercel/node"
-    }
-  ],
   "routes": [
     {
       "src": "/(.*)",
