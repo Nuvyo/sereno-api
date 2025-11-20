@@ -15,8 +15,6 @@ describe('[Decorator] Auth Guard', () => {
 
     normalUserRequester = new Requester(app);
     await normalUserRequester.signupAndSignin({ email: 'john.auth.guard@email.com' });
-
-    normalUserRequester = new Requester(app);
   });
 
   after(async () => {
