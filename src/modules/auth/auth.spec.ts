@@ -9,8 +9,9 @@ import {
   SignupDTO,
 } from '../auth/auth.dto';
 import { HttpStatus, INestApplication } from '@nestjs/common';
-import { createApp, Requester } from '../../../test/utils';
+import { createApp } from '../../../test/setup';
 import { Specialization } from '../../core/entities/user.entity';
+import Requester from '../../../test/requester';
 
 describe('v1/auth', () => {
   let app: INestApplication;
@@ -331,7 +332,7 @@ describe('v1/auth', () => {
     });
   });
 
-  describe('[PUT] /me', () => {
+  describe('[PATCH] /me', () => {
     it('should fail if psychologist tries to become public without crp', async () => {
       const updateBody = {
         public: true,
@@ -339,7 +340,7 @@ describe('v1/auth', () => {
         sessionCost: 100,
         bio: 'Test',
       };
-      const response = await psycologistUserRequester3.put('/v1/auth/me', updateBody);
+      const response = await psycologistUserRequester3.patch('/v1/auth/me', updateBody);
 
       assert.equal(response.status, HttpStatus.BAD_REQUEST);
       assert.match(response.body.message, /CRP is required/);
@@ -351,7 +352,7 @@ describe('v1/auth', () => {
         crp: '231331564',
         bio: 'Test',
       };
-      const response = await psycologistUserRequester3.put('/v1/auth/me', updateBody);
+      const response = await psycologistUserRequester3.patch('/v1/auth/me', updateBody);
 
       assert.equal(response.status, HttpStatus.BAD_REQUEST);
       assert.match(response.body.message, /Session cost is required/);
@@ -359,7 +360,7 @@ describe('v1/auth', () => {
 
     it('should update the user name and photo successfully', async () => {
       const updateBody = { name: 'Updated Name', photo: 'https://example.com/updated-photo.jpg' };
-      const response = await normalUserRequester1.put('/v1/auth/me', updateBody);
+      const response = await normalUserRequester1.patch('/v1/auth/me', updateBody);
 
       assert.equal(response.status, HttpStatus.OK);
       assert.match(response.body.message, /Profile updated successfully/);
@@ -377,7 +378,7 @@ describe('v1/auth', () => {
         sessionCost: 100,
         bio: 'Test',
       };
-      const response = await psycologistUserRequester1.put('/v1/auth/me', updateBody);
+      const response = await psycologistUserRequester1.patch('/v1/auth/me', updateBody);
 
       assert.equal(response.status, HttpStatus.OK);
       assert.match(response.body.message, /Profile updated successfully/);

@@ -1,10 +1,10 @@
 import { HttpStatus, INestApplication } from '@nestjs/common';
 import * as assert from 'node:assert/strict';
 import { describe, before, it, after } from 'node:test';
-import { createApp, Requester } from '../../../test/utils';
+import { createApp } from '../../../test/setup';
 import request from 'supertest';
 import { SigninDTO } from '../../modules/auth/auth.dto';
-import { registerUserDummy } from '../../../test/dummies';
+import Requester from '../../../test/requester';
 
 describe('[Decorator] Auth Guard', () => {
   let app: INestApplication;
@@ -13,7 +13,8 @@ describe('[Decorator] Auth Guard', () => {
   before(async () => {
     app = await createApp();
 
-    await registerUserDummy(app, 'john.auth.guard@email.com');
+    normalUserRequester = new Requester(app);
+    await normalUserRequester.signupAndSignin({ email: 'john.auth.guard@email.com' });
 
     normalUserRequester = new Requester(app);
   });
@@ -56,7 +57,7 @@ describe('[Decorator] Auth Guard', () => {
     it('should succeed to access a protected route with a valid token', async () => {
       const signInBody: SigninDTO = {
         email: 'john.auth.guard@email.com',
-        password: '123456456',
+        password: 'validpassword',
       };
 
       await normalUserRequester.signin(signInBody);
