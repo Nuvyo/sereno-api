@@ -1,9 +1,10 @@
 import { Body, Controller, Delete, Get, Patch, Post, Req, UseGuards } from '@nestjs/common';
-import { MeResponseDTO, RefreshTokenDTO, SigninDTO, SigninResponseDTO, SignupDTO, UpdateMeDTO } from '../auth/auth.dto';
+import { MeResponseDTO, SigninDTO, SignupDTO, UpdateMeDTO } from '../auth/auth.dto';
 import { AuthService } from '../auth/auth.service';
 import { Request } from 'express';
 import { AuthGuard } from '../../core/guards/auth.guard';
 import { BaseMessageDTO } from '../../core/dtos/generic.dto';
+import { Session } from '../../core/entities/session.entity';
 
 @Controller('v1/auth')
 export class AuthController {
@@ -22,7 +23,7 @@ export class AuthController {
   }
 
   @Post('/signin')
-  public signin(@Body() body: SigninDTO): Promise<SigninResponseDTO> {
+  public signin(@Body() body: SigninDTO): Promise<Session> {
     return this.authService.signin(body);
   }
 
@@ -30,12 +31,6 @@ export class AuthController {
   @UseGuards(AuthGuard)
   public logout(@Req() req: Request): Promise<BaseMessageDTO> {
     return this.authService.logout(req.userId);
-  }
-
-  @Post('/refresh')
-  @UseGuards(AuthGuard)
-  public refresh(@Req() req: Request, @Body() body: RefreshTokenDTO): Promise<RefreshTokenDTO> {
-    return this.authService.refresh(body, req.userId);
   }
 
   @Patch('/me')

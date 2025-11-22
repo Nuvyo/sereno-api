@@ -3,7 +3,6 @@ import { PsychologistModule } from './psychologist/psychologist.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { PostgresConfig } from '../core/datasources/postgres.datasource';
 import { AuthModule } from './auth/auth.module';
-import { JwtModule } from '@nestjs/jwt';
 import { I18nModule, HeaderResolver } from 'nestjs-i18n';
 import path from 'node:path';
 import * as dotenv from 'dotenv';
@@ -22,7 +21,6 @@ dotenv.config();
       },
       resolvers: [{ use: HeaderResolver, options: ['language'] }],
     }),
-    JwtModule.register({ global: true, secret: process.env.JWT_SECRET }),
     TypeOrmModule.forRoot(PostgresConfig),
     PsychologistModule,
     AuthModule,

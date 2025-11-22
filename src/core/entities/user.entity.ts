@@ -1,9 +1,7 @@
-import { Column, Entity, OneToMany, OneToOne } from 'typeorm';
-import { ChatMessage } from '../entities/chat-message.entity';
-import { RefreshToken } from '../entities/refresh-token.entity';
-import { AccessToken } from '../entities/access-token.entity';
+import { Column, Entity, OneToMany } from 'typeorm';
 import { CustomBaseEntity } from '../entities/utils/base.entity';
 import { ColumnDecimalTransformer } from '../entities/utils/transformers';
+import { Session } from './session.entity';
 
 export enum Specialization {
   Ansiety = 'anxiety',
@@ -30,17 +28,8 @@ export class User extends CustomBaseEntity {
   @Column({ type: 'varchar', length: 255, nullable: true })
   photo?: string;
 
-  @OneToMany(() => ChatMessage, (chatMessage) => chatMessage.fromUser)
-  messagesSent: ChatMessage[];
-
-  @OneToMany(() => ChatMessage, (chatMessage) => chatMessage.toUser)
-  messagesReceived: ChatMessage[];
-
-  @OneToOne(() => RefreshToken, (refreshToken) => refreshToken.user)
-  refreshToken: RefreshToken;
-
-  @OneToOne(() => AccessToken, (blockedToken) => blockedToken.user)
-  accessToken: AccessToken;
+  @OneToMany(() => Session, (session) => session.user)
+  sessions: Session[];
 
   // Psychologist-specific fields
   @Column({ type: 'boolean', default: false })

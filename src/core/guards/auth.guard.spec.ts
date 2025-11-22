@@ -39,13 +39,18 @@ describe('[Decorator] Auth Guard', () => {
     });
 
     it('should fail to access a protected route without authentication', async () => {
-      const response = await normalUserRequester.get('/v1/auth/me');
+      const requester = new Requester(app);
+      const response = await requester.get('/v1/auth/me');
 
       assert.equal(response.status, HttpStatus.UNAUTHORIZED);
     });
 
     it('should fail to access a protected route with an invalid token', async () => {
-      normalUserRequester.setTokens('invalid-token', 'invalid-token');
+      const invalidSession = {
+        token: 'invalid-token',
+      } as any;
+
+      normalUserRequester.setSession(invalidSession);
 
       const response = await normalUserRequester.get('/v1/auth/me');
 
@@ -59,6 +64,8 @@ describe('[Decorator] Auth Guard', () => {
       };
 
       await normalUserRequester.signin(signInBody);
+
+      console.log(normalUserRequester.getSession());
 
       const response = await normalUserRequester.get('/v1/auth/me');
 

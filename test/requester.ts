@@ -2,12 +2,12 @@ import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { SigninDTO, SignupDTO } from '../src/modules/auth/auth.dto';
 import { faker } from '@faker-js/faker';
+import { Session } from '../src/core/entities/session.entity';
 
 export default class Requester {
 
   public userId: string | null = null;
-  private accessToken: string | null = null;
-  private refreshToken: string | null = null;
+  private session: Session | null = null;
 
   constructor(private readonly app: INestApplication) {}
 
@@ -15,7 +15,7 @@ export default class Requester {
     return request(this.app.getHttpServer())
       .get(path)
       .set('language', 'en')
-      .set('Authorization', `Bearer ${this.accessToken}`)
+      .set('Authorization', `Bearer ${this.session?.token || ''}`)
       .set('Content-Type', 'application/json')
       .query(query || {});
   }
@@ -24,7 +24,7 @@ export default class Requester {
     return request(this.app.getHttpServer())
       .post(endpoint)
       .set('language', 'en')
-      .set('Authorization', `Bearer ${this.accessToken}`)
+      .set('Authorization', `Bearer ${this.session?.token || ''}`)
       .set('Content-Type', 'application/json')
       .send(body);
   }
@@ -33,7 +33,7 @@ export default class Requester {
     return request(this.app.getHttpServer())
       .put(endpoint)
       .set('language', 'en')
-      .set('Authorization', `Bearer ${this.accessToken}`)
+      .set('Authorization', `Bearer ${this.session?.token || ''}`)
       .set('Content-Type', 'application/json')
       .send(body);
   }
@@ -42,7 +42,7 @@ export default class Requester {
     return request(this.app.getHttpServer())
       .patch(endpoint)
       .set('language', 'en')
-      .set('Authorization', `Bearer ${this.accessToken}`)
+      .set('Authorization', `Bearer ${this.session?.token || ''}`)
       .set('Content-Type', 'application/json')
       .send(body);
   }
@@ -51,7 +51,7 @@ export default class Requester {
     return request(this.app.getHttpServer())
       .delete(endpoint)
       .set('language', 'en')
-      .set('Authorization', `Bearer ${this.accessToken}`);
+      .set('Authorization', `Bearer ${this.session?.token || ''}`);
   }
 
   // Helpers
@@ -75,7 +75,7 @@ export default class Requester {
       throw new Error('Requester Login failed: ' + response.body.message);
     }
 
-    this.setTokens(response.body.accessToken, response.body.refreshToken);
+    this.setSession(response.body);
     this.userId = response.body.userId;
   }
 
@@ -91,7 +91,7 @@ export default class Requester {
       throw new Error('Requester Logout failed: ' + response.body.message);
     }
 
-    this.setTokens('', '');
+    this.setSession(null);
     this.userId = null;
   }
 
@@ -102,19 +102,15 @@ export default class Requester {
       throw new Error('Requester Cancel Account failed: ' + response.body.message);
     }
 
-    this.setTokens('', '');
+    this.setSession(null);
   }
 
-  public setTokens(accessToken: string, refreshToken: string): void {
-    this.accessToken = accessToken;
-    this.refreshToken = refreshToken;
+  public setSession(session: Session | null): void {
+    this.session = session;
   }
 
-  public getTokens(): { accessToken: string | null; refreshToken: string | null } {
-    return {
-      accessToken: this.accessToken,
-      refreshToken: this.refreshToken,
-    };
+  public getSession(): Session | null {
+    return this.session;
   }
 
 }

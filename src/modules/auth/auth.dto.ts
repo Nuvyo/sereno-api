@@ -6,7 +6,6 @@ import {
   IsNumber,
   IsOptional,
   IsString,
-  IsUUID,
   Max,
   Min,
   MinLength,
@@ -118,29 +117,6 @@ export class SigninDTO {
   @IsNotEmpty()
   @IsString()
   password: string;
-
-}
-
-export class RefreshTokenDTO {
-
-  @IsNotEmpty()
-  @IsUUID('4')
-  refreshToken: string;
-
-}
-
-export class SigninResponseDTO {
-
-  accessToken: string;
-  refreshToken: string;
-  userId: string;
-
-}
-
-export class RefreshTokensResponseDTO {
-
-  accessToken: string;
-  refreshToken: string;
 
 }
 

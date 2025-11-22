@@ -1,14 +1,12 @@
 import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
 import { DataSource } from 'typeorm';
-import { AccessToken } from '../entities/access-token.entity';
+import { Session } from '../entities/session.entity';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
 
   constructor(
-    private readonly jwtService: JwtService,
     private readonly dataSource: DataSource,
   ) {}
 
@@ -16,27 +14,34 @@ export class AuthGuard implements CanActivate {
     const request: Request = context.switchToHttp().getRequest();
 
     try {
-      const token = this.extractTokenFromHeader(request);
+      const session = await this.getUserSession(request);
 
-      if (!token) {
-        throw new UnauthorizedException('Invalid token');
-      }
-
-      const decoded = this.jwtService.verify<{ [key: string]: string }>(token);
-      const currentAccessToken = await this.dataSource
-        .getRepository(AccessToken)
-        .findOneBy({ user: { id: decoded.userId } });
-
-      if (!currentAccessToken || token !== currentAccessToken.token) {
-        throw new UnauthorizedException('Invalid token');
-      }
-
-      request.userId = decoded.userId;
+      request.userId = session.userId;
     } catch {
-      throw new UnauthorizedException('Invalid token');
+      throw new UnauthorizedException({ key: 'auth.invalid_session' });
     }
 
     return true;
+  }
+
+  private async getUserSession(request: Request): Promise<Session> {
+    const token = this.extractTokenFromHeader(request);
+
+    if (!token) {
+      throw new UnauthorizedException({ key: 'auth.invalid_session' });
+    }
+
+    const session = await this.dataSource.getRepository(Session).findOneBy({ token });
+
+    if (!session) {
+      throw new UnauthorizedException({ key: 'auth.invalid_session' });
+    }
+
+    if (new Date(session.expiresAt) < new Date()) {
+      throw new UnauthorizedException({ key: 'auth.invalid_session' });
+    }
+
+    return session;
   }
 
   private extractTokenFromHeader(request: Request): string | null {

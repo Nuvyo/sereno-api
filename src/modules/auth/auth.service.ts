@@ -3,20 +3,15 @@ import { DataSource } from 'typeorm';
 import { User } from '../../core/entities/user.entity';
 import {
   SigninDTO,
-  RefreshTokensResponseDTO,
   SignupDTO,
-  RefreshTokenDTO,
-  SigninResponseDTO,
   MeResponseDTO,
   UpdateMeDTO,
 } from '../auth/auth.dto';
 import { BcryptService } from '../../core/services/bcrypt.service';
-import { JwtService } from '@nestjs/jwt';
-import { v4 as uuidv4 } from 'uuid';
-import { RefreshToken } from '../../core/entities/refresh-token.entity';
-import { AccessToken } from '../../core/entities/access-token.entity';
+import crypto from 'node:crypto';
 import { BaseMessageDTO } from '../../core/dtos/generic.dto';
 import { DictionaryService } from '../../core/services/dictionary.service';
+import { Session } from '../../core/entities/session.entity';
 
 @Injectable()
 export class AuthService {
@@ -24,7 +19,6 @@ export class AuthService {
   constructor(
     private readonly dataSource: DataSource,
     private readonly bcryptService: BcryptService,
-    private readonly jwtService: JwtService,
     private readonly dictionaryService: DictionaryService,
   ) {}
 
@@ -84,64 +78,20 @@ export class AuthService {
 
   public async signup(body: SignupDTO): Promise<BaseMessageDTO> {
     await this.validateSignupData(body);
-
-    const data = new User();
-
-    data.photo = body.photo;
-    data.name = body.name;
-    data.email = body.email;
-    data.psychologist = body.psychologist;
-    data.password = await this.bcryptService.hash(body.password);
-
-    if (body.psychologist && body.public) {
-      data.public = body.public;
-      data.crp = body.crp;
-      data.specializations = body.specializations;
-      data.whatsapp = body.whatsapp;
-      data.sessionCost = body.sessionCost;
-      data.bio = body.bio;
-    }
-
-    await this.dataSource.getRepository(User).save(data);
+    await this.createUser(body);
 
     return { message: this.dictionaryService.translate('auth.signup_successful') };
   }
 
-  public async signin(body: SigninDTO): Promise<SigninResponseDTO> {
-    const user = await this.dataSource.getRepository(User).findOne({
-      where: { email: body.email },
-      select: { id: true, password: true },
-    });
+  public async signin(body: SigninDTO): Promise<Session> {
+    const user = await this.getAuthenticatedUser(body);
+    const session = await this.createUserSession(user.id);
 
-    await this.validateSigninData(body, user);
-
-    const tokens = await this.generateUserTokens(user!.id);
-
-    return {
-      ...tokens,
-      userId: user!.id,
-    };
-  }
-
-  public async refresh(body: RefreshTokenDTO, userId: string): Promise<RefreshTokensResponseDTO> {
-    const token = await this.dataSource
-      .getRepository(RefreshToken)
-      .createQueryBuilder('token')
-      .where('token.token = :token', { token: body.refreshToken })
-      .andWhere('token.userId = :userId', { userId })
-      .andWhere('token.expiresAt > :now', { now: new Date() })
-      .getOne();
-
-    if (!token) {
-      throw new UnauthorizedException({ key: 'auth.invalid_refresh_token' });
-    }
-
-    return this.generateUserTokens(token.userId);
+    return session;
   }
 
   public async logout(userId: string): Promise<BaseMessageDTO> {
-    await this.dataSource.getRepository(RefreshToken).delete({ user: { id: userId } });
-    await this.dataSource.getRepository(AccessToken).delete({ user: { id: userId } });
+    await this.dataSource.getRepository(Session).delete({ user: { id: userId } });
 
     return {
       message: this.dictionaryService.translate('auth.logout_successful'),
@@ -178,7 +128,33 @@ export class AuthService {
     }
   }
 
-  private async validateSigninData(body: SigninDTO, user: User | null): Promise<void> {
+  private async createUser(body: SignupDTO): Promise<User> {
+    const data = new User();
+
+    data.photo = body.photo;
+    data.name = body.name;
+    data.email = body.email;
+    data.psychologist = body.psychologist;
+    data.password = await this.bcryptService.hash(body.password);
+
+    if (body.psychologist && body.public) {
+      data.public = body.public;
+      data.crp = body.crp;
+      data.specializations = body.specializations;
+      data.whatsapp = body.whatsapp;
+      data.sessionCost = body.sessionCost;
+      data.bio = body.bio;
+    }
+
+    return this.dataSource.getRepository(User).save(data);
+  }
+
+  private async getAuthenticatedUser(body: SigninDTO): Promise<User> {
+    const user = await this.dataSource.getRepository(User).findOne({
+      where: { email: body.email },
+      select: { id: true, password: true },
+    });
+
     if (!user) {
       throw new UnauthorizedException({ key: 'auth.invalid_credentials' });
     }
@@ -188,6 +164,24 @@ export class AuthService {
     if (!isPasswordValid) {
       throw new UnauthorizedException({ key: 'auth.invalid_credentials' });
     }
+
+    return user;
+  }
+
+  private async createUserSession(userId: string): Promise<Session> {
+    const newSession = new Session();
+    const expirationInMilliseconds = 30 * 24 * 60 * 60 * 1000; // 30 days
+
+    newSession.token = crypto.randomBytes(48).toString('hex');
+    newSession.expiresAt = new Date(Date.now() + expirationInMilliseconds);
+    newSession.user = new User();
+    newSession.user.id = userId;
+
+    const savedSession = await this.dataSource.getRepository(Session).save(newSession);
+
+    delete (savedSession as any).user;
+
+    return savedSession;
   }
 
   private validateUpdateMeData(body: UpdateMeDTO, user: User): void {
@@ -202,47 +196,6 @@ export class AuthService {
         throw new BadRequestException({ key: 'auth.session_cost_is_required' });
       }
     }
-  }
-
-  private async generateUserTokens(userId: string): Promise<RefreshTokensResponseDTO> {
-    const accessToken = this.jwtService.sign({ userId }, { expiresIn: '2d' });
-    const refreshToken = uuidv4();
-
-    await this.saveRefreshToken(refreshToken, userId);
-    await this.saveAccessToken(accessToken, userId);
-
-    return {
-      accessToken: accessToken,
-      refreshToken: refreshToken,
-    };
-  }
-
-  private async saveRefreshToken(token: string, userId: string): Promise<RefreshToken> {
-    const refreshTokenData = new RefreshToken();
-    const expiresAt = new Date();
-
-    expiresAt.setDate(expiresAt.getDate() + 3);
-
-    refreshTokenData.token = token;
-    refreshTokenData.user = new User();
-    refreshTokenData.user.id = userId;
-    refreshTokenData.expiresAt = expiresAt;
-
-    await this.dataSource.getRepository(RefreshToken).delete({ user: { id: userId } });
-
-    return this.dataSource.getRepository(RefreshToken).save(refreshTokenData);
-  }
-
-  private async saveAccessToken(token: string, userId: string): Promise<AccessToken> {
-    const accessTokenData = new AccessToken();
-
-    accessTokenData.token = token;
-    accessTokenData.user = new User();
-    accessTokenData.user.id = userId;
-
-    await this.dataSource.getRepository(AccessToken).delete({ user: { id: userId } });
-
-    return this.dataSource.getRepository(AccessToken).save(accessTokenData);
   }
 
 }

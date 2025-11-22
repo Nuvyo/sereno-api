@@ -5,7 +5,6 @@ import { Test } from '@nestjs/testing';
 import { ModuleMetadata, ValidationPipe } from '@nestjs/common';
 
 import { CustomExceptionFilter } from '../src/core/filters/error.filter';
-import { JwtModule } from '@nestjs/jwt';
 import { HeaderResolver, I18nModule, I18nService } from 'nestjs-i18n';
 import path from 'node:path';
 import * as useragent from 'express-useragent';
@@ -27,7 +26,6 @@ export async function createApp(options?: ModuleMetadata) {
         },
         resolvers: [{ use: HeaderResolver, options: ['language'] }],
       }),
-      JwtModule.register({ global: true, secret: process.env.JWT_SECRET }),
       TypeOrmModule.forRoot(PostgresConfig),
       AuthModule,
       ...(options?.imports || [])

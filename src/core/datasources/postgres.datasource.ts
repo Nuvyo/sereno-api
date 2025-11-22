@@ -1,9 +1,7 @@
 import { DataSource, DataSourceOptions } from 'typeorm';
 import * as dotenv from 'dotenv';
-import { ChatMessage } from '../entities/chat-message.entity';
 import { User } from '../entities/user.entity';
-import { RefreshToken } from '../entities/refresh-token.entity';
-import { AccessToken } from '../entities/access-token.entity';
+import { Session } from '../entities/session.entity';
 
 dotenv.config();
 
@@ -18,7 +16,7 @@ export const PostgresConfig: DataSourceOptions = {
   synchronize: process.env.TYPEORM_SYNCHRONIZE === 'true',
   logging: false,
   migrations: [__dirname + '/../migration/*.{ts,js}'],
-  entities: [AccessToken, ChatMessage, RefreshToken, User],
+  entities: [Session, User],
   extra: {
     max: Number(process.env.PGPOOLSIZE) || 10,
     idleTimeoutMillis: Number(process.env.PG_IDLE_TIMEOUT) || 30000,
