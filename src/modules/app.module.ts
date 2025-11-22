@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { UserModule } from './user/user.module';
+import { PsychologistModule } from './psychologist/psychologist.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { PostgresConfig } from '../core/datasources/postgres.datasource';
 import { AuthModule } from './auth/auth.module';
@@ -24,7 +24,7 @@ dotenv.config();
     }),
     JwtModule.register({ global: true, secret: process.env.JWT_SECRET }),
     TypeOrmModule.forRoot(PostgresConfig),
-    UserModule,
+    PsychologistModule,
     AuthModule,
   ],
   controllers: [AppController],

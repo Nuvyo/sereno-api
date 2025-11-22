@@ -2,17 +2,17 @@ import * as assert from 'node:assert/strict';
 import { describe, before, it, after } from 'node:test';
 import { HttpStatus, INestApplication } from '@nestjs/common';
 import { createApp } from '../../../test/setup';
-import { UserModule } from '../user/user.module';
-import { FindPsychologistDTO } from '../user/user.dto';
+import { PsychologistModule } from './psychologist.module';
+import { FindPsychologistDTO } from './psychologist.dto';
 import Requester from '../../../test/requester';
 
-describe('v1/users', () => {
+describe('v1/psychologists', () => {
   let app: INestApplication;
   let normalUserRequester: Requester;
   let psychologistsRequesters: Requester[] = [];
 
   before(async () => {
-    app = await createApp({ imports: [UserModule] });
+    app = await createApp({ imports: [PsychologistModule] });
 
     normalUserRequester = new Requester(app);
     await normalUserRequester.signupAndSignin({ name: 'John Test' });
@@ -32,7 +32,7 @@ describe('v1/users', () => {
 
   describe('/psychologists', () => {
     it('should receive no query param and succeed', async () => {
-      const response = await normalUserRequester.get('/v1/users/psychologists');
+      const response = await normalUserRequester.get('/v1/psychologists');
 
       assert.equal(response.status, HttpStatus.OK);
 
@@ -70,7 +70,7 @@ describe('v1/users', () => {
     });
 
     it('should receive filter "like=Tom" and succeed', async () => {
-      const response = await normalUserRequester.get('/v1/users/psychologists', {
+      const response = await normalUserRequester.get('/v1/psychologists', {
         like: 'Tom',
       });
 
@@ -86,7 +86,7 @@ describe('v1/users', () => {
     });
 
     it('should paginate psychologists with default pagination settings', async () => {
-      const response = await normalUserRequester.get('/v1/users/psychologists', {
+      const response = await normalUserRequester.get('/v1/psychologists', {
         page: 0,
         take: 2,
       });
@@ -96,7 +96,7 @@ describe('v1/users', () => {
     });
 
     it('should paginate psychologists with custom page and limit', async () => {
-      const response = await normalUserRequester.get('/v1/users/psychologists', {
+      const response = await normalUserRequester.get('/v1/psychologists', {
         page: 1,
         take: 1,
       });
@@ -106,7 +106,7 @@ describe('v1/users', () => {
     });
 
     it('should return empty array for out-of-range page', async () => {
-      const response = await normalUserRequester.get('/v1/users/psychologists', {
+      const response = await normalUserRequester.get('/v1/psychologists', {
         page: 10,
         take: 10,
       });
@@ -116,7 +116,7 @@ describe('v1/users', () => {
     });
 
     it('should handle invalid pagination parameters gracefully', async () => {
-      const response = await normalUserRequester.get('/v1/users/psychologists', {
+      const response = await normalUserRequester.get('/v1/psychologists', {
         page: -1,
         take: -3,
       });
@@ -128,7 +128,7 @@ describe('v1/users', () => {
 
   describe('/psychologists/:id', () => {
     it('should receive psychologist id and succeed', async () => {
-      const response = await normalUserRequester.get(`/v1/users/psychologists/${psychologistsRequesters[0].userId}`);
+      const response = await normalUserRequester.get(`/v1/psychologists/${psychologistsRequesters[0].userId}`);
 
       assert.equal(response.status, HttpStatus.OK);
 
@@ -142,14 +142,14 @@ describe('v1/users', () => {
     });
 
     it('should receive psychologist id and fail', async () => {
-      const response = await normalUserRequester.get('/v1/users/psychologists/b74186fb-c440-4f4c-89a9-8d6fda98f9bc');
+      const response = await normalUserRequester.get('/v1/psychologists/b74186fb-c440-4f4c-89a9-8d6fda98f9bc');
 
       assert.equal(response.status, HttpStatus.NOT_FOUND);
       assert.equal(['User not found', 'Usuário não encontrado'].includes(response.body.message), true);
     });
 
     it('should fail to get non-psychologist user', async () => {
-      const response = await normalUserRequester.get(`/v1/users/psychologists/${normalUserRequester.userId}`);
+      const response = await normalUserRequester.get(`/v1/psychologists/${normalUserRequester.userId}`);
 
       assert.equal(response.status, HttpStatus.NOT_FOUND);
     });
