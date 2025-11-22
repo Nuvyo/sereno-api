@@ -1,49 +1,31 @@
 import * as assert from 'node:assert/strict';
 import { describe, before, it, after } from 'node:test';
 import { HttpStatus, INestApplication } from '@nestjs/common';
-import { createApp, Requester } from '../../../test/utils';
-import { registerUserDummy } from '../../../test/dummies';
+import { createApp } from '../../../test/setup';
 import { UserModule } from '../user/user.module';
 import { FindPsychologistDTO } from '../user/user.dto';
-import { SignupDTO } from '../auth/auth.dto';
+import Requester from '../../../test/requester';
 
 describe('v1/users', () => {
   let app: INestApplication;
   let normalUserRequester: Requester;
-  let psychologistRequesterOne: Requester;
-  let psychologistRequesterTwo: Requester;
-  let psychologistRequesterThree: Requester;
-  let psychologistRequesterFour: Requester;
-  let psychologistRequesterFive: Requester;
+  let psychologistsRequesters: Requester[] = [];
 
   before(async () => {
-    app = await createApp({
-      imports: [UserModule],
-    });
+    app = await createApp({ imports: [UserModule] });
 
-    normalUserRequester = await registerUserDummy(app, 'john@email.com');
-    psychologistRequesterOne = new Requester(app);
-    psychologistRequesterTwo = new Requester(app);
-    psychologistRequesterThree = new Requester(app);
-    psychologistRequesterFour = new Requester(app);
-    psychologistRequesterFive = new Requester(app);
+    normalUserRequester = new Requester(app);
+    await normalUserRequester.signupAndSignin({ name: 'John Test' });
 
-    await createPsychologists(
-      psychologistRequesterOne,
-      psychologistRequesterTwo,
-      psychologistRequesterThree,
-      psychologistRequesterFour,
-      psychologistRequesterFive,
-    );
+    psychologistsRequesters = await createAndSetPsychologistsRequesters(app);
   });
 
   after(async () => {
     await normalUserRequester.cancelAccount();
-    await psychologistRequesterOne.cancelAccount();
-    await psychologistRequesterTwo.cancelAccount();
-    await psychologistRequesterThree.cancelAccount();
-    await psychologistRequesterFour.cancelAccount();
-    await psychologistRequesterFive.cancelAccount();
+
+    const promises = psychologistsRequesters.map(requester => requester.cancelAccount());
+
+    await Promise.all(promises);
 
     await app.close();
   });
@@ -146,14 +128,14 @@ describe('v1/users', () => {
 
   describe('/psychologists/:id', () => {
     it('should receive psychologist id and succeed', async () => {
-      const response = await normalUserRequester.get(`/v1/users/psychologists/${psychologistRequesterOne.userId}`);
+      const response = await normalUserRequester.get(`/v1/users/psychologists/${psychologistsRequesters[0].userId}`);
 
       assert.equal(response.status, HttpStatus.OK);
 
       const psychologist = response.body as FindPsychologistDTO;
 
       assert.equal(psychologist.name.startsWith('Tom'), true);
-      assert.equal(psychologist.id, psychologistRequesterOne.userId);
+      assert.equal(psychologist.id, psychologistsRequesters[0].userId);
       assert.equal(psychologist.sessionCost, 70);
       assert.equal(typeof psychologist.bio, 'string');
       assert.equal(psychologist.bio, 'My name is Tom');
@@ -174,80 +156,64 @@ describe('v1/users', () => {
   });
 });
 
-async function createPsychologists(
-  requesterOne: Requester,
-  requesterTwo: Requester,
-  requesterThree: Requester,
-  requesterFour: Requester,
-  requesterFive: Requester,
-) {
-  const signupBodyOne = {
+async function createAndSetPsychologistsRequesters(app: INestApplication) {
+  const requesters: Requester[] = [];
+
+  for (let i = 0; i < 5; i++) {
+    requesters.push(new Requester(app));
+  }
+
+  const user1 = {
     name: 'Tom Test',
     email: 'tom.user@email.com',
-    password: '12345678',
-    passwordConfirmation: '12345678',
     psychologist: true,
     public: true,
     crp: '987654321',
     sessionCost: 70,
     bio: 'My name is Tom',
-  } as SignupDTO;
-  await requesterOne.post('/v1/auth/signup', signupBodyOne);
-  await requesterOne.signin({ email: 'tom.user@email.com', password: '12345678' });
-
-  const signupBodyTwo = {
+  };
+  const user2 = {
     name: 'Charles Test',
     email: 'charles.user@email.com',
-    password: '12345678',
-    passwordConfirmation: '12345678',
     psychologist: true,
     public: true,
     crp: '555555555',
     sessionCost: 90,
     bio: 'My name is Charles',
-  } as SignupDTO;
-  await requesterTwo.post('/v1/auth/signup', signupBodyTwo);
-  await requesterTwo.signin({ email: 'charles.user@email.com', password: '12345678' });
-
-  const signupBodyThree = {
+  };
+  const user3 = {
     name: 'Alice Test',
     email: 'alice.user@email.com',
-    password: '12345678',
-    passwordConfirmation: '12345678',
     psychologist: true,
     public: true,
     crp: '111111111',
     sessionCost: 80,
     bio: 'My name is Alice',
-  } as SignupDTO;
-  await requesterThree.post('/v1/auth/signup', signupBodyThree);
-  await requesterThree.signin({ email: 'alice.user@email.com', password: '12345678' });
-
-  const signupBodyFour = {
+  };
+  const user4 = {
     name: 'Emma Test',
     email: 'emma.user@email.com',
-    password: '12345678',
-    passwordConfirmation: '12345678',
     psychologist: true,
     public: true,
     crp: '222222222',
     sessionCost: 60,
     bio: 'My name is Emma',
-  } as SignupDTO;
-  await requesterFour.post('/v1/auth/signup', signupBodyFour);
-  await requesterFour.signin({ email: 'emma.user@email.com', password: '12345678' });
-
-  const signupBodyFive = {
+  };
+  const user5 = {
     name: 'Oliver Test',
     email: 'oliver.user@email.com',
-    password: '12345678',
-    passwordConfirmation: '12345678',
     psychologist: true,
     public: true,
     crp: '333333333',
     sessionCost: 50,
     bio: 'My name is Oliver',
-  } as SignupDTO;
-  await requesterFive.post('/v1/auth/signup', signupBodyFive);
-  await requesterFive.signin({ email: 'oliver.user@email.com', password: '12345678' });
+  };
+
+  await requesters[0].signupAndSignin(user1);
+  await requesters[1].signupAndSignin(user2);
+  await requesters[2].signupAndSignin(user3);
+  await requesters[3].signupAndSignin(user4);
+  await requesters[4].signupAndSignin(user5);
+
+  return requesters;
 }

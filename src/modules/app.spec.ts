@@ -1,12 +1,13 @@
 import * as assert from 'node:assert/strict';
 import { describe, before, it, after } from 'node:test';
 import { HttpStatus, INestApplication } from '@nestjs/common';
-import { createApp, Requester } from '../../test/utils';
+import { createApp } from '../../test/setup';
 import { ServerStatusDTO } from './app.dto';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { Test, TestingModule } from '@nestjs/testing';
 import { DataSource } from 'typeorm';
+import Requester from '../../test/requester';
 
 describe('app', () => {
   let app: INestApplication;

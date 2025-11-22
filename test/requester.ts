@@ -1,62 +1,9 @@
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { PostgresConfig } from '../src/core/datasources/postgres.datasource';
-import { AuthModule } from '../src/modules/auth/auth.module';
-import { Test } from '@nestjs/testing';
-import { INestApplication, ModuleMetadata, ValidationPipe } from '@nestjs/common';
-import { SigninDTO } from '../src/modules/auth/auth.dto';
-import { CustomExceptionFilter } from '../src/core/filters/error.filter';
-import { JwtModule } from '@nestjs/jwt';
-import { HeaderResolver, I18nModule, I18nService } from 'nestjs-i18n';
+import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
-import path from 'node:path';
-import * as useragent from 'express-useragent';
-import * as bodyParser from 'body-parser';
-import * as dotenv from 'dotenv';
-import { ResponseInterceptor } from '../src/core/interceptors/response.interceptor';
-import { DictionaryService } from '../src/core/services/dictionary.service';
+import { SigninDTO, SignupDTO } from '../src/modules/auth/auth.dto';
+import { faker } from '@faker-js/faker';
 
-dotenv.config();
-
-const BaseApp = {
-  imports: [
-    I18nModule.forRoot({
-      fallbackLanguage: 'en',
-      loaderOptions: {
-        path: path.join(__dirname, '../src/i18n/'),
-        watch: true,
-      },
-      resolvers: [{ use: HeaderResolver, options: ['language'] }],
-    }),
-    JwtModule.register({ global: true, secret: process.env.JWT_SECRET }),
-    TypeOrmModule.forRoot(PostgresConfig),
-    AuthModule,
-  ],
-};
-
-export async function createApp(options?: ModuleMetadata) {
-  const moduleRef = await Test.createTestingModule({
-    imports: [...BaseApp.imports, ...(options?.imports || [])],
-    controllers: [...(options?.controllers || [])],
-    providers: [...(options?.providers || [])],
-    exports: [...(options?.exports || [])],
-  }).compile();
-  const app = moduleRef.createNestApplication();
-  const i18n = app.get<I18nService>(I18nService);
-  const dictionary = new DictionaryService(i18n);
-
-  app.use(bodyParser.json({ type: ['application/json'], limit: '128mb' }));
-  app.use(bodyParser.urlencoded({ limit: '128mb', extended: true }));
-  app.use(useragent.express());
-  app.useGlobalPipes(new ValidationPipe());
-  app.useGlobalFilters(new CustomExceptionFilter(dictionary));
-  app.useGlobalInterceptors(new ResponseInterceptor(dictionary));
-
-  await app.init();
-
-  return app;
-}
-
-export class Requester {
+export default class Requester {
 
   public userId: string | null = null;
   private accessToken: string | null = null;
@@ -91,11 +38,34 @@ export class Requester {
       .send(body);
   }
 
+  public async patch(endpoint: string, body?: Record<string, any>): Promise<request.Response> {
+    return request(this.app.getHttpServer())
+      .patch(endpoint)
+      .set('language', 'en')
+      .set('Authorization', `Bearer ${this.accessToken}`)
+      .set('Content-Type', 'application/json')
+      .send(body);
+  }
+
   public async delete(endpoint: string): Promise<request.Response> {
     return request(this.app.getHttpServer())
       .delete(endpoint)
       .set('language', 'en')
       .set('Authorization', `Bearer ${this.accessToken}`);
+  }
+
+  // Helpers
+  public async signup(body: Partial<SignupDTO>): Promise<void> {
+    body.name = body.name || faker.person.firstName() + ' ' + faker.person.lastName();
+    body.email = body.email || faker.internet.email();
+    body.password = body.password || 'validpassword';
+    body.passwordConfirmation = body.password;
+
+    const response = await this.post('/v1/auth/signup', body);
+
+    if (response.status !== 201) {
+      throw new Error('Requester Create User failed: ' + response.body.message);
+    }
   }
 
   public async signin(body: SigninDTO): Promise<void> {
@@ -109,10 +79,15 @@ export class Requester {
     this.userId = response.body.userId;
   }
 
-  public async signout(): Promise<void> {
-    const response = await this.delete('/v1/auth/signout');
+  public async signupAndSignin(body: Partial<SignupDTO>): Promise<void> {
+    await this.signup(body);
+    await this.signin({ email: body.email!, password: body.password! });
+  }
 
-    if (response.status !== 200) {
+  public async signout(): Promise<void> {
+    const response = await this.post('/v1/auth/signout');
+
+    if (!response.ok) {
       throw new Error('Requester Logout failed: ' + response.body.message);
     }
 

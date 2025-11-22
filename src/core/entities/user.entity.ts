@@ -28,7 +28,7 @@ export class User extends CustomBaseEntity {
   password: string;
 
   @Column({ type: 'varchar', length: 255, nullable: true })
-  photo: string;
+  photo?: string;
 
   @OneToMany(() => ChatMessage, (chatMessage) => chatMessage.fromUser)
   messagesSent: ChatMessage[];

@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Post, Put, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Patch, Post, Req, UseGuards } from '@nestjs/common';
 import { MeResponseDTO, RefreshTokenDTO, SigninDTO, SigninResponseDTO, SignupDTO, UpdateMeDTO } from '../auth/auth.dto';
 import { AuthService } from '../auth/auth.service';
 import { Request } from 'express';
@@ -38,7 +38,7 @@ export class AuthController {
     return this.authService.refresh(body, req.userId);
   }
 
-  @Put('/me')
+  @Patch('/me')
   @UseGuards(AuthGuard)
   public updateMe(@Req() req: Request, @Body() body: UpdateMeDTO): Promise<BaseMessageDTO> {
     return this.authService.updateMe(req.userId, body);

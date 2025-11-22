@@ -55,7 +55,7 @@ export class AuthService {
       user.name = body.name;
     }
 
-    if ('photo' in body) {
+    if (body.photo !== undefined) {
       user.photo = body.photo;
     }
 
@@ -64,15 +64,15 @@ export class AuthService {
         user.public = body.public;
       }
 
-      if ('crp' in body) {
+      if (body.crp !== undefined) {
         user.crp = body.crp;
       }
 
-      if ('sessionCost' in body) {
+      if (body.sessionCost !== undefined) {
         user.sessionCost = body.sessionCost;
       }
 
-      if ('bio' in body) {
+      if (body.bio !== undefined) {
         user.bio = body.bio;
       }
     }
