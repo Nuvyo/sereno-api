@@ -12,6 +12,8 @@ import crypto from 'node:crypto';
 import { BaseMessageDTO } from '../../core/dtos/generic.dto';
 import { DictionaryService } from '../../core/services/dictionary.service';
 import { Session } from '../../core/entities/session.entity';
+import { daysInMilliseconds } from '../../core/utils';
+import { Response } from 'express';
 
 @Injectable()
 export class AuthService {
@@ -83,9 +85,11 @@ export class AuthService {
     return { message: this.dictionaryService.translate('auth.signup_successful') };
   }
 
-  public async signin(body: SigninDTO): Promise<Session> {
+  public async signin(body: SigninDTO, response: Response): Promise<Session> {
     const user = await this.getAuthenticatedUser(body);
     const session = await this.createUserSession(user.id);
+
+    response.setHeader('Set-Cookie', `sid=${session.token}`);
 
     return session;
   }
@@ -170,7 +174,7 @@ export class AuthService {
 
   private async createUserSession(userId: string): Promise<Session> {
     const newSession = new Session();
-    const expirationInMilliseconds = 30 * 24 * 60 * 60 * 1000; // 30 days
+    const expirationInMilliseconds = daysInMilliseconds(30);
 
     newSession.token = crypto.randomBytes(48).toString('hex');
     newSession.expiresAt = new Date(Date.now() + expirationInMilliseconds);

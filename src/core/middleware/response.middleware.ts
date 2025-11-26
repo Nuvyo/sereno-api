@@ -4,7 +4,7 @@ import { map } from 'rxjs/operators';
 import { DictionaryService } from '../services/dictionary.service';
 
 @Injectable()
-export class ResponseInterceptor<T> implements NestInterceptor<T, any> {
+export class ResponseMiddleware<T> implements NestInterceptor<T, any> {
 
   constructor(private readonly dictionary: DictionaryService) {}
 

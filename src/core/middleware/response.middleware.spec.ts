@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import * as assert from 'node:assert/strict';
-import { ResponseInterceptor } from './response.interceptor';
+import { ResponseMiddleware } from './response.middleware';
 import { of, firstValueFrom } from 'rxjs';
 import { ExecutionContext, CallHandler } from '@nestjs/common';
 
@@ -23,7 +23,7 @@ describe('ResponseInterceptor', () => {
   } as any;
 
   it('translates string message keys', async () => {
-    const interceptor = new ResponseInterceptor(dictionary);
+    const interceptor = new ResponseMiddleware(dictionary);
     const ctx = createContextStub();
 
     const next: CallHandler = { handle: () => of({ message: 'auth.signup_successful', ok: true }) } as any;
@@ -33,7 +33,7 @@ describe('ResponseInterceptor', () => {
   });
 
   it('translates object message with key/args', async () => {
-    const interceptor = new ResponseInterceptor(dictionary);
+    const interceptor = new ResponseMiddleware(dictionary);
     const ctx = createContextStub();
 
     const next: CallHandler = { handle: () => of({ message: { key: 'user.not_found' }, id: 123 }) } as any;
@@ -43,7 +43,7 @@ describe('ResponseInterceptor', () => {
   });
 
   it('keeps plain message as-is', async () => {
-    const interceptor = new ResponseInterceptor(dictionary);
+    const interceptor = new ResponseMiddleware(dictionary);
     const ctx = createContextStub();
 
     const next: CallHandler = { handle: () => of({ message: 'already translated', other: true }) } as any;
@@ -53,7 +53,7 @@ describe('ResponseInterceptor', () => {
   });
 
   it('returns data unchanged when message is absent', async () => {
-    const interceptor = new ResponseInterceptor(dictionary);
+    const interceptor = new ResponseMiddleware(dictionary);
     const ctx = createContextStub();
 
     const payload = { ok: true, value: 42 };

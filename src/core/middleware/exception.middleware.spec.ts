@@ -1,7 +1,7 @@
 import { describe, it } from 'node:test';
 import * as assert from 'node:assert/strict';
 import { ArgumentsHost, HttpException, HttpStatus } from '@nestjs/common';
-import { CustomExceptionFilter } from './error.filter';
+import { ExceptionMiddleware } from './exception.middleware';
 import { TypeORMError } from 'typeorm';
 
 function createHostStub() {
@@ -39,7 +39,7 @@ describe('CustomExceptionFilter', () => {
   } as any;
 
   it('maps TypeORM EntityNotFoundError for User to translated user.not_found with 404', () => {
-    const filter = new CustomExceptionFilter(dictionary);
+    const filter = new ExceptionMiddleware(dictionary);
     const { host, getStatus, getBody } = createHostStub();
 
     const err = new TypeORMError('Could not find any entity of type "User"');
@@ -53,7 +53,7 @@ describe('CustomExceptionFilter', () => {
   });
 
   it('uses message from HttpException response object', () => {
-    const filter = new CustomExceptionFilter(dictionary);
+    const filter = new ExceptionMiddleware(dictionary);
     const { host, getStatus, getBody } = createHostStub();
 
     const ex = new HttpException({ message: 'Plain error' }, HttpStatus.BAD_REQUEST);
@@ -64,7 +64,7 @@ describe('CustomExceptionFilter', () => {
   });
 
   it('translates HttpException with i18n key object', () => {
-    const filter = new CustomExceptionFilter(dictionary);
+    const filter = new ExceptionMiddleware(dictionary);
     const { host, getStatus, getBody } = createHostStub();
 
     const ex = new HttpException({ key: 'auth.invalid_credentials' }, HttpStatus.UNAUTHORIZED);
@@ -75,7 +75,7 @@ describe('CustomExceptionFilter', () => {
   });
 
   it('uses string response from HttpException directly', () => {
-    const filter = new CustomExceptionFilter(dictionary);
+    const filter = new ExceptionMiddleware(dictionary);
     const { host, getStatus, getBody } = createHostStub();
 
     const ex = new HttpException('oops', HttpStatus.BAD_REQUEST);
@@ -86,7 +86,7 @@ describe('CustomExceptionFilter', () => {
   });
 
   it('falls back to exception.message when payload object has no message or key', () => {
-    const filter = new CustomExceptionFilter(dictionary);
+    const filter = new ExceptionMiddleware(dictionary);
     const { host, getStatus, getBody } = createHostStub();
 
     const ex = new HttpException({ other: true }, HttpStatus.BAD_REQUEST);
@@ -97,7 +97,7 @@ describe('CustomExceptionFilter', () => {
   });
 
   it('falls back to exception.message when payload is not object nor string', () => {
-    const filter = new CustomExceptionFilter(dictionary);
+    const filter = new ExceptionMiddleware(dictionary);
     const { host, getStatus, getBody } = createHostStub();
 
     const ex = new HttpException(123 as any, HttpStatus.BAD_REQUEST);

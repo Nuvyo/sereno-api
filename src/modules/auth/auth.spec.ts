@@ -10,6 +10,7 @@ import { createApp } from '../../../test/setup';
 import { Specialization } from '../../core/entities/user.entity';
 import Requester from '../../../test/requester';
 import { Session } from '../../core/entities/session.entity';
+import { daysInMilliseconds } from '../../core/utils';
 
 describe('v1/auth', () => {
   let app: INestApplication;
@@ -201,6 +202,17 @@ describe('v1/auth', () => {
       assert.equal(typeof responseBody.userId, 'string');
       assert.equal(typeof responseBody.expiresAt, 'string');
       assert.notEqual(new Date(responseBody.expiresAt), NaN);
+
+      const createdAt = new Date(responseBody.createdAt);
+      const expiresAt = new Date(responseBody.expiresAt);
+
+      createdAt.setMilliseconds(0);
+      expiresAt.setMilliseconds(0);
+
+      const diffInMs = expiresAt.getTime() - createdAt.getTime();
+      const expectedDiffInMs = daysInMilliseconds(30);
+
+      assert.equal(diffInMs, expectedDiffInMs);
 
       Object.keys(response.body).forEach((key) => {
         assert.equal(key in new Session(), true);

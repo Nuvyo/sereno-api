@@ -1,7 +1,7 @@
-import { Body, Controller, Delete, Get, Patch, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Patch, Post, Req, Res, UseGuards, UsePipes, ValidationPipe } from '@nestjs/common';
 import { MeResponseDTO, SigninDTO, SignupDTO, UpdateMeDTO } from '../auth/auth.dto';
 import { AuthService } from '../auth/auth.service';
-import { Request } from 'express';
+import { Request, Response } from 'express';
 import { AuthGuard } from '../../core/guards/auth.guard';
 import { BaseMessageDTO } from '../../core/dtos/generic.dto';
 import { Session } from '../../core/entities/session.entity';
@@ -23,8 +23,8 @@ export class AuthController {
   }
 
   @Post('/signin')
-  public signin(@Body() body: SigninDTO): Promise<Session> {
-    return this.authService.signin(body);
+  public signin(@Body() body: SigninDTO, @Res() response: Response): Promise<Session> {
+    return this.authService.signin(body, response);
   }
 
   @Post('/signout')
@@ -35,6 +35,7 @@ export class AuthController {
 
   @Patch('/me')
   @UseGuards(AuthGuard)
+  @UsePipes(new ValidationPipe({ whitelist: true, skipMissingProperties: true }))
   public updateMe(@Req() req: Request, @Body() body: UpdateMeDTO): Promise<BaseMessageDTO> {
     return this.authService.updateMe(req.userId, body);
   }

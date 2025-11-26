@@ -4,7 +4,7 @@ import { TypeORMError } from 'typeorm';
 import { DictionaryService } from '../services/dictionary.service';
 
 @Catch()
-export class CustomExceptionFilter implements ExceptionFilter {
+export class ExceptionMiddleware implements ExceptionFilter {
 
   constructor(private readonly dictionary: DictionaryService) {}
 
