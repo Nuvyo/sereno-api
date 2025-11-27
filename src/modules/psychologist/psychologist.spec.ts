@@ -145,7 +145,7 @@ describe('v1/psychologists', () => {
       const response = await normalUserRequester.get('/v1/psychologists/b74186fb-c440-4f4c-89a9-8d6fda98f9bc');
 
       assert.equal(response.status, HttpStatus.NOT_FOUND);
-      assert.equal(['User not found', 'Usuário não encontrado'].includes(response.body.message), true);
+      assert.equal(response.body.message, 'User not found');
     });
 
     it('should fail to get non-psychologist user', async () => {

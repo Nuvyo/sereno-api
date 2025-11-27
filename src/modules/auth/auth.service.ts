@@ -12,7 +12,7 @@ import crypto from 'node:crypto';
 import { BaseMessageDTO } from '../../core/dtos/generic.dto';
 import { DictionaryService } from '../../core/services/dictionary.service';
 import { Session } from '../../core/entities/session.entity';
-import { daysInMilliseconds } from '../../core/utils';
+import { daysInMilliseconds } from '../../core/utils/utils';
 import { Response } from 'express';
 
 @Injectable()

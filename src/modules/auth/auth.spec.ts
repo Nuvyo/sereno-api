@@ -10,7 +10,7 @@ import { createApp } from '../../../test/setup';
 import { Specialization } from '../../core/entities/user.entity';
 import Requester from '../../../test/requester';
 import { Session } from '../../core/entities/session.entity';
-import { daysInMilliseconds } from '../../core/utils';
+import { daysInMilliseconds } from '../../core/utils/utils';
 
 describe('v1/auth', () => {
   let app: INestApplication;
@@ -129,7 +129,7 @@ describe('v1/auth', () => {
       const response = await normalUserRequester1.post('/v1/auth/signup', body);
 
       assert.equal(response.status, HttpStatus.BAD_REQUEST);
-      assert.match(response.body.message, /Email already in use/);
+      assert.equal(response.body.message, 'Email already in use');
     });
 
     it('should fail when public psychologist is missing required fields', async () => {
@@ -160,7 +160,7 @@ describe('v1/auth', () => {
       const response = await normalUserRequester1.post('/v1/auth/signup', body);
 
       assert.equal(response.status, HttpStatus.BAD_REQUEST);
-      assert.match(response.body.message, /Session cost is required/);
+      assert.equal(response.body.message, 'Session cost is required');
     });
   });
 
@@ -173,7 +173,7 @@ describe('v1/auth', () => {
       const response = await normalUserRequester1.post('/v1/auth/signin', body);
 
       assert.equal(response.status, HttpStatus.UNAUTHORIZED);
-      assert.match(response.body.message, /Invalid credentials/);
+      assert.equal(response.body.message, 'Invalid credentials');
     });
 
     it('should receive a body with invalid password and fail', async () => {
@@ -184,7 +184,7 @@ describe('v1/auth', () => {
       const response = await normalUserRequester1.post('/v1/auth/signin', body);
 
       assert.equal(response.status, HttpStatus.UNAUTHORIZED);
-      assert.match(response.body.message, /Invalid credentials/);
+      assert.equal(response.body.message, 'Invalid credentials');
     });
 
     it('should receive a body of a normal user and succeed', async () => {

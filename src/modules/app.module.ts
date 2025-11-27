@@ -14,7 +14,7 @@ dotenv.config();
 @Module({
   imports: [
     I18nModule.forRoot({
-      fallbackLanguage: 'pt-br',
+      fallbackLanguage: 'ptbr',
       loaderOptions: {
         path: path.join(__dirname, '../i18n/'),
         watch: true,

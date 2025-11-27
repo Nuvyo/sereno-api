@@ -12,6 +12,7 @@ import * as bodyParser from 'body-parser';
 import * as dotenv from 'dotenv';
 import { ResponseMiddleware } from '../src/core/middleware/response.middleware';
 import { DictionaryService } from '../src/core/services/dictionary.service';
+import { setRequestContext } from '../src/core/request-context/request-context';
 
 dotenv.config();
 
@@ -41,6 +42,13 @@ export async function createApp(options?: ModuleMetadata) {
   app.use(bodyParser.json({ type: ['application/json'], limit: '128mb' }));
   app.use(bodyParser.urlencoded({ limit: '128mb', extended: true }));
   app.use(useragent.express());
+  app.use((req: any, _res: any, next: any) => {
+    const headerLanguage = req.headers['language'] || 'ptbr';
+    const language = Array.isArray(headerLanguage) ? headerLanguage[0] : String(headerLanguage);
+    
+    setRequestContext({ language });
+    next();
+  });
   app.useGlobalPipes(new ValidationPipe());
   app.useGlobalFilters(new ExceptionMiddleware(dictionary));
   app.useGlobalInterceptors(new ResponseMiddleware(dictionary));
