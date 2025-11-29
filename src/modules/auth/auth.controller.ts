@@ -4,7 +4,6 @@ import { AuthService } from '../auth/auth.service';
 import { Request, Response } from 'express';
 import { AuthGuard } from '../../core/guards/auth.guard';
 import { BaseMessageDTO } from '../../core/dtos/generic.dto';
-import { Session } from '../../core/entities/session.entity';
 
 @Controller('v1/auth')
 export class AuthController {
@@ -23,8 +22,10 @@ export class AuthController {
   }
 
   @Post('/signin')
-  public signin(@Body() body: SigninDTO, @Res() response: Response): Promise<Session> {
-    return this.authService.signin(body, response);
+  public async signin(@Body() body: SigninDTO, @Res() response: Response): Promise<void> {
+    const session = await this.authService.signin(body, response);
+
+    response.json(session);
   }
 
   @Post('/signout')

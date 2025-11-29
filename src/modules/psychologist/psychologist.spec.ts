@@ -128,14 +128,14 @@ describe('v1/psychologists', () => {
 
   describe('/psychologists/:id', () => {
     it('should receive psychologist id and succeed', async () => {
-      const response = await normalUserRequester.get(`/v1/psychologists/${psychologistsRequesters[0].userId}`);
+      const response = await normalUserRequester.get(`/v1/psychologists/${psychologistsRequesters[0].getSession()?.userId}`);
 
       assert.equal(response.status, HttpStatus.OK);
 
       const psychologist = response.body as FindPsychologistDTO;
 
       assert.equal(psychologist.name.startsWith('Tom'), true);
-      assert.equal(psychologist.id, psychologistsRequesters[0].userId);
+      assert.equal(psychologist.id, psychologistsRequesters[0].getSession()?.userId);
       assert.equal(psychologist.sessionCost, 70);
       assert.equal(typeof psychologist.bio, 'string');
       assert.equal(psychologist.bio, 'My name is Tom');
@@ -149,7 +149,7 @@ describe('v1/psychologists', () => {
     });
 
     it('should fail to get non-psychologist user', async () => {
-      const response = await normalUserRequester.get(`/v1/psychologists/${normalUserRequester.userId}`);
+      const response = await normalUserRequester.get(`/v1/psychologists/${normalUserRequester.getSession()?.userId}`);
 
       assert.equal(response.status, HttpStatus.NOT_FOUND);
     });

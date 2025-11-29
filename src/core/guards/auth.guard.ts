@@ -12,14 +12,9 @@ export class AuthGuard implements CanActivate {
 
   public async canActivate(context: ExecutionContext): Promise<boolean> {
     const request: Request = context.switchToHttp().getRequest();
+    const session = await this.getUserSession(request);
 
-    try {
-      const session = await this.getUserSession(request);
-
-      request.userId = session.userId;
-    } catch {
-      throw new UnauthorizedException({ key: 'auth.invalid_session' });
-    }
+    request.userId = session.userId;
 
     return true;
   }

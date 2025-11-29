@@ -12,7 +12,8 @@ import * as bodyParser from 'body-parser';
 import * as dotenv from 'dotenv';
 import { ResponseMiddleware } from '../src/core/middleware/response.middleware';
 import { DictionaryService } from '../src/core/services/dictionary.service';
-import { setRequestContext } from '../src/core/request-context/request-context';
+import { setRequestContext } from '../src/core/request-context';
+import { DataSourceOptions } from 'typeorm';
 
 dotenv.config();
 
@@ -27,7 +28,10 @@ export async function createApp(options?: ModuleMetadata) {
         },
         resolvers: [{ use: HeaderResolver, options: ['language'] }],
       }),
-      TypeOrmModule.forRoot(PostgresConfig),
+      TypeOrmModule.forRoot({
+        ...PostgresConfig,
+        database: process.env.PGDATABASE_TEST
+      } as DataSourceOptions),
       AuthModule,
       ...(options?.imports || [])
     ],
