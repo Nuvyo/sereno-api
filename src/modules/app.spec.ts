@@ -84,12 +84,15 @@ describe('AppController (Unit)', () => {
         if (sql.includes('version()')) {
           return [{ version: 'PostgreSQL 14.0' }];
         }
+
         if (sql.includes('max_connections')) {
           return [{ max_connections: '100' }];
         }
+
         if (sql.includes('pg_stat_activity')) {
           return [{ count: '5' }];
         }
+
         return [];
       },
     };
@@ -143,12 +146,15 @@ describe('AppService (Unit)', () => {
         if (sql.includes('version()')) {
           return [{ version: 'PostgreSQL 16.0' }];
         }
+
         if (sql.includes('max_connections')) {
           return [{ max_connections: '200' }];
         }
+
         if (sql.includes('pg_stat_activity')) {
           return [{ count: '10' }];
         }
+
         return [];
       },
     };

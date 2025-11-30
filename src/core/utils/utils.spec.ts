@@ -13,11 +13,13 @@ describe('Utils', () => {
   
   it('daysInMilliseconds suporta valores fracionários', () => {
     const halfDayMs = 0.5 * 24 * 60 * 60 * 1000;
+
     assert.equal(daysInMilliseconds(0.5), halfDayMs);
   });
   
   it('daysInMilliseconds lida com valores negativos', () => {
     const minusOneDay = -1 * 24 * 60 * 60 * 1000;
+
     assert.equal(daysInMilliseconds(-1), minusOneDay);
   });
 });

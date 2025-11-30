@@ -75,10 +75,6 @@ describe('v1/auth', () => {
       } as SignupDTO;
       const response = await psycologistUserRequester2.post('/v1/auth/signup', body);
 
-      if (response.status !== HttpStatus.CREATED) {
-        console.log('DEBUG signup public failure:', response.body);
-      }
-
       assert.equal(response.status, HttpStatus.CREATED);
       assert.equal(typeof response.body.message, 'string');
     });
@@ -97,9 +93,7 @@ describe('v1/auth', () => {
         bio: 'Experienced psychologist specialized in cognitive behavioral therapy.',
       } as SignupDTO;
       const response = await psycologistUserRequester3.post('/v1/auth/signup', body);
-      if (response.status !== HttpStatus.CREATED) {
-        console.log('DEBUG signup private failure:', response.body);
-      }
+
       assert.equal(response.status, HttpStatus.CREATED);
     });
 

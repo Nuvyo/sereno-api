@@ -3,16 +3,19 @@
 ## Endpoints
 
 ### GET /v1/psychologists
+
 - Lista psicólogos públicos
 - Parâmetros de query: like (nome), page, take, order
 - Resposta: Array de FindPsychologistDTO + total
 
 ### GET /v1/psychologists/:id
+
 - Busca psicólogo por ID
 - Parâmetro: id (uuid)
 - Resposta: FindPsychologistDTO
 
 ## Exemplo de resposta
+
 ```json
 [
   {

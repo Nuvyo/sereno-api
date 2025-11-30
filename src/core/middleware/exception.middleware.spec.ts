@@ -6,20 +6,18 @@ import { TypeORMError } from 'typeorm';
 
 function createHostStub() {
   let statusCode: number | undefined;
-  let jsonBody: any;
-
-  const response = {
+  let jsonBody: any;  const response = {
     status(code: number) {
       statusCode = code;
+
       return this;
     },
     json(payload: any) {
       jsonBody = payload;
+
       return this as any;
     },
-  } as any;
-
-  const host: Partial<ArgumentsHost> = {
+  } as any;  const host: Partial<ArgumentsHost> = {
     switchToHttp: () => ({ getResponse: () => response }) as any,
   };
 
@@ -33,16 +31,16 @@ describe('CustomExceptionFilter', () => {
     isTranslationObject: (value?: Record<string, any>) => !!value && typeof (value as any).key === 'string',
     translate: (key: string) => {
       if (key === 'user.not_found') return 'User not found';
+
       if (key === 'auth.invalid_credentials') return 'Invalid credentials';
+
       return key;
     },
   } as any;
 
   it('maps TypeORM EntityNotFoundError for User to translated user.not_found with 404', () => {
     const filter = new ExceptionMiddleware(dictionary);
-    const { host, getStatus, getBody } = createHostStub();
-
-    const err = new TypeORMError('Could not find any entity of type "User"');
+    const { host, getStatus, getBody } = createHostStub();    const err = new TypeORMError('Could not find any entity of type "User"');
 
     (err as any).stack = 'EntityNotFoundError: ...';
 
@@ -54,9 +52,8 @@ describe('CustomExceptionFilter', () => {
 
   it('uses message from HttpException response object', () => {
     const filter = new ExceptionMiddleware(dictionary);
-    const { host, getStatus, getBody } = createHostStub();
+    const { host, getStatus, getBody } = createHostStub();    const ex = new HttpException({ message: 'Plain error' }, HttpStatus.BAD_REQUEST);
 
-    const ex = new HttpException({ message: 'Plain error' }, HttpStatus.BAD_REQUEST);
     filter.catch(ex, host);
 
     assert.equal(getStatus(), 400);
@@ -65,9 +62,8 @@ describe('CustomExceptionFilter', () => {
 
   it('translates HttpException with i18n key object', () => {
     const filter = new ExceptionMiddleware(dictionary);
-    const { host, getStatus, getBody } = createHostStub();
+    const { host, getStatus, getBody } = createHostStub();    const ex = new HttpException({ key: 'auth.invalid_credentials' }, HttpStatus.UNAUTHORIZED);
 
-    const ex = new HttpException({ key: 'auth.invalid_credentials' }, HttpStatus.UNAUTHORIZED);
     filter.catch(ex, host);
 
     assert.equal(getStatus(), 401);
@@ -76,9 +72,8 @@ describe('CustomExceptionFilter', () => {
 
   it('uses string response from HttpException directly', () => {
     const filter = new ExceptionMiddleware(dictionary);
-    const { host, getStatus, getBody } = createHostStub();
+    const { host, getStatus, getBody } = createHostStub();    const ex = new HttpException('oops', HttpStatus.BAD_REQUEST);
 
-    const ex = new HttpException('oops', HttpStatus.BAD_REQUEST);
     filter.catch(ex, host);
 
     assert.equal(getStatus(), 400);
@@ -87,9 +82,8 @@ describe('CustomExceptionFilter', () => {
 
   it('falls back to exception.message when payload object has no message or key', () => {
     const filter = new ExceptionMiddleware(dictionary);
-    const { host, getStatus, getBody } = createHostStub();
+    const { host, getStatus, getBody } = createHostStub();    const ex = new HttpException({ other: true }, HttpStatus.BAD_REQUEST);
 
-    const ex = new HttpException({ other: true }, HttpStatus.BAD_REQUEST);
     filter.catch(ex, host);
 
     assert.equal(getStatus(), 400);
@@ -98,9 +92,8 @@ describe('CustomExceptionFilter', () => {
 
   it('falls back to exception.message when payload is not object nor string', () => {
     const filter = new ExceptionMiddleware(dictionary);
-    const { host, getStatus, getBody } = createHostStub();
+    const { host, getStatus, getBody } = createHostStub();    const ex = new HttpException(123 as any, HttpStatus.BAD_REQUEST);
 
-    const ex = new HttpException(123 as any, HttpStatus.BAD_REQUEST);
     filter.catch(ex, host);
 
     assert.equal(getStatus(), 400);

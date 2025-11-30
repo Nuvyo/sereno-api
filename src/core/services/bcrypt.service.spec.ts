@@ -6,6 +6,7 @@ const originalEnv = { ...process.env };
 
 function getCostFactorFromHash(hash: string): number {
   const parts = hash.split('$');
+
   return parseInt(parts[2], 10);
 }
 
@@ -42,9 +43,8 @@ describe('BcryptService', () => {
   it('pepper is applied on compare', async () => {
     process.env.NODE_ENV = 'test';
     const svc = new BcryptService();
-    const hash = await svc.hash('value');
+    const hash = await svc.hash('value');    const ok = await svc.compare('value', hash);
 
-    const ok = await svc.compare('value', hash);
     assert.equal(ok, true);
   });
 });

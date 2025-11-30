@@ -3,6 +3,7 @@
 Principais entidades:
 
 ## User
+
 - id (uuid)
 - name (string)
 - email (string)
@@ -17,6 +18,7 @@ Principais entidades:
 - sessions (relacionamento 1:N com Session)
 
 ## Session
+
 - id (uuid)
 - token (string, único)
 - expiresAt (datetime)
@@ -24,4 +26,5 @@ Principais entidades:
 - userId (uuid, FK para User)
 
 ## Relacionamentos
+
 - Um usuário pode ter várias sessões (User 1:N Session)
