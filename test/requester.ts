@@ -15,7 +15,7 @@ export default class Requester {
     return request(this.app.getHttpServer())
       .get(path)
       .set('language', 'en')
-      .set('Authorization', `Bearer ${this.session?.token || ''}`)
+      .set('Cookie', `sid=${this.session?.token || ''}`)
       .set('Content-Type', 'application/json')
       .query(query || {})
       .timeout({ response: 5000, deadline: 6000 });
@@ -25,7 +25,7 @@ export default class Requester {
     return request(this.app.getHttpServer())
       .post(endpoint)
       .set('language', 'en')
-      .set('Authorization', `Bearer ${this.session?.token || ''}`)
+      .set('Cookie', `sid=${this.session?.token || ''}`)
       .set('Content-Type', 'application/json')
       .send(body)
       .timeout({ response: 5000, deadline: 6000 });
@@ -35,7 +35,7 @@ export default class Requester {
     return request(this.app.getHttpServer())
       .put(endpoint)
       .set('language', 'en')
-      .set('Authorization', `Bearer ${this.session?.token || ''}`)
+      .set('Cookie', `sid=${this.session?.token || ''}`)
       .set('Content-Type', 'application/json')
       .send(body)
       .timeout({ response: 5000, deadline: 6000 });
@@ -45,7 +45,7 @@ export default class Requester {
     return request(this.app.getHttpServer())
       .patch(endpoint)
       .set('language', 'en')
-      .set('Authorization', `Bearer ${this.session?.token || ''}`)
+      .set('Cookie', `sid=${this.session?.token || ''}`)
       .set('Content-Type', 'application/json')
       .send(body)
       .timeout({ response: 5000, deadline: 6000 });
@@ -55,7 +55,7 @@ export default class Requester {
     return request(this.app.getHttpServer())
       .delete(endpoint)
       .set('language', 'en')
-      .set('Authorization', `Bearer ${this.session?.token || ''}`)
+      .set('Cookie', `sid=${this.session?.token || ''}`)
       .timeout({ response: 5000, deadline: 6000 });
   }
 

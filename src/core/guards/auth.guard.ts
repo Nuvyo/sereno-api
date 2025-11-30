@@ -20,7 +20,7 @@ export class AuthGuard implements CanActivate {
   }
 
   private async getUserSession(request: Request): Promise<Session> {
-    const token = this.extractTokenFromHeader(request);
+    const token = request.headers.cookie?.split('sid=')[1]?.split(';')[0];
 
     if (!token) {
       throw new UnauthorizedException({ key: 'auth.invalid_session' });
@@ -37,18 +37,6 @@ export class AuthGuard implements CanActivate {
     }
 
     return session;
-  }
-
-  private extractTokenFromHeader(request: Request): string | null {
-    const authHeader = request.headers['authorization'];
-
-    if (!authHeader) {
-      return null;
-    }
-
-    const token = authHeader.split(' ')[1];
-
-    return token || null;
   }
 
 }
