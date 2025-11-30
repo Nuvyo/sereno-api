@@ -12,6 +12,9 @@ export class Session extends CustomBaseEntity {
   @Column({ type: 'timestamptz', nullable: false })
   expiresAt: Date;
 
+  @Column({ type: 'integer', nullable: false })
+  maxAge: number;
+
   @RelationId((authSession: Session) => authSession.user)
   userId: string;
 

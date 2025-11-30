@@ -12,7 +12,7 @@ import * as bodyParser from 'body-parser';
 import * as dotenv from 'dotenv';
 import { ResponseMiddleware } from '../src/core/middleware/response.middleware';
 import { DictionaryService } from '../src/core/services/dictionary.service';
-import { setRequestContext } from '../src/core/request-context';
+import { setRequestContext } from '../src/core/request-context/request-context';
 import { DataSourceOptions } from 'typeorm';
 
 dotenv.config();

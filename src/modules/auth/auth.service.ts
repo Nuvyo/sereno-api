@@ -14,6 +14,7 @@ import { DictionaryService } from '../../core/services/dictionary.service';
 import { Session } from '../../core/entities/session.entity';
 import { daysInMilliseconds } from '../../core/utils/utils';
 import { Response } from 'express';
+import { CookieService } from '../../core/services/cookie.service';
 
 @Injectable()
 export class AuthService {
@@ -21,6 +22,7 @@ export class AuthService {
   constructor(
     private readonly dataSource: DataSource,
     private readonly bcryptService: BcryptService,
+    private readonly cookieService: CookieService,
     private readonly dictionaryService: DictionaryService,
   ) {}
 
@@ -88,8 +90,16 @@ export class AuthService {
   public async signin(body: SigninDTO, response: Response): Promise<Session> {
     const user = await this.getAuthenticatedUser(body);
     const session = await this.createUserSession(user.id);
+    const cookie = this.cookieService.serialize({
+      name: 'sid',
+      value: session.token,
+      maxAge: session.maxAge,
+      path: '/',
+      httpOnly: true,
+      secure: true,
+    });
 
-    response.setHeader('Set-Cookie', `sid=${session.token}`);
+    response.setHeader('Set-Cookie', cookie);
 
     return session;
   }
@@ -178,6 +188,7 @@ export class AuthService {
 
     newSession.token = crypto.randomBytes(48).toString('hex');
     newSession.expiresAt = new Date(Date.now() + expirationInMilliseconds);
+    newSession.maxAge = expirationInMilliseconds / 1000;
     newSession.user = new User();
     newSession.user.id = userId;
 

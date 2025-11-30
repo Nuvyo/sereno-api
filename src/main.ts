@@ -9,7 +9,7 @@ import cors from 'cors';
 import { I18nService } from 'nestjs-i18n';
 import { ResponseMiddleware } from './core/middleware/response.middleware';
 import { DictionaryService } from './core/services/dictionary.service';
-import { setRequestContext } from './core/request-context';
+import { setRequestContext } from './core/request-context/request-context';
 
 dotenv.config();
 

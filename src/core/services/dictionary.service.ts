@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { I18nService } from 'nestjs-i18n';
-import { getRequestContext } from '../request-context';
+import { getRequestContext } from '../request-context/request-context';
 
 @Injectable()
 export class DictionaryService {

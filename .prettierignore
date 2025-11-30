@@ -5,8 +5,6 @@ node_modules
 coverage
 .tmp
 /tmp
-src/**/*.ts
-test/**/*.ts
 types/**/*.d.ts
 
 # Logs and caches
