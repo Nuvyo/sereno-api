@@ -4,15 +4,16 @@ import { AuthModule } from '../src/modules/auth/auth.module';
 import { Test } from '@nestjs/testing';
 import { ModuleMetadata, ValidationPipe } from '@nestjs/common';
 
-import { CustomExceptionFilter } from '../src/core/filters/error.filter';
-import { JwtModule } from '@nestjs/jwt';
+import { ExceptionMiddleware } from '../src/core/middleware/exception.middleware';
 import { HeaderResolver, I18nModule, I18nService } from 'nestjs-i18n';
 import path from 'node:path';
 import * as useragent from 'express-useragent';
 import * as bodyParser from 'body-parser';
 import * as dotenv from 'dotenv';
-import { ResponseInterceptor } from '../src/core/interceptors/response.interceptor';
+import { ResponseMiddleware } from '../src/core/middleware/response.middleware';
 import { DictionaryService } from '../src/core/services/dictionary.service';
+import { setRequestContext } from '../src/core/request-context/request-context';
+import { DataSourceOptions } from 'typeorm';
 
 dotenv.config();
 
@@ -27,8 +28,10 @@ export async function createApp(options?: ModuleMetadata) {
         },
         resolvers: [{ use: HeaderResolver, options: ['language'] }],
       }),
-      JwtModule.register({ global: true, secret: process.env.JWT_SECRET }),
-      TypeOrmModule.forRoot(PostgresConfig),
+      TypeOrmModule.forRoot({
+        ...PostgresConfig,
+        database: process.env.PGDATABASE_TEST
+      } as DataSourceOptions),
       AuthModule,
       ...(options?.imports || [])
     ],
@@ -43,9 +46,16 @@ export async function createApp(options?: ModuleMetadata) {
   app.use(bodyParser.json({ type: ['application/json'], limit: '128mb' }));
   app.use(bodyParser.urlencoded({ limit: '128mb', extended: true }));
   app.use(useragent.express());
+  app.use((req: any, _res: any, next: any) => {
+    const headerLanguage = req.headers['language'] || 'ptbr';
+    const language = Array.isArray(headerLanguage) ? headerLanguage[0] : String(headerLanguage);
+    
+    setRequestContext({ language });
+    next();
+  });
   app.useGlobalPipes(new ValidationPipe());
-  app.useGlobalFilters(new CustomExceptionFilter(dictionary));
-  app.useGlobalInterceptors(new ResponseInterceptor(dictionary));
+  app.useGlobalFilters(new ExceptionMiddleware(dictionary));
+  app.useGlobalInterceptors(new ResponseMiddleware(dictionary));
 
   await app.init();
 

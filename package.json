@@ -18,17 +18,18 @@
     "services:up": "docker compose up -d",
     "services:stop": "docker compose stop",
     "services:down": "docker compose down",
-    "test": "cross-env NODE_ENV=test node -r ts-node/register -r tsconfig-paths/register --test ",
-    "tests": "cross-env NODE_ENV=test node -r ts-node/register -r tsconfig-paths/register --test ./src/**/*.spec.ts",
+    "test": "cross-env NODE_ENV=test && npm run clear:test-db && node -r ts-node/register -r tsconfig-paths/register --test ",
+    "tests": "cross-env NODE_ENV=test && npm run clear:test-db && node -r ts-node/register -r tsconfig-paths/register --test ./src/**/*.spec.ts",
     "test:cov": "c8 npm run test",
     "tests:cov": "c8 npm run tests",
     "migration:run": "npx typeorm-ts-node-commonjs migration:run -d src/core/datasources/postgres.datasource.ts",
-    "migration:generate": "npx typeorm-ts-node-commonjs migration:generate ./src/core/migration/Migration -d src/core/datasources/postgres.datasource.ts"
+    "migration:generate": "npx typeorm-ts-node-commonjs migration:generate ./src/core/migration/Migration -d src/core/datasources/postgres.datasource.ts",
+    "migration:new": "rm -rf dist && npm run build && npm run migration:run && npm run migration:generate",
+    "clear:test-db": "node -r tsconfig-paths/register -r ts-node/register ./scripts/clear-test-db.ts"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
     "@nestjs/core": "^11.0.1",
-    "@nestjs/jwt": "^11.0.0",
     "@nestjs/platform-express": "^11.0.1",
     "@nestjs/typeorm": "^11.0.0",
     "bcrypt": "^5.1.1",

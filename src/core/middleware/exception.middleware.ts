@@ -4,7 +4,7 @@ import { TypeORMError } from 'typeorm';
 import { DictionaryService } from '../services/dictionary.service';
 
 @Catch()
-export class CustomExceptionFilter implements ExceptionFilter {
+export class ExceptionMiddleware implements ExceptionFilter {
 
   constructor(private readonly dictionary: DictionaryService) {}
 
@@ -47,6 +47,10 @@ export class CustomExceptionFilter implements ExceptionFilter {
       }
     }
 
+    if (Array.isArray(message) && message.some((msg) => msg.includes('.validator.'))) {
+      message = message[0];
+    }
+
     if (this.dictionary.isTranslationKey(message as any)) {
       message = this.dictionary.translate(message as any);
     } else if (this.dictionary.isTranslationObject(message as any)) {
@@ -55,6 +59,7 @@ export class CustomExceptionFilter implements ExceptionFilter {
 
       message = this.dictionary.translate(key, args);
     }
+    
 
     response.status(status).json({ statusCode: status, message });
   }

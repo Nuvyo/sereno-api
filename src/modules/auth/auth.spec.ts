@@ -2,16 +2,15 @@ import * as assert from 'node:assert/strict';
 import { describe, before, it, after } from 'node:test';
 import {
   MeResponseDTO,
-  RefreshTokenDTO,
-  RefreshTokensResponseDTO,
   SigninDTO,
-  SigninResponseDTO,
   SignupDTO,
 } from '../auth/auth.dto';
 import { HttpStatus, INestApplication } from '@nestjs/common';
 import { createApp } from '../../../test/setup';
 import { Specialization } from '../../core/entities/user.entity';
 import Requester from '../../../test/requester';
+import { Session } from '../../core/entities/session.entity';
+import { daysInMilliseconds } from '../../core/utils/utils';
 
 describe('v1/auth', () => {
   let app: INestApplication;
@@ -76,10 +75,6 @@ describe('v1/auth', () => {
       } as SignupDTO;
       const response = await psycologistUserRequester2.post('/v1/auth/signup', body);
 
-      if (response.status !== HttpStatus.CREATED) {
-        console.log('DEBUG signup public failure:', response.body);
-      }
-
       assert.equal(response.status, HttpStatus.CREATED);
       assert.equal(typeof response.body.message, 'string');
     });
@@ -98,9 +93,7 @@ describe('v1/auth', () => {
         bio: 'Experienced psychologist specialized in cognitive behavioral therapy.',
       } as SignupDTO;
       const response = await psycologistUserRequester3.post('/v1/auth/signup', body);
-      if (response.status !== HttpStatus.CREATED) {
-        console.log('DEBUG signup private failure:', response.body);
-      }
+
       assert.equal(response.status, HttpStatus.CREATED);
     });
 
@@ -130,7 +123,7 @@ describe('v1/auth', () => {
       const response = await normalUserRequester1.post('/v1/auth/signup', body);
 
       assert.equal(response.status, HttpStatus.BAD_REQUEST);
-      assert.match(response.body.message, /Email already in use/);
+      assert.equal(response.body.message, 'Email already in use');
     });
 
     it('should fail when public psychologist is missing required fields', async () => {
@@ -161,7 +154,7 @@ describe('v1/auth', () => {
       const response = await normalUserRequester1.post('/v1/auth/signup', body);
 
       assert.equal(response.status, HttpStatus.BAD_REQUEST);
-      assert.match(response.body.message, /Session cost is required/);
+      assert.equal(response.body.message, 'Session cost is required');
     });
   });
 
@@ -174,7 +167,7 @@ describe('v1/auth', () => {
       const response = await normalUserRequester1.post('/v1/auth/signin', body);
 
       assert.equal(response.status, HttpStatus.UNAUTHORIZED);
-      assert.match(response.body.message, /Invalid credentials/);
+      assert.equal(response.body.message, 'Invalid credentials');
     });
 
     it('should receive a body with invalid password and fail', async () => {
@@ -185,7 +178,7 @@ describe('v1/auth', () => {
       const response = await normalUserRequester1.post('/v1/auth/signin', body);
 
       assert.equal(response.status, HttpStatus.UNAUTHORIZED);
-      assert.match(response.body.message, /Invalid credentials/);
+      assert.equal(response.body.message, 'Invalid credentials');
     });
 
     it('should receive a body of a normal user and succeed', async () => {
@@ -196,17 +189,30 @@ describe('v1/auth', () => {
       const response = await normalUserRequester1.post('/v1/auth/signin', body);
 
       assert.equal(response.status, HttpStatus.CREATED);
-      assert.equal(typeof response.body.accessToken, 'string');
-      assert.equal(typeof response.body.refreshToken, 'string');
-      assert.equal(typeof response.body.userId, 'string');
+
+      const responseBody = response.body as Session;
+
+      assert.equal(typeof responseBody.token, 'string');
+      assert.equal(typeof responseBody.userId, 'string');
+      assert.equal(typeof responseBody.expiresAt, 'string');
+      assert.notEqual(new Date(responseBody.expiresAt), NaN);
+
+      const createdAt = new Date(responseBody.createdAt);
+      const expiresAt = new Date(responseBody.expiresAt);
+
+      createdAt.setMilliseconds(0);
+      expiresAt.setMilliseconds(0);
+
+      const diffInMs = expiresAt.getTime() - createdAt.getTime();
+      const expectedDiffInMs = daysInMilliseconds(30);
+
+      assert.equal(diffInMs, expectedDiffInMs);
 
       Object.keys(response.body).forEach((key) => {
-        assert.notEqual(key, 'password');
-        assert.notEqual(key, 'passwordConfirmation');
-        assert.equal(key in new SigninResponseDTO(), true);
+        assert.equal(key in new Session(), true);
       });
 
-      normalUserRequester1.setTokens(response.body.accessToken, response.body.refreshToken);
+      normalUserRequester1.setSession(responseBody);
     });
 
     it('should receive a body of a psychologist user and succeed', async () => {
@@ -217,17 +223,19 @@ describe('v1/auth', () => {
       const response = await psycologistUserRequester1.post('/v1/auth/signin', body);
 
       assert.equal(response.status, HttpStatus.CREATED);
-      assert.equal(typeof response.body.accessToken, 'string');
-      assert.equal(typeof response.body.refreshToken, 'string');
-      assert.equal(typeof response.body.userId, 'string');
+      
+      const responseBodyOne = response.body as Session;
+
+      assert.equal(typeof responseBodyOne.token, 'string');
+      assert.equal(typeof responseBodyOne.userId, 'string');
+      assert.equal(typeof responseBodyOne.expiresAt, 'string');
+      assert.notEqual(new Date(responseBodyOne.expiresAt), NaN);
 
       Object.keys(response.body).forEach((key) => {
-        assert.notEqual(key, 'password');
-        assert.notEqual(key, 'passwordConfirmation');
-        assert.equal(key in new SigninResponseDTO(), true);
+        assert.equal(key in new Session(), true);
       });
 
-      psycologistUserRequester1.setTokens(response.body.accessToken, response.body.refreshToken);
+      psycologistUserRequester1.setSession(responseBodyOne);
 
       const body2: SigninDTO = {
         email: 'sarah.connor.auth@email.com',
@@ -236,17 +244,19 @@ describe('v1/auth', () => {
       const response2 = await psycologistUserRequester2.post('/v1/auth/signin', body2);
 
       assert.equal(response2.status, HttpStatus.CREATED);
-      assert.equal(typeof response2.body.accessToken, 'string');
-      assert.equal(typeof response2.body.refreshToken, 'string');
-      assert.equal(typeof response2.body.userId, 'string');
+      
+      const responseBodyTwo = response2.body as Session;
+
+      assert.equal(typeof responseBodyTwo.token, 'string');
+      assert.equal(typeof responseBodyTwo.userId, 'string');
+      assert.equal(typeof responseBodyTwo.expiresAt, 'string');
+      assert.notEqual(new Date(responseBodyTwo.expiresAt), NaN);
 
       Object.keys(response2.body).forEach((key) => {
-        assert.notEqual(key, 'password');
-        assert.notEqual(key, 'passwordConfirmation');
-        assert.equal(key in new SigninResponseDTO(), true);
+        assert.equal(key in new Session(), true);
       });
 
-      psycologistUserRequester2.setTokens(response2.body.accessToken, response2.body.refreshToken);
+      psycologistUserRequester2.setSession(responseBodyTwo);
 
       const body3: SigninDTO = {
         email: 'sofie.test.auth@email.com',
@@ -255,42 +265,19 @@ describe('v1/auth', () => {
       const response3 = await psycologistUserRequester3.post('/v1/auth/signin', body3);
 
       assert.equal(response3.status, HttpStatus.CREATED);
-      assert.equal(typeof response3.body.accessToken, 'string');
-      assert.equal(typeof response3.body.refreshToken, 'string');
-      assert.equal(typeof response3.body.userId, 'string');
+      
+      const responseBodyThree = response3.body as Session;
+
+      assert.equal(typeof responseBodyThree.token, 'string');
+      assert.equal(typeof responseBodyThree.userId, 'string');
+      assert.equal(typeof responseBodyThree.expiresAt, 'string');
+      assert.notEqual(new Date(responseBodyThree.expiresAt), NaN);
 
       Object.keys(response3.body).forEach((key) => {
-        assert.notEqual(key, 'password');
-        assert.notEqual(key, 'passwordConfirmation');
-        assert.equal(key in new SigninResponseDTO(), true);
+        assert.equal(key in new Session(), true);
       });
 
-      psycologistUserRequester3.setTokens(response3.body.accessToken, response3.body.refreshToken);
-    });
-  });
-
-  describe('[POST] /refresh', () => {
-    it('should refresh the access token and succeed', async () => {
-      const body: RefreshTokenDTO = { refreshToken: normalUserRequester1.getTokens().refreshToken! };
-      const response = await normalUserRequester1.post('/v1/auth/refresh', body);
-
-      assert.equal(response.status, HttpStatus.CREATED);
-      assert.equal(typeof response.body.accessToken, 'string');
-      assert.equal(typeof response.body.refreshToken, 'string');
-
-      Object.keys(response.body).forEach((key) => {
-        assert.equal(key in new RefreshTokensResponseDTO(), true);
-      });
-
-      normalUserRequester1.setTokens(response.body.accessToken, response.body.refreshToken);
-    });
-
-    it('should not find the refresh token and fail', async () => {
-      const body: RefreshTokenDTO = { refreshToken: '0de903fb-cd85-4fc8-b648-f625f994a515' };
-      const response = await normalUserRequester1.post('/v1/auth/refresh', body);
-
-      assert.equal(response.status, HttpStatus.UNAUTHORIZED);
-      assert.match(response.body.message, /Invalid refresh token/);
+      psycologistUserRequester3.setSession(responseBodyThree);
     });
   });
 

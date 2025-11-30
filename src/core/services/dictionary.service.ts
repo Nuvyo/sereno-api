@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { I18nService } from 'nestjs-i18n';
+import { getRequestContext } from '../request-context/request-context';
 
 @Injectable()
 export class DictionaryService {
@@ -11,11 +12,11 @@ export class DictionaryService {
   private ensureCache(): void {
     if (!this.cache) {
       const authEn = require('../../i18n/en/auth.json');
-      const authPt = require('../../i18n/pt-br/auth.json');
+      const authPt = require('../../i18n/ptbr/auth.json');
       const userEn = require('../../i18n/en/user.json');
-      const userPt = require('../../i18n/pt-br/user.json');
+      const userPt = require('../../i18n/ptbr/user.json');
 
-      this.cache = { auth: { en: authEn, 'pt-br': authPt }, user: { en: userEn, 'pt-br': userPt } };
+      this.cache = { auth: { en: authEn, 'ptbr': authPt }, user: { en: userEn, 'ptbr': userPt } };
     }
   }
 
@@ -24,11 +25,13 @@ export class DictionaryService {
     const [domain, ...restParts] = key.split('.');
     const innerKey = restParts.join('.');
     const bundle = (this.cache as any)[domain];
-    let text: string | undefined = bundle?.[lang]?.[innerKey];
+    const ctx = getRequestContext();
+    const langToUse = ctx?.language || lang;
+    let text: string | undefined = bundle?.[langToUse]?.[innerKey];
 
     if (typeof text !== 'string' || text.length === 0) {
       try {
-        const maybe = this.i18nService.translate(key, { lang, args: args || {} }) as unknown as string;
+        const maybe = this.i18nService.translate(key, { lang: langToUse, args: args || {} }) as unknown as string;
 
         if (typeof maybe === 'string' && maybe !== key) {
           text = maybe;

@@ -1,7 +1,7 @@
-import { Body, Controller, Delete, Get, Patch, Post, Req, UseGuards } from '@nestjs/common';
-import { MeResponseDTO, RefreshTokenDTO, SigninDTO, SigninResponseDTO, SignupDTO, UpdateMeDTO } from '../auth/auth.dto';
+import { Body, Controller, Delete, Get, Patch, Post, Req, Res, UseGuards, UsePipes, ValidationPipe } from '@nestjs/common';
+import { MeResponseDTO, SigninDTO, SignupDTO, UpdateMeDTO } from '../auth/auth.dto';
 import { AuthService } from '../auth/auth.service';
-import { Request } from 'express';
+import { Request, Response } from 'express';
 import { AuthGuard } from '../../core/guards/auth.guard';
 import { BaseMessageDTO } from '../../core/dtos/generic.dto';
 
@@ -22,8 +22,10 @@ export class AuthController {
   }
 
   @Post('/signin')
-  public signin(@Body() body: SigninDTO): Promise<SigninResponseDTO> {
-    return this.authService.signin(body);
+  public async signin(@Body() body: SigninDTO, @Res() response: Response): Promise<void> {
+    const session = await this.authService.signin(body, response);
+
+    response.json(session);
   }
 
   @Post('/signout')
@@ -32,14 +34,9 @@ export class AuthController {
     return this.authService.logout(req.userId);
   }
 
-  @Post('/refresh')
-  @UseGuards(AuthGuard)
-  public refresh(@Req() req: Request, @Body() body: RefreshTokenDTO): Promise<RefreshTokenDTO> {
-    return this.authService.refresh(body, req.userId);
-  }
-
   @Patch('/me')
   @UseGuards(AuthGuard)
+  @UsePipes(new ValidationPipe({ whitelist: true, skipMissingProperties: true }))
   public updateMe(@Req() req: Request, @Body() body: UpdateMeDTO): Promise<BaseMessageDTO> {
     return this.authService.updateMe(req.userId, body);
   }

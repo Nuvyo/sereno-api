@@ -2,14 +2,14 @@ import { Injectable } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { User } from '../../core/entities/user.entity';
 import { QueryData } from '../../core/pipes/query.pipe';
-import { FindPsychologistDTO } from '../user/user.dto';
+import { FindPsychologistDTO } from './psychologist.dto';
 
 @Injectable()
-export class UserService {
+export class PsychologistService {
 
   constructor(private readonly dataSource: DataSource) {}
 
-  public async listPsychologists(query: QueryData): Promise<[FindPsychologistDTO[], number]> {
+  public async findAll(query: QueryData): Promise<[FindPsychologistDTO[], number]> {
     const queryBuilder = this.dataSource
       .getRepository(User)
       .createQueryBuilder('user')
@@ -31,7 +31,7 @@ export class UserService {
     return queryBuilder.getManyAndCount();
   }
 
-  public async getPsychologistById(id: string): Promise<FindPsychologistDTO> {
+  public async findOne(id: string): Promise<FindPsychologistDTO> {
     const user = await this.dataSource
       .getRepository(User)
       .createQueryBuilder('user')

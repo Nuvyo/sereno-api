@@ -1,11 +1,11 @@
 import { DataSource, DataSourceOptions } from 'typeorm';
 import * as dotenv from 'dotenv';
-import { ChatMessage } from '../entities/chat-message.entity';
 import { User } from '../entities/user.entity';
-import { RefreshToken } from '../entities/refresh-token.entity';
-import { AccessToken } from '../entities/access-token.entity';
+import { Session } from '../entities/session.entity';
 
 dotenv.config();
+
+export const entities = [User, Session];
 
 export const PostgresConfig: DataSourceOptions = {
   type: 'postgres',
@@ -13,12 +13,12 @@ export const PostgresConfig: DataSourceOptions = {
   port: Number(process.env.PGPORT),
   username: process.env.PGUSER,
   password: process.env.PGPASSWORD,
-  database: process.env.NODE_ENV === 'test' ? process.env.PGDATABASE_TEST : process.env.PGDATABASE,
+  database: process.env.PGDATABASE,
   ssl: process.env.PGSSLMODE === 'require' ? { rejectUnauthorized: false } : false,
   synchronize: process.env.TYPEORM_SYNCHRONIZE === 'true',
   logging: false,
   migrations: [__dirname + '/../migration/*.{ts,js}'],
-  entities: [AccessToken, ChatMessage, RefreshToken, User],
+  entities,
   extra: {
     max: Number(process.env.PGPOOLSIZE) || 10,
     idleTimeoutMillis: Number(process.env.PG_IDLE_TIMEOUT) || 30000,

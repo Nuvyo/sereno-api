@@ -1,14 +1,15 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './modules/app.module';
-import { CustomExceptionFilter } from './core/filters/error.filter';
+import { ExceptionMiddleware } from './core/middleware/exception.middleware';
 import * as dotenv from 'dotenv';
 import * as bodyParser from 'body-parser';
 import * as useragent from 'express-useragent';
 import cors from 'cors';
 import { I18nService } from 'nestjs-i18n';
-import { ResponseInterceptor } from './core/interceptors/response.interceptor';
+import { ResponseMiddleware } from './core/middleware/response.middleware';
 import { DictionaryService } from './core/services/dictionary.service';
+import { setRequestContext } from './core/request-context/request-context';
 
 dotenv.config();
 
@@ -39,12 +40,19 @@ async function bootstrap() {
   };
 
   app.use(cors(corsOptions));
-  app.use(bodyParser.json({ type: ['application/json'], limit: '128mb' }));
-  app.use(bodyParser.urlencoded({ limit: '128mb', extended: true }));
+  app.use(bodyParser.json({ type: ['application/json'], limit: '50mb' }));
+  app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
   app.use(useragent.express());
+  app.use((req: any, _res: any, next: any) => {
+    const headerLanguage = req.headers['language'] || 'ptbr';
+    const language = Array.isArray(headerLanguage) ? headerLanguage[0] : String(headerLanguage);
+    
+    setRequestContext({ language });
+    next();
+  });
   app.useGlobalPipes(new ValidationPipe());
-  app.useGlobalFilters(new CustomExceptionFilter(dictionary));
-  app.useGlobalInterceptors(new ResponseInterceptor(dictionary));
+  app.useGlobalFilters(new ExceptionMiddleware(dictionary));
+  app.useGlobalInterceptors(new ResponseMiddleware(dictionary));
 
   app.enableShutdownHooks();
 
