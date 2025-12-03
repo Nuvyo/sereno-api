@@ -43,7 +43,7 @@ export class AuthController {
 
   @Delete('/cancel-account')
   @UseGuards(AuthGuard)
-  public revoke(@Req() req: Request): Promise<BaseMessageDTO> {
+  public cancelAccount(@Req() req: Request): Promise<BaseMessageDTO> {
     return this.authService.cancelAccount(req.userId);
   }
 

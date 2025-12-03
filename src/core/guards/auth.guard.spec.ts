@@ -46,19 +46,6 @@ describe('[Decorator] Auth Guard', () => {
       assert.equal(response.status, HttpStatus.UNAUTHORIZED);
     });
 
-    it('should succeed to access a protected route with a valid token', async () => {
-      const signInBody: SigninDTO = {
-        email: userData.email,
-        password: userData.password,
-      };
-
-      await normalUserRequester.signin(signInBody);
-
-      const response = await normalUserRequester.get('/v1/auth/me');
-
-      assert.equal(response.status, HttpStatus.OK);
-    });
-
     it('should fail to access a protected route with expired session token', async () => {
       const dataSource = app.get(DataSource);
       const signInBody: SigninDTO = {
@@ -85,6 +72,19 @@ describe('[Decorator] Auth Guard', () => {
       await dataSource.getRepository(Session).update({ id: session.id }, {
         expiresAt: new Date(Date.now() + daysInMilliseconds(30)) // 30 days ahead
       });
+    });
+
+    it('should succeed to access a protected route with a valid token', async () => {
+      const signInBody: SigninDTO = {
+        email: userData.email,
+        password: userData.password,
+      };
+
+      await normalUserRequester.signin(signInBody);
+
+      const response = await normalUserRequester.get('/v1/auth/me');
+
+      assert.equal(response.status, HttpStatus.OK);
     });
   });
 });

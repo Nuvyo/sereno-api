@@ -1,5 +1,5 @@
 import { ArgumentsHost, Catch, ExceptionFilter, HttpException, HttpStatus } from '@nestjs/common';
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { TypeORMError } from 'typeorm';
 import { DictionaryService } from '../services/dictionary.service';
 
@@ -45,6 +45,8 @@ export class ExceptionMiddleware implements ExceptionFilter {
       } else {
         message = exception.message;
       }
+    } else {
+      message = exception.message;
     }
 
     if (Array.isArray(message) && message.some((msg) => msg.includes('.validator.'))) {
@@ -52,14 +54,20 @@ export class ExceptionMiddleware implements ExceptionFilter {
     }
 
     if (this.dictionary.isTranslationKey(message as any)) {
+      const req = ctx.getRequest<Request>();
+
+      this.dictionary.setLanguage(req);
+
       message = this.dictionary.translate(message as any);
     } else if (this.dictionary.isTranslationObject(message as any)) {
+      const req = ctx.getRequest<Request>();
       const key = (message as Record<string, any>).key;
       const args = (message as Record<string, any>).args || {};
 
+      this.dictionary.setLanguage(req);
+
       message = this.dictionary.translate(key, args);
     }
-    
 
     response.status(status).json({ statusCode: status, message });
   }
