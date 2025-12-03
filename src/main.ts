@@ -9,7 +9,6 @@ import cors from 'cors';
 import { I18nService } from 'nestjs-i18n';
 import { ResponseMiddleware } from './core/middleware/response.middleware';
 import { DictionaryService } from './core/services/dictionary.service';
-import { setRequestContext } from './core/request-context/request-context';
 
 dotenv.config();
 
@@ -43,13 +42,6 @@ async function bootstrap() {
   app.use(bodyParser.json({ type: ['application/json'], limit: '50mb' }));
   app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
   app.use(useragent.express());
-  app.use((req: any, _res: any, next: any) => {
-    const headerLanguage = req.headers['language'] || 'ptbr';
-    const language = Array.isArray(headerLanguage) ? headerLanguage[0] : String(headerLanguage);
-    
-    setRequestContext({ language });
-    next();
-  });
   app.useGlobalPipes(new ValidationPipe());
   app.useGlobalFilters(new ExceptionMiddleware(dictionary));
   app.useGlobalInterceptors(new ResponseMiddleware(dictionary));

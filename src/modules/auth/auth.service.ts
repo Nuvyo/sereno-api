@@ -10,11 +10,10 @@ import {
 import { BcryptService } from '../../core/services/bcrypt.service';
 import crypto from 'node:crypto';
 import { BaseMessageDTO } from '../../core/dtos/generic.dto';
-import { DictionaryService } from '../../core/services/dictionary.service';
 import { Session } from '../../core/entities/session.entity';
 import { daysInMilliseconds } from '../../core/utils/utils';
-import { Response } from 'express';
 import { CookieService } from '../../core/services/cookie.service';
+import { Response } from 'express';
 
 @Injectable()
 export class AuthService {
@@ -23,7 +22,6 @@ export class AuthService {
     private readonly dataSource: DataSource,
     private readonly bcryptService: BcryptService,
     private readonly cookieService: CookieService,
-    private readonly dictionaryService: DictionaryService,
   ) {}
 
   public async getMe(userId: string): Promise<MeResponseDTO> {
@@ -77,14 +75,14 @@ export class AuthService {
 
     await this.dataSource.getRepository(User).save(user);
 
-    return { message: this.dictionaryService.translate('auth.profile_updated') };
+    return { message: { key: 'auth.profile_updated' } };
   }
 
   public async signup(body: SignupDTO): Promise<BaseMessageDTO> {
     await this.validateSignupData(body);
     await this.createUser(body);
 
-    return { message: this.dictionaryService.translate('auth.signup_successful') };
+    return { message: { key: 'auth.signup_successful' } };
   }
 
   public async signin(body: SigninDTO, response: Response): Promise<Session> {
@@ -108,7 +106,7 @@ export class AuthService {
     await this.dataSource.getRepository(Session).delete({ user: { id: userId } });
 
     return {
-      message: this.dictionaryService.translate('auth.logout_successful'),
+      message: { key: 'auth.logout_successful' },
     };
   }
 
@@ -116,7 +114,7 @@ export class AuthService {
     await this.dataSource.getRepository(User).delete({ id: userId });
 
     return {
-      message: this.dictionaryService.translate('auth.account_cancellation_successful'),
+      message: { key: 'auth.account_cancellation_successful' },
     };
   }
 
@@ -124,20 +122,20 @@ export class AuthService {
     const userAlreadyExists = await this.dataSource.getRepository(User).exists({ where: { email: body.email } });
 
     if (userAlreadyExists) {
-      throw new BadRequestException(this.dictionaryService.translate('auth.email_already_in_use'));
+      throw new BadRequestException({ key: 'auth.email_already_in_use' });
     }
 
     if (body.password !== body.passwordConfirmation) {
-      throw new BadRequestException(this.dictionaryService.translate('auth.passwords_do_not_match'));
+      throw new BadRequestException({ key: 'auth.passwords_do_not_match' });
     }
 
     if (body.psychologist && body.public) {
       if (!body.crp) {
-        throw new BadRequestException(this.dictionaryService.translate('auth.crp_is_required'));
+        throw new BadRequestException({ key: 'auth.crp_is_required' });
       }
 
       if (body.sessionCost == null) {
-        throw new BadRequestException(this.dictionaryService.translate('auth.session_cost_is_required'));
+        throw new BadRequestException({ key: 'auth.session_cost_is_required' });
       }
     }
   }
