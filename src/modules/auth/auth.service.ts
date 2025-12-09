@@ -25,55 +25,26 @@ export class AuthService {
   ) {}
 
   public async getMe(userId: string): Promise<MeResponseDTO> {
-    const user = await this.dataSource.getRepository(User).findOneOrFail({ where: { id: userId } });
+    const user = await this.dataSource.getRepository(User).findOneOrFail({
+      where: { id: userId },
+    });
     const data: MeResponseDTO = {
       id: user.id,
       name: user.name,
       email: user.email,
-      photo: user.photo,
     };
-
-    if (user.psychologist && user.public) {
-      data.crp = user.crp;
-      data.sessionCost = user.sessionCost;
-      data.bio = user.bio;
-    }
-
+  
     return data;
   }
 
   public async updateMe(userId: string, body: UpdateMeDTO): Promise<BaseMessageDTO> {
     const user = await this.dataSource.getRepository(User).findOneOrFail({ where: { id: userId } });
+    const data = {
+      ...user,
+      ...body
+    };
 
-    this.validateUpdateMeData(body, user);
-
-    if (body.name) {
-      user.name = body.name;
-    }
-
-    if (body.photo !== undefined) {
-      user.photo = body.photo;
-    }
-
-    if (user.psychologist) {
-      if (typeof body.public === 'boolean') {
-        user.public = body.public;
-      }
-
-      if (body.crp !== undefined) {
-        user.crp = body.crp;
-      }
-
-      if (body.sessionCost !== undefined) {
-        user.sessionCost = body.sessionCost;
-      }
-
-      if (body.bio !== undefined) {
-        user.bio = body.bio;
-      }
-    }
-
-    await this.dataSource.getRepository(User).save(user);
+    await this.dataSource.getRepository(User).save(data);
 
     return { message: { key: 'auth.profile_updated' } };
   }
@@ -128,35 +99,14 @@ export class AuthService {
     if (body.password !== body.passwordConfirmation) {
       throw new BadRequestException({ key: 'auth.passwords_do_not_match' });
     }
-
-    if (body.psychologist && body.public) {
-      if (!body.crp) {
-        throw new BadRequestException({ key: 'auth.crp_is_required' });
-      }
-
-      if (body.sessionCost == null) {
-        throw new BadRequestException({ key: 'auth.session_cost_is_required' });
-      }
-    }
   }
 
   private async createUser(body: SignupDTO): Promise<User> {
     const data = new User();
 
-    data.photo = body.photo;
     data.name = body.name;
     data.email = body.email;
-    data.psychologist = body.psychologist;
     data.password = await this.bcryptService.hash(body.password);
-
-    if (body.psychologist && body.public) {
-      data.public = body.public;
-      data.crp = body.crp;
-      data.specializations = body.specializations;
-      data.whatsapp = body.whatsapp;
-      data.sessionCost = body.sessionCost;
-      data.bio = body.bio;
-    }
 
     return this.dataSource.getRepository(User).save(data);
   }
@@ -195,20 +145,6 @@ export class AuthService {
     delete (savedSession as any).user;
 
     return savedSession;
-  }
-
-  private validateUpdateMeData(body: UpdateMeDTO, user: User): void {
-    const willBePublic = body.public && !user.public;
-
-    if (user.psychologist && willBePublic) {
-      if (!user.crp && (!body.crp || body.crp === '')) {
-        throw new BadRequestException({ key: 'auth.crp_is_required' });
-      }
-
-      if (body.sessionCost == null) {
-        throw new BadRequestException({ key: 'auth.session_cost_is_required' });
-      }
-    }
   }
 
 }

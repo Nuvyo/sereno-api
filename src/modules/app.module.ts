@@ -1,5 +1,4 @@
 import { Module } from '@nestjs/common';
-import { PsychologistModule } from './psychologist/psychologist.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { PostgresConfig } from '../core/datasources/postgres.datasource';
 import { AuthModule } from './auth/auth.module';
@@ -22,7 +21,6 @@ dotenv.config();
       resolvers: [{ use: HeaderResolver, options: ['language'] }],
     }),
     TypeOrmModule.forRoot(PostgresConfig),
-    PsychologistModule,
     AuthModule,
   ],
   controllers: [AppController],
