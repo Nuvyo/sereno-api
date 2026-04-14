@@ -1,7 +1,9 @@
 import { Injectable } from '@nestjs/common';
+import * as dotenv from 'dotenv';
+
+dotenv.config();
 
 export interface ICookieOptions {
-  name: string;
   value: string;
   maxAge?: number;
   path?: string;
@@ -16,8 +18,9 @@ export class CookieService {
 
   public serialize(options: ICookieOptions): string {
     const parts: string[] = [];
+    const isProduction = process.env.NODE_ENV === 'production';
 
-    parts.push(`${options.name}=${options.value ?? ''}`);
+    parts.push(`${options.value ?? ''}`);
 
     if (options.path) {
       parts.push(`Path=${options.path}`);
@@ -27,7 +30,7 @@ export class CookieService {
       parts.push(`Max-Age=${options.maxAge}`);
     }
 
-    if (options.secure) {
+    if (options.secure && isProduction) {
       parts.push('Secure');
     }
 
@@ -39,19 +42,8 @@ export class CookieService {
   }
 
   public parse(cookieString: string): ICookieOptions {
-    const [nameValuePair, ...attributes] = cookieString.split(';').map(part => part.trim());
-    const eqIndex = nameValuePair.indexOf('=');
-    let name = '', value = '';
-
-    if (eqIndex !== -1) {
-      name = nameValuePair.substring(0, eqIndex);
-      value = nameValuePair.substring(eqIndex + 1);
-    } else {
-      name = nameValuePair;
-      value = '';
-    }
-
-    const options: ICookieOptions = { name, value };
+    const attributes = cookieString.split(';').map(part => part.trim());
+    const options: ICookieOptions = { value: attributes[0] };
 
     attributes.forEach(attr => {
       if (!attr) return;

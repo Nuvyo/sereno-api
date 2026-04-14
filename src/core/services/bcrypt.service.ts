@@ -11,7 +11,7 @@ export class BcryptService {
 
   public async hash(value: string): Promise<string> {
     const valueWithPepper = value + process.env.PEPPER;
-    const rounds = process.env.NODE_ENV === 'test' ? 1 : 10;
+    const rounds = process.env.NODE_ENV === 'test' ? 1 : 12;
 
     return bcrypt.hash(valueWithPepper, rounds);
   }

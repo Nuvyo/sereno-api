@@ -59,25 +59,31 @@ export class AuthService {
   public async signin(body: SigninDTO, response: Response): Promise<Session> {
     const user = await this.getAuthenticatedUser(body);
     const session = await this.createUserSession(user.id);
-    const cookie = this.cookieService.serialize({
-      name: 'sid',
-      value: session.token,
-      maxAge: session.maxAge,
+
+    response.cookie('sid', session.token, {
+      maxAge: session.maxAge * 1000,
       path: '/',
       httpOnly: true,
-      secure: true,
+      secure: process.env.NODE_ENV === 'production' || true,
+      sameSite: 'none',
     });
-
-    response.setHeader('Set-Cookie', cookie);
 
     return session;
   }
 
-  public async logout(userId: string): Promise<BaseMessageDTO> {
+  public async signout(userId: string, sessionId: string): Promise<BaseMessageDTO> {
+    await this.dataSource.getRepository(Session).delete({ id: sessionId, user: { id: userId } });
+
+    return {
+      message: { key: 'auth.signout_successful' },
+    };
+  }
+
+  public async signoutAll(userId: string): Promise<BaseMessageDTO> {
     await this.dataSource.getRepository(Session).delete({ user: { id: userId } });
 
     return {
-      message: { key: 'auth.logout_successful' },
+      message: { key: 'auth.signout_successful' },
     };
   }
 

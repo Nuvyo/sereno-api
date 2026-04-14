@@ -30,8 +30,14 @@ export class AuthController {
 
   @Post('/signout')
   @UseGuards(AuthGuard)
-  public logout(@Req() req: Request): Promise<BaseMessageDTO> {
-    return this.authService.logout(req.userId);
+  public signout(@Req() req: Request): Promise<BaseMessageDTO> {
+    return this.authService.signout(req.userId, req.sessionId);
+  }
+
+  @Post('/signout-all')
+  @UseGuards(AuthGuard)
+  public signoutAll(@Req() req: Request): Promise<BaseMessageDTO> {
+    return this.authService.signoutAll(req.userId);
   }
 
   @Patch('/me')

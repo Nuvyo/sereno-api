@@ -6,7 +6,7 @@ describe('CookieService', () => {
   const svc = new CookieService();
 
   it('serializes simple cookie', () => {
-    const options: ICookieOptions = { name: 'token', value: 'abc' };
+    const options: ICookieOptions = { value: 'abc' };
     const result = svc.serialize(options);
 
     assert.equal(result, 'token=abc');
@@ -14,7 +14,6 @@ describe('CookieService', () => {
 
   it('serializes cookie with all attributes', () => {
     const options: ICookieOptions = {
-      name: 'token',
       value: 'abc',
       maxAge: 3600,
       path: '/',
@@ -41,7 +40,6 @@ describe('CookieService', () => {
     const cookieStr = 'token=abc; Path=/; Max-Age=3600; Secure; HttpOnly';
     const parsed = svc.parse(cookieStr);
 
-    assert.equal(parsed.name, 'token');
     assert.equal(parsed.value, 'abc');
     assert.equal(parsed.path, '/');
     assert.equal(parsed.maxAge, 3600);
@@ -53,7 +51,6 @@ describe('CookieService', () => {
     const cookieStr = 'token=abc; Foo=bar; Path=/';
     const parsed = svc.parse(cookieStr);
 
-    assert.equal(parsed.name, 'token');
     assert.equal(parsed.value, 'abc');
     assert.equal(parsed.path, '/');
     assert.equal(Object.hasOwn(parsed, 'Foo'), false);

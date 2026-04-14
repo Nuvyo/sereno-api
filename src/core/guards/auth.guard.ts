@@ -15,12 +15,24 @@ export class AuthGuard implements CanActivate {
     const session = await this.getUserSession(request);
 
     request.userId = session.userId;
+    request.sessionId = session.id;
 
     return true;
   }
 
   private async getUserSession(request: Request): Promise<Session> {
-    const token = request.headers.cookie?.split('sid=')[1]?.split(';')[0];
+    // Tenta obter o token do cookie usando cookie-parser
+    const cookies = (request as any).cookies || {};
+    let token = cookies.sid;
+
+    // Fallback: se cookie-parser não tiver parseado, tenta parsing manual
+    if (!token) {
+      const rawCookie = request.headers.cookie;
+      if (rawCookie) {
+        const sidCookie = rawCookie.split(';').find((c) => c.trim().startsWith('sid='));
+        token = sidCookie?.split('=')[1];
+      }
+    }
 
     if (!token) {
       throw new UnauthorizedException({ key: 'auth.invalid_session' });

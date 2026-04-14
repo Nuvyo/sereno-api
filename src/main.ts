@@ -4,6 +4,7 @@ import { AppModule } from './modules/app.module';
 import { ExceptionMiddleware } from './core/middleware/exception.middleware';
 import * as dotenv from 'dotenv';
 import * as bodyParser from 'body-parser';
+import cookieParser from 'cookie-parser';
 import * as useragent from 'express-useragent';
 import cors from 'cors';
 import { I18nService } from 'nestjs-i18n';
@@ -39,6 +40,7 @@ async function bootstrap() {
   };
 
   app.use(cors(corsOptions));
+  app.use(cookieParser());
   app.use(bodyParser.json({ type: ['application/json'], limit: '50mb' }));
   app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
   app.use(useragent.express());
