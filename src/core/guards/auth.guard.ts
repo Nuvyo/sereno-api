@@ -21,18 +21,11 @@ export class AuthGuard implements CanActivate {
   }
 
   private async getUserSession(request: Request): Promise<Session> {
-    // Tenta obter o token do cookie usando cookie-parser
-    const cookies = (request as any).cookies || {};
-    let token = cookies.sid;
-
-    // Fallback: se cookie-parser não tiver parseado, tenta parsing manual
-    if (!token) {
-      const rawCookie = request.headers.cookie;
-      if (rawCookie) {
-        const sidCookie = rawCookie.split(';').find((c) => c.trim().startsWith('sid='));
-        token = sidCookie?.split('=')[1];
-      }
+    if ((request.query as any).sid || (request.query as any).token) {
+      throw new UnauthorizedException({ key: 'auth.invalid_session' });
     }
+
+    const token = this.extractTokenFromCookies(request);
 
     if (!token) {
       throw new UnauthorizedException({ key: 'auth.invalid_session' });
@@ -49,6 +42,12 @@ export class AuthGuard implements CanActivate {
     }
 
     return session;
+  }
+
+  private extractTokenFromCookies(request: Request): string | null {
+    const cookies = (request as any).cookies || {};
+    
+    return cookies.sid || null;
   }
 
 }

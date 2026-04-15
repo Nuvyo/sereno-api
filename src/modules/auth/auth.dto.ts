@@ -4,6 +4,8 @@ import {
   IsOptional,
   IsString,
   MinLength,
+  Matches,
+  IsEmail,
 } from 'class-validator';
 import 'reflect-metadata';
 
@@ -50,17 +52,23 @@ export class UpdateMeDTO {
 export class SignupDTO extends UpdateMeDTO {
 
   @IsNotEmpty({ message: 'auth.validator.email_not_empty' })
-  @IsString({ message: 'auth.validator.email_must_be_string' })
+  @IsEmail({}, { message: 'auth.validator.invalid_email' })
   email: string;
 
   @IsNotEmpty({ message: 'auth.validator.password_not_empty' })
   @IsString({ message: 'auth.validator.password_must_be_string' })
   @MinLength(8, { message: 'auth.validator.password_min_length' })
+  @Matches(/^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!@#$%^&*])/, {
+    message: 'auth.validator.password_doesnt_meet_requirements',
+  })
   password: string;
 
   @IsNotEmpty({ message: 'auth.validator.passwordConfirmation_not_empty' })
   @IsString({ message: 'auth.validator.passwordConfirmation_must_be_string' })
   @MinLength(8, { message: 'auth.validator.passwordConfirmation_min_length' })
+  @Matches(/^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!@#$%^&*])/, {
+    message: 'auth.validator.password_doesnt_meet_requirements',
+  })
   passwordConfirmation: string;
 
 }
@@ -68,7 +76,7 @@ export class SignupDTO extends UpdateMeDTO {
 export class SigninDTO {
 
   @IsNotEmpty({ message: 'auth.validator.email_not_empty' })
-  @IsString({ message: 'auth.validator.email_must_be_string' })
+  @IsEmail({}, { message: 'auth.validator.invalid_email' })
   email: string;
 
   @IsNotEmpty({ message: 'auth.validator.password_not_empty' })

@@ -12,7 +12,6 @@ import crypto from 'node:crypto';
 import { BaseMessageDTO } from '../../core/dtos/generic.dto';
 import { Session } from '../../core/entities/session.entity';
 import { daysInMilliseconds } from '../../core/utils/utils';
-import { CookieService } from '../../core/services/cookie.service';
 import { Response } from 'express';
 
 @Injectable()
@@ -21,7 +20,6 @@ export class AuthService {
   constructor(
     private readonly dataSource: DataSource,
     private readonly bcryptService: BcryptService,
-    private readonly cookieService: CookieService,
   ) {}
 
   public async getMe(userId: string): Promise<MeResponseDTO> {
@@ -64,8 +62,8 @@ export class AuthService {
       maxAge: session.maxAge * 1000,
       path: '/',
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production' || true,
-      sameSite: 'none',
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
     });
 
     return session;
@@ -122,14 +120,10 @@ export class AuthService {
       where: { email: body.email },
       select: { id: true, password: true },
     });
+    const passwordHash = user?.password || '';
+    const isPasswordValid = await this.bcryptService.compare(body.password, passwordHash);
 
-    if (!user) {
-      throw new UnauthorizedException({ key: 'auth.invalid_credentials' });
-    }
-
-    const isPasswordValid = await this.bcryptService.compare(body.password, user.password);
-
-    if (!isPasswordValid) {
+    if (!user || !isPasswordValid) {
       throw new UnauthorizedException({ key: 'auth.invalid_credentials' });
     }
 
