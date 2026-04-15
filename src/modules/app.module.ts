@@ -17,7 +17,7 @@ dotenv.config();
     ThrottlerModule.forRoot({
       throttlers: [
         {
-          ttl: 60000,
+          ttl: 30000,
           limit: 10,
         },
       ]
