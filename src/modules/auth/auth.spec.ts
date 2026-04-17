@@ -6,10 +6,12 @@ import {
   SignupDTO,
 } from '../auth/auth.dto';
 import { HttpStatus, INestApplication } from '@nestjs/common';
-import { createApp } from '../../../test/setup';
+import { closeApp, createApp } from '../../../test/setup';
 import Requester from '../../../test/requester';
 import { Session } from '../../core/entities/session.entity';
 import { daysInMilliseconds } from '../../core/utils/utils';
+
+const VALID_PASSWORD = 'Test@1234';
 
 describe('v1/auth', () => {
   let app: INestApplication;
@@ -21,16 +23,28 @@ describe('v1/auth', () => {
   });
 
   after(async () => {
-    await app.close();
+    await closeApp(app);
   });
 
   describe('[POST] /signup', () => {
-    it('should receive a body with invalid password confirmation and fail', async () => {
+    it('should fail when password and passwordConfirmation do not match', async () => {
       const body = {
         name: 'John Doe Test',
         email: 'john.test.auth@email.com',
-        password: '123456789',
-        passwordConfirmation: '12345678',
+        password: VALID_PASSWORD,
+        passwordConfirmation: VALID_PASSWORD + 'x',
+      } as SignupDTO;
+      const response = await normalUserRequester1.post('/v1/auth/signup', body);
+
+      assert.equal(response.status, HttpStatus.BAD_REQUEST);
+    });
+
+    it('should fail when password does not meet strength requirements', async () => {
+      const body = {
+        name: 'John Doe Test',
+        email: 'john.test.auth@email.com',
+        password: 'weakpassword',
+        passwordConfirmation: 'weakpassword',
       } as SignupDTO;
       const response = await normalUserRequester1.post('/v1/auth/signup', body);
 
@@ -41,8 +55,8 @@ describe('v1/auth', () => {
       const body = {
         name: 'John Doe Test',
         email: 'john.test.auth@email.com',
-        password: '123456789',
-        passwordConfirmation: '123456789',
+        password: VALID_PASSWORD,
+        passwordConfirmation: VALID_PASSWORD,
       } as SignupDTO;
       const response = await normalUserRequester1.post('/v1/auth/signup', body);
 
@@ -54,8 +68,8 @@ describe('v1/auth', () => {
       const body = {
         name: 'John Doe Test',
         email: 'john.test.auth@email.com',
-        password: '123456789',
-        passwordConfirmation: '123456789',
+        password: VALID_PASSWORD,
+        passwordConfirmation: VALID_PASSWORD,
       } as SignupDTO;
       const response = await normalUserRequester1.post('/v1/auth/signup', body);
 
@@ -68,7 +82,7 @@ describe('v1/auth', () => {
     it('should receive a body with invalid email and fail', async () => {
       const body: SigninDTO = {
         email: 'john.test.1@email.com',
-        password: '123456789',
+        password: VALID_PASSWORD,
       };
       const response = await normalUserRequester1.post('/v1/auth/signin', body);
 
@@ -79,7 +93,7 @@ describe('v1/auth', () => {
     it('should receive a body with invalid password and fail', async () => {
       const body: SigninDTO = {
         email: 'john.test.auth@email.com',
-        password: '12345678',
+        password: 'Wrong@1234',
       };
       const response = await normalUserRequester1.post('/v1/auth/signin', body);
 
@@ -90,7 +104,7 @@ describe('v1/auth', () => {
     it('should receive a body of a normal user and succeed', async () => {
       const body: SigninDTO = {
         email: 'john.test.auth@email.com',
-        password: '123456789',
+        password: VALID_PASSWORD,
       };
       const response = await normalUserRequester1.post('/v1/auth/signin', body);
 
@@ -154,6 +168,18 @@ describe('v1/auth', () => {
 
       assert.equal(meRes.body.name, 'Updated Name');
     });
+
+    it('should ignore extra fields due to whitelist validation', async () => {
+      const updateBody = { name: 'Whitelist Test', email: 'hacker@evil.com', password: 'Hacked@999' };
+      const response = await normalUserRequester1.patch('/v1/auth/me', updateBody);
+
+      assert.equal(response.status, HttpStatus.OK);
+
+      const meRes = await normalUserRequester1.get('/v1/auth/me');
+
+      assert.equal(meRes.body.name, 'Whitelist Test');
+      assert.notEqual(meRes.body.email, 'hacker@evil.com');
+    });
   });
 
   describe('[POST] /signout', () => {
@@ -181,7 +207,7 @@ describe('v1/auth', () => {
     it('should cancel the account of normal user and succeed', async () => {
       const signinBody: SigninDTO = {
         email: 'john.test.auth@email.com',
-        password: '123456789',
+        password: VALID_PASSWORD,
       };
 
       await normalUserRequester1.signin(signinBody);

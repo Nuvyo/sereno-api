@@ -1,7 +1,7 @@
 import { HttpStatus, INestApplication } from '@nestjs/common';
 import * as assert from 'node:assert/strict';
 import { describe, before, it, after } from 'node:test';
-import { createApp } from '../../../test/setup';
+import { closeApp, createApp } from '../../../test/setup';
 import request from 'supertest';
 import { SigninDTO, SignupDTO } from '../../modules/auth/auth.dto';
 import Requester from '../../../test/requester';
@@ -22,8 +22,11 @@ describe('[Decorator] Auth Guard', () => {
   });
 
   after(async () => {
-    await normalUserRequester.cancelAccount();
-    await app.close();
+    try {
+      await normalUserRequester.cancelAccount();
+    } finally {
+      await closeApp(app);
+    }
   });
 
   describe('Guard', () => {

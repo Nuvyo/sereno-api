@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(node -e \"const c=require\\('crypto'\\); console.log\\('PEPPER='+c.randomBytes\\(32\\).toString\\('hex'\\)\\); console.log\\('COOKIE_SECRET='+c.randomBytes\\(32\\).toString\\('hex'\\)\\);\")",
-      "Bash(npm audit *)"
+      "Bash(npm audit *)",
+      "Bash(npx eslint *)"
     ]
   }
 }

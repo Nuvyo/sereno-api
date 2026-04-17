@@ -64,8 +64,8 @@ export default class Requester {
     body = body || {};
     body.name = body.name || faker.person.firstName() + ' ' + faker.person.lastName();
     body.email = body.email || faker.internet.email();
-    body.password = body.password || 'validpassword';
-    body.passwordConfirmation = body.password;
+    body.password = body.password || 'Test@1234';
+    body.passwordConfirmation = body.passwordConfirmation || body.password;
 
     const response = await this.post('/v1/auth/signup', body);
     const result = `Requester Signup Status OK: ${response.ok}${!response.ok ? ` - ${JSON.stringify(response.body.message)}` : ''}`;

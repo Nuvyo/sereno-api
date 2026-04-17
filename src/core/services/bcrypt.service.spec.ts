@@ -12,14 +12,14 @@ function getCostFactorFromHash(hash: string): number {
 
 describe('BcryptService', () => {
   beforeEach(() => {
-    process.env.PEPPER = 'pep';
+    process.env.PEPPER = 'test-pepper-value-for-unit-tests';
   });
 
   afterEach(() => {
     process.env = { ...originalEnv };
   });
 
-  it('uses 1 round when NODE_ENV=test', async () => {
+  it('uses 4 rounds (cost factor 4) when NODE_ENV=test', async () => {
     process.env.NODE_ENV = 'test';
 
     const svc = new BcryptService();
@@ -31,20 +31,36 @@ describe('BcryptService', () => {
     assert.equal(await svc.compare('wrong', hash), false);
   });
 
-  it('uses 10 rounds when NODE_ENV!=test', async () => {
+  it('uses 12 rounds (cost factor 12) when NODE_ENV!=test', async () => {
     process.env.NODE_ENV = 'production';
 
     const svc = new BcryptService();
     const hash = await svc.hash('value');
 
-    assert.equal(getCostFactorFromHash(hash), 10);
+    assert.equal(getCostFactorFromHash(hash), 12);
   });
 
-  it('pepper is applied on compare', async () => {
+  it('pepper is applied: same value hashed and compared must match', async () => {
     process.env.NODE_ENV = 'test';
+
     const svc = new BcryptService();
-    const hash = await svc.hash('value');    const ok = await svc.compare('value', hash);
+    const hash = await svc.hash('value');
+    const ok = await svc.compare('value', hash);
 
     assert.equal(ok, true);
+  });
+
+  it('pepper is applied: different pepper must not match', async () => {
+    process.env.NODE_ENV = 'test';
+
+    const svc = new BcryptService();
+    const hash = await svc.hash('value');
+
+    process.env.PEPPER = 'other-pepper-value-completely-diff';
+
+    const svc2 = new BcryptService();
+    const ok = await svc2.compare('value', hash);
+
+    assert.equal(ok, false);
   });
 });
