@@ -37,12 +37,10 @@ export class AuthService {
 
   public async updateMe(userId: string, body: UpdateMeDTO): Promise<BaseMessageDTO> {
     const user = await this.dataSource.getRepository(User).findOneOrFail({ where: { id: userId } });
-    const data = {
-      ...user,
-      ...body
-    };
 
-    await this.dataSource.getRepository(User).save(data);
+    if (body.name !== undefined) user.name = body.name;
+
+    await this.dataSource.getRepository(User).save(user);
 
     return { message: { key: 'auth.profile_updated' } };
   }

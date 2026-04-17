@@ -19,24 +19,26 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const i18n = app.get<I18nService>(I18nService);
   const dictionary = new DictionaryService(i18n);
+  const allowedOrigins = (process.env.CORS_ALLOWED_ORIGINS || '')
+    .trim()
+    .split(',')
+    .map((o) => o.trim())
+    .filter(Boolean);
+
+  if (allowedOrigins.length === 0) {
+    throw new Error('CORS_ALLOWED_ORIGINS não configurado — a API não iniciará sem origens permitidas explícitas');
+  }
+
   const corsOptions: cors.CorsOptions = {
     allowedHeaders: ['Origin', 'Content-Type', 'Accept', 'Authorization', 'language', 'timezone'],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     origin: (origin, callback) => {
-      const error = new Error('Not allowed by CORS');
-
-      if (!origin) return callback(error);
-
-      const allowedOrigins = process.env.CORS_ALLOWED_ORIGINS
-        ? process.env.CORS_ALLOWED_ORIGINS.trim().split(',').map((o) => o.trim())
-        : [];
-
-      if (allowedOrigins.includes(origin)) {
+      if (!origin || allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
 
-      return callback(error);
+      return callback(new Error('Not allowed by CORS'));
     },
   };
   const helmetOptions: HelmetOptions = {
@@ -66,14 +68,25 @@ async function bootstrap() {
     hidePoweredBy: true,
     referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
   };
+  const cookieSecret = process.env.COOKIE_SECRET;
+  const pepper = process.env.PEPPER;
+  const isProd = process.env.NODE_ENV === 'production';
+
+  if (isProd && (!cookieSecret || cookieSecret.length < 32)) {
+    throw new Error('COOKIE_SECRET deve ter pelo menos 32 caracteres');
+  }
+
+  if (isProd && (!pepper || pepper.length < 32)) {
+    throw new Error('PEPPER deve ter pelo menos 32 caracteres');
+  }
 
   app.use(helmet(helmetOptions));
   app.use(cors(corsOptions));
-  app.use(cookieParser(process.env.COOKIE_SECRET));
-  app.use(bodyParser.json({ type: ['application/json'], limit: '50mb' }));
-  app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
+  app.use(cookieParser(cookieSecret));
+  app.use(bodyParser.json({ type: ['application/json'], limit: '1mb' }));
+  app.use(bodyParser.urlencoded({ limit: '1mb', extended: true }));
   app.use(useragent.express());
-  app.useGlobalPipes(new ValidationPipe());
+  app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
   app.useGlobalFilters(new ExceptionMiddleware(dictionary));
   app.useGlobalInterceptors(new ResponseMiddleware(dictionary));
 

@@ -55,13 +55,13 @@ export class QueryPipe implements PipeTransform<QueryDataInput, QueryData> {
     return new QueryData(where, like, skip, take, order);
   }
 
+  private readonly QUERY_KEYS: (keyof QueryDataInput)[] = ['like', 'page', 'take', 'order'];
+
   private getFilter(value: QueryDataInput): Record<string, any> {
     const where: Record<string, any> = {};
 
-    Object.keys(value).map((key) => {
-      const queryInputObject = new QueryDataInput();
-
-      if (!Object.keys(queryInputObject).includes(key)) {
+    Object.keys(value).forEach((key) => {
+      if (!this.QUERY_KEYS.includes(key as keyof QueryDataInput)) {
         where[key] = value[key as keyof QueryDataInput];
       }
     });

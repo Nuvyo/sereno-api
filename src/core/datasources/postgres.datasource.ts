@@ -14,9 +14,9 @@ export const PostgresConfig: DataSourceOptions = {
   username: process.env.POSTGRES_USER,
   password: process.env.POSTGRES_PASSWORD,
   database: process.env.POSTGRES_DB,
-  ssl: process.env.POSTGRES_SSLMODE === 'require' ? { rejectUnauthorized: false } : false,
-  synchronize: process.env.TYPEORM_SYNCHRONIZE === 'true',
-  logging: false,
+  ssl: process.env.POSTGRES_SSLMODE === 'require' ? { rejectUnauthorized: true } : false,
+  synchronize: process.env.NODE_ENV !== 'production' && process.env.TYPEORM_SYNCHRONIZE === 'true',
+  logging: process.env.NODE_ENV === 'production' ? ['error'] : false,
   migrations: [__dirname + '/../migration/*.{ts,js}'],
   entities,
   extra: {

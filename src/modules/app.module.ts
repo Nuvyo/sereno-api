@@ -16,11 +16,10 @@ dotenv.config();
   imports: [
     ThrottlerModule.forRoot({
       throttlers: [
-        {
-          ttl: 30000,
-          limit: 10,
-        },
-      ]
+        { name: 'short', ttl: 1000, limit: 3 },
+        { name: 'medium', ttl: 60000, limit: 30 },
+        { name: 'long', ttl: 900000, limit: 100 },
+      ],
     }),
     I18nModule.forRoot({
       fallbackLanguage: 'ptbr',
