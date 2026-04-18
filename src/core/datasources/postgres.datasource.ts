@@ -2,10 +2,11 @@ import { DataSource, DataSourceOptions } from 'typeorm';
 import * as dotenv from 'dotenv';
 import { User } from '../entities/user.entity';
 import { Session } from '../entities/session.entity';
+import { AuditLog } from '../entities/audit-log.entity';
 
 dotenv.config();
 
-export const entities = [User, Session];
+export const entities = [User, Session, AuditLog];
 
 export const PostgresConfig: DataSourceOptions = {
   type: 'postgres',

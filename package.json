@@ -24,6 +24,7 @@
     "tests:cov": "c8 npm run tests",
     "migration:run": "npx typeorm-ts-node-commonjs migration:run -d src/core/datasources/postgres.datasource.ts",
     "migration:generate": "npx typeorm-ts-node-commonjs migration:generate ./src/core/migration/Migration -d src/core/datasources/postgres.datasource.ts",
+    "migration:create": "npx typeorm-ts-node-commonjs migration:create ./src/core/migration/Migration",
     "migration:new": "rm -rf dist && npm run build && npm run migration:run && npm run migration:generate",
     "clear:test-db": "node -r tsconfig-paths/register -r ts-node/register ./scripts/clear-test-db.ts"
   },

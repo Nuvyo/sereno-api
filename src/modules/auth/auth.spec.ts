@@ -120,13 +120,10 @@ describe('v1/auth', () => {
       const createdAt = new Date(responseBody.createdAt);
       const expiresAt = new Date(responseBody.expiresAt);
 
-      createdAt.setMilliseconds(0);
-      expiresAt.setMilliseconds(0);
+      const diffInSec = Math.round((expiresAt.getTime() - createdAt.getTime()) / 1000);
+      const expectedDiffInSec = daysInMilliseconds(30) / 1000;
 
-      const diffInMs = expiresAt.getTime() - createdAt.getTime();
-      const expectedDiffInMs = daysInMilliseconds(30);
-
-      assert.equal(diffInMs, expectedDiffInMs);
+      assert.equal(diffInSec, expectedDiffInSec);
 
       Object.keys(response.body).forEach((key) => {
         assert.equal(key in new Session(), true);

@@ -5,6 +5,7 @@ import { DataSource } from 'typeorm';
 import { Response } from 'express';
 import { AuthService } from './auth.service';
 import { BcryptService } from '../../core/services/bcrypt.service';
+import { AuditLogService } from '../../core/services/audit-log.service';
 import { User } from '../../core/entities/user.entity';
 import { Session } from '../../core/entities/session.entity';
 import { SignupDTO, UpdateMeDTO } from './auth.dto';
@@ -53,6 +54,10 @@ function mockBcrypt(overrides: Partial<BcryptService> = {}): BcryptService {
   } as BcryptService;
 }
 
+function mockAuditLog(): AuditLogService {
+  return { log: () => {} } as unknown as AuditLogService;
+}
+
 function mockResponse(spy: { name?: string; value?: string } = {}): Response {
   return {
     cookie: (name: string, value: string) => {
@@ -72,6 +77,7 @@ describe('AuthService', () => {
       const service = new AuthService(
         mockDataSource({ findOneOrFail: async () => user }),
         mockBcrypt(),
+        mockAuditLog(),
       );
 
       const result = await service.getMe(user.id);
@@ -86,6 +92,7 @@ describe('AuthService', () => {
       const service = new AuthService(
         mockDataSource({ findOneOrFail: async () => { throw new Error('EntityNotFound'); } }),
         mockBcrypt(),
+        mockAuditLog(),
       );
 
       await assert.rejects(() => service.getMe('nonexistent'));
@@ -103,6 +110,7 @@ describe('AuthService', () => {
           save: async (u: User) => { capture.saved = u; return u; },
         }),
         mockBcrypt(),
+        mockAuditLog(),
       );
 
       const result = await service.updateMe(user.id, { name: 'New Name' } as UpdateMeDTO);
@@ -122,6 +130,7 @@ describe('AuthService', () => {
           save: async (u: User) => { capture.saved = u; return u; },
         }),
         mockBcrypt(),
+        mockAuditLog(),
       );
 
       await service.updateMe(user.id, {} as UpdateMeDTO);
@@ -141,6 +150,7 @@ describe('AuthService', () => {
           save: async (u: User) => { capture.created = u; return u; },
         }),
         mockBcrypt(),
+        mockAuditLog(),
       );
 
       const body: SignupDTO = {
@@ -163,6 +173,7 @@ describe('AuthService', () => {
       const service = new AuthService(
         mockDataSource({ exists: async () => true }),
         mockBcrypt(),
+        mockAuditLog(),
       );
 
       await assert.rejects(
@@ -179,6 +190,7 @@ describe('AuthService', () => {
       const service = new AuthService(
         mockDataSource({ exists: async () => false }),
         mockBcrypt(),
+        mockAuditLog(),
       );
 
       await assert.rejects(
@@ -203,6 +215,7 @@ describe('AuthService', () => {
           { save: async (s: Session) => { s.id = 'session-id-1'; return s; } },
         ),
         mockBcrypt({ compare: async () => true }),
+        mockAuditLog(),
       );
 
       const session = await service.signin({ email: user.email, password: 'Test@1234' }, mockResponse(cookieSpy));
@@ -218,6 +231,7 @@ describe('AuthService', () => {
       const service = new AuthService(
         mockDataSource({ findOne: async () => null }),
         mockBcrypt({ compare: async () => false }),
+        mockAuditLog(),
       );
 
       await assert.rejects(
@@ -232,6 +246,7 @@ describe('AuthService', () => {
       const service = new AuthService(
         mockDataSource({ findOne: async () => user }),
         mockBcrypt({ compare: async () => false }),
+        mockAuditLog(),
       );
 
       await assert.rejects(
@@ -248,6 +263,7 @@ describe('AuthService', () => {
       const service = new AuthService(
         mockDataSource({}, { delete: async (f: any) => { deletedFilter = f; return { affected: 1 }; } }),
         mockBcrypt(),
+        mockAuditLog(),
       );
 
       const result = await service.signout('user-id-1', 'session-id-1');
@@ -264,6 +280,7 @@ describe('AuthService', () => {
       const service = new AuthService(
         mockDataSource({}, { delete: async (f: any) => { deletedFilter = f; return { affected: 3 }; } }),
         mockBcrypt(),
+        mockAuditLog(),
       );
 
       const result = await service.signoutAll('user-id-1');
@@ -280,6 +297,7 @@ describe('AuthService', () => {
       const service = new AuthService(
         mockDataSource({ delete: async (f: any) => { deletedFilter = f; return { affected: 1 }; } }),
         mockBcrypt(),
+        mockAuditLog(),
       );
 
       const result = await service.cancelAccount('user-id-1');

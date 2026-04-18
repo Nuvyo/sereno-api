@@ -13,6 +13,8 @@ import { BaseMessageDTO } from '../../core/dtos/generic.dto';
 import { Session } from '../../core/entities/session.entity';
 import { daysInMilliseconds } from '../../core/utils/utils';
 import { Response } from 'express';
+import { AuditLogService, IAuditContext } from '../../core/services/audit-log.service';
+import { AuditAction } from '../../core/entities/audit-log.entity';
 
 @Injectable()
 export class AuthService {
@@ -20,6 +22,7 @@ export class AuthService {
   constructor(
     private readonly dataSource: DataSource,
     private readonly bcryptService: BcryptService,
+    private readonly auditLogService: AuditLogService,
   ) {}
 
   public async getMe(userId: string): Promise<MeResponseDTO> {
@@ -31,30 +34,45 @@ export class AuthService {
       name: user.name,
       email: user.email,
     };
-  
+
     return data;
   }
 
-  public async updateMe(userId: string, body: UpdateMeDTO): Promise<BaseMessageDTO> {
+  public async updateMe(userId: string, body: UpdateMeDTO, context: IAuditContext = {}): Promise<BaseMessageDTO> {
     const user = await this.dataSource.getRepository(User).findOneOrFail({ where: { id: userId } });
 
     if (body.name !== undefined) user.name = body.name;
 
     await this.dataSource.getRepository(User).save(user);
 
+    await this.auditLogService.log({ userId, action: AuditAction.UPDATE_PROFILE, ...context });
+
     return { message: { key: 'auth.profile_updated' } };
   }
 
-  public async signup(body: SignupDTO): Promise<BaseMessageDTO> {
+  public async signup(body: SignupDTO, context: IAuditContext = {}): Promise<BaseMessageDTO> {
     await this.validateSignupData(body);
-    await this.createUser(body);
+    
+    const user = await this.createUser(body);
+
+    await this.auditLogService.log({ userId: user.id, action: AuditAction.SIGNUP, ...context });
 
     return { message: { key: 'auth.signup_successful' } };
   }
 
-  public async signin(body: SigninDTO, response: Response): Promise<Session> {
-    const user = await this.getAuthenticatedUser(body);
+  public async signin(body: SigninDTO, response: Response, context: IAuditContext = {}): Promise<Session> {
+    let user: User;
+
+    try {
+      user = await this.getAuthenticatedUser(body);
+    } catch (e) {
+      await this.auditLogService.log({ action: AuditAction.SIGNIN_FAILED, ...context });
+      throw e;
+    }
+
     const session = await this.createUserSession(user.id);
+
+    await this.auditLogService.log({ userId: user.id, action: AuditAction.SIGNIN, ...context });
 
     response.cookie('sid', session.token, {
       maxAge: session.maxAge * 1000,
@@ -67,23 +85,29 @@ export class AuthService {
     return session;
   }
 
-  public async signout(userId: string, sessionId: string): Promise<BaseMessageDTO> {
+  public async signout(userId: string, sessionId: string, context: IAuditContext = {}): Promise<BaseMessageDTO> {
     await this.dataSource.getRepository(Session).delete({ id: sessionId, user: { id: userId } });
 
+    await this.auditLogService.log({ userId, action: AuditAction.SIGNOUT, ...context });
+
     return {
       message: { key: 'auth.signout_successful' },
     };
   }
 
-  public async signoutAll(userId: string): Promise<BaseMessageDTO> {
+  public async signoutAll(userId: string, context: IAuditContext = {}): Promise<BaseMessageDTO> {
     await this.dataSource.getRepository(Session).delete({ user: { id: userId } });
 
+    await this.auditLogService.log({ userId, action: AuditAction.SIGNOUT_ALL, ...context });
+
     return {
       message: { key: 'auth.signout_successful' },
     };
   }
 
-  public async cancelAccount(userId: string): Promise<BaseMessageDTO> {
+  public async cancelAccount(userId: string, context: IAuditContext = {}): Promise<BaseMessageDTO> {
+    await this.auditLogService.log({ userId, action: AuditAction.CANCEL_ACCOUNT, ...context });
+
     await this.dataSource.getRepository(User).delete({ id: userId });
 
     return {
