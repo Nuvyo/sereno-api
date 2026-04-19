@@ -61,15 +61,6 @@ export default tseslint.config(
       ],
       'padded-blocks': ['error', { blocks: 'never', switches: 'never', classes: 'always' }],
       'lines-between-class-members': ['error', 'always', { exceptAfterSingleLine: true }],
-      'padding-line-between-statements': [
-        'error',
-        { blankLine: 'always', prev: '*', next: 'return' },
-        { blankLine: 'always', prev: ['const', 'let', 'var'], next: '*' },
-        { blankLine: 'never', prev: ['const', 'let', 'var'], next: ['const', 'let', 'var'] },
-        { blankLine: 'always', prev: ['case', 'default'], next: '*' },
-        { blankLine: 'always', prev: '*', next: ['if', 'for', 'while', 'do'] },
-        { blankLine: 'always', prev: ['if', 'for', 'while', 'do'], next: '*' },
-      ],
       'max-lines-per-function': [
         'error',
         {
