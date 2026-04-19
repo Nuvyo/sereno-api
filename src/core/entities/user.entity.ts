@@ -14,6 +14,18 @@ export class User extends CustomBaseEntity {
   @Column({ type: 'varchar', length: 60, nullable: false, select: false })
   password: string;
 
+  @Column({ type: 'varchar', length: 10, nullable: false, default: 'ptbr' })
+  language: string;
+
+  @Column({ type: 'boolean', nullable: false, default: false })
+  emailVerified: boolean;
+
+  @Column({ type: 'varchar', length: 100, nullable: true, select: false })
+  emailVerificationToken: string | null;
+
+  @Column({ type: 'varchar', length: 100, nullable: true, select: false })
+  cancellationToken: string | null;
+
   @OneToMany(() => Session, (session) => session.user)
   sessions: Session[];
 

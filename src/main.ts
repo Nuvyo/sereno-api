@@ -72,6 +72,10 @@ async function bootstrap() {
   const pepper = process.env.PEPPER;
   const isProd = process.env.NODE_ENV === 'production';
 
+  if (!process.env.APP_URL) {
+    throw new Error('APP_URL não configurado — defina a variável de ambiente APP_URL');
+  }
+
   if (isProd && (!cookieSecret || cookieSecret.length < 32)) {
     throw new Error('COOKIE_SECRET deve ter pelo menos 32 caracteres');
   }

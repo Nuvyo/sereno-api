@@ -15,6 +15,8 @@ import { daysInMilliseconds } from '../../core/utils/utils';
 import { Response } from 'express';
 import { AuditLogService, IAuditContext } from '../../core/services/audit-log.service';
 import { AuditAction } from '../../core/entities/audit-log.entity';
+import { MailService } from '../../core/mail/mail.service';
+import { DictionaryService } from '../../core/services/dictionary.service';
 
 @Injectable()
 export class AuthService {
@@ -23,6 +25,8 @@ export class AuthService {
     private readonly dataSource: DataSource,
     private readonly bcryptService: BcryptService,
     private readonly auditLogService: AuditLogService,
+    private readonly mailService: MailService,
+    private readonly dictionary: DictionaryService,
   ) {}
 
   public async getMe(userId: string): Promise<MeResponseDTO> {
@@ -43,6 +47,24 @@ export class AuthService {
 
     if (body.name !== undefined) user.name = body.name;
 
+    if (body.currentPassword !== undefined && body.newPassword !== undefined) {
+      const userWithPassword = await this.dataSource.getRepository(User).findOneOrFail({
+        where: { id: userId },
+        select: { id: true, password: true },
+      });
+      const isCurrentPasswordValid = await this.bcryptService.compare(body.currentPassword, userWithPassword.password);
+
+      if (!isCurrentPasswordValid) {
+        throw new BadRequestException({ key: 'auth.wrong_current_password' });
+      }
+
+      if (body.newPassword !== body.newPasswordConfirmation) {
+        throw new BadRequestException({ key: 'auth.passwords_do_not_match' });
+      }
+
+      user.password = await this.bcryptService.hash(body.newPassword!);
+    }
+
     await this.dataSource.getRepository(User).save(user);
 
     await this.auditLogService.log({ userId, action: AuditAction.UPDATE_PROFILE, ...context });
@@ -50,14 +72,56 @@ export class AuthService {
     return { message: { key: 'auth.profile_updated' } };
   }
 
-  public async signup(body: SignupDTO, context: IAuditContext = {}): Promise<BaseMessageDTO> {
+  public async signup(body: SignupDTO, context: IAuditContext = {}, lang = 'ptbr'): Promise<BaseMessageDTO> {
     await this.validateSignupData(body);
-    
-    const user = await this.createUser(body);
 
+    const user = await this.createUser(body, lang);
+
+    await this.mailService.send(this.buildVerificationEmail(user, lang));
     await this.auditLogService.log({ userId: user.id, action: AuditAction.SIGNUP, ...context });
 
     return { message: { key: 'auth.signup_successful' } };
+  }
+
+  private buildVerificationEmail(user: User, lang: string) {
+    const t = (key: string, args?: Record<string, unknown>) =>
+      this.dictionary.translate(`auth.${key}`, args, lang);
+    const verificationUrl = `${process.env.APP_URL}/verify-email?token=${user.emailVerificationToken}`;
+
+    return {
+      to: user.email,
+      subject: t('verification_email_subject'),
+      template: 'email-verification',
+      context: {
+        verificationUrl,
+        greeting: t('verification_email_greeting', { name: user.name }),
+        body: t('verification_email_body'),
+        button: t('verification_email_button'),
+        expiry: t('verification_email_expiry'),
+        disclaimer: t('verification_email_disclaimer'),
+        fallback: t('verification_email_fallback'),
+      },
+      userId: user.id,
+    };
+  }
+
+  public async verifyEmail(token: string, context: IAuditContext = {}): Promise<BaseMessageDTO> {
+    const user = await this.dataSource.getRepository(User).findOne({
+      where: { emailVerificationToken: token },
+      select: { id: true, emailVerificationToken: true },
+    });
+
+    if (!user) {
+      throw new BadRequestException({ key: 'auth.email_verification_invalid' });
+    }
+
+    user.emailVerified = true;
+    user.emailVerificationToken = null;
+    await this.dataSource.getRepository(User).save(user);
+
+    await this.auditLogService.log({ userId: user.id, action: AuditAction.EMAIL_VERIFICATION, ...context });
+
+    return { message: { key: 'auth.email_verification_successful' } };
   }
 
   public async signin(body: SigninDTO, response: Response, context: IAuditContext = {}): Promise<Session> {
@@ -68,6 +132,10 @@ export class AuthService {
     } catch (e) {
       await this.auditLogService.log({ action: AuditAction.SIGNIN_FAILED, ...context });
       throw e;
+    }
+
+    if (!user.emailVerified) {
+      throw new UnauthorizedException({ key: 'auth.email_not_verified' });
     }
 
     const session = await this.createUserSession(user.id);
@@ -105,13 +173,53 @@ export class AuthService {
     };
   }
 
-  public async cancelAccount(userId: string, context: IAuditContext = {}): Promise<BaseMessageDTO> {
-    await this.auditLogService.log({ userId, action: AuditAction.CANCEL_ACCOUNT, ...context });
+  public async cancelAccount(userId: string, context: IAuditContext = {}, lang = 'ptbr'): Promise<BaseMessageDTO> {
+    const user = await this.dataSource.getRepository(User).findOneOrFail({ where: { id: userId } });
 
-    await this.dataSource.getRepository(User).delete({ id: userId });
+    user.cancellationToken = crypto.randomBytes(50).toString('hex');
+    await this.dataSource.getRepository(User).save(user);
+
+    await this.mailService.send(this.buildCancellationEmail(user, user.cancellationToken, lang));
+    await this.auditLogService.log({ userId, action: AuditAction.CANCEL_ACCOUNT_REQUESTED, ...context });
+
+    return { message: { key: 'auth.cancel_account_email_sent' } };
+  }
+
+  public async confirmCancelAccount(token: string, context: IAuditContext = {}): Promise<BaseMessageDTO> {
+    const user = await this.dataSource.getRepository(User).findOne({
+      where: { cancellationToken: token },
+      select: { id: true, cancellationToken: true },
+    });
+
+    if (!user) {
+      throw new BadRequestException({ key: 'auth.cancel_account_confirmation_invalid' });
+    }
+
+    await this.auditLogService.log({ userId: user.id, action: AuditAction.CANCEL_ACCOUNT, ...context });
+    await this.dataSource.getRepository(User).delete({ id: user.id });
+
+    return { message: { key: 'auth.account_cancellation_successful' } };
+  }
+
+  private buildCancellationEmail(user: User, token: string, lang: string) {
+    const t = (key: string, args?: Record<string, unknown>) =>
+      this.dictionary.translate(`auth.${key}`, args, lang);
+    const confirmationUrl = `${process.env.APP_URL}/cancel-account/confirm?token=${token}`;
 
     return {
-      message: { key: 'auth.account_cancellation_successful' },
+      to: user.email,
+      subject: t('cancellation_email_subject'),
+      template: 'account-cancellation',
+      context: {
+        confirmationUrl,
+        greeting: t('cancellation_email_greeting', { name: user.name }),
+        body: t('cancellation_email_body'),
+        warning: t('cancellation_email_warning'),
+        button: t('cancellation_email_button'),
+        disclaimer: t('cancellation_email_disclaimer'),
+        fallback: t('cancellation_email_fallback'),
+      },
+      userId: user.id,
     };
   }
 
@@ -127,12 +235,15 @@ export class AuthService {
     }
   }
 
-  private async createUser(body: SignupDTO): Promise<User> {
+  private async createUser(body: SignupDTO, lang: string): Promise<User> {
     const data = new User();
 
     data.name = body.name;
     data.email = body.email;
     data.password = await this.bcryptService.hash(body.password);
+    data.language = lang;
+    data.emailVerified = process.env.NODE_ENV === 'test';
+    data.emailVerificationToken = crypto.randomBytes(50).toString('hex');
 
     return this.dataSource.getRepository(User).save(data);
   }
@@ -140,7 +251,7 @@ export class AuthService {
   private async getAuthenticatedUser(body: SigninDTO): Promise<User> {
     const user = await this.dataSource.getRepository(User).findOne({
       where: { email: body.email },
-      select: { id: true, password: true },
+      select: { id: true, password: true, emailVerified: true },
     });
     const passwordHash = user?.password || '';
     const isPasswordValid = await this.bcryptService.compare(body.password, passwordHash);

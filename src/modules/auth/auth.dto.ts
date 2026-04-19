@@ -47,9 +47,30 @@ export class UpdateMeDTO {
   @IsString({ message: 'auth.validator.name_must_be_string' })
   name: string;
 
+  @IsOptional()
+  @IsString({ message: 'auth.validator.currentPassword_must_be_string' })
+  currentPassword: string;
+
+  @IsOptional()
+  @IsString({ message: 'auth.validator.password_must_be_string' })
+  @MinLength(8, { message: 'auth.validator.password_min_length' })
+  @Matches(/^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!@#$%^&*])/, {
+    message: 'auth.validator.password_doesnt_meet_requirements',
+  })
+  newPassword: string;
+
+  @IsOptional()
+  @IsString({ message: 'auth.validator.passwordConfirmation_must_be_string' })
+  @MinLength(8, { message: 'auth.validator.passwordConfirmation_min_length' })
+  newPasswordConfirmation: string;
+
 }
 
-export class SignupDTO extends UpdateMeDTO {
+export class SignupDTO {
+
+  @IsOptional()
+  @IsString({ message: 'auth.validator.name_must_be_string' })
+  name: string;
 
   @IsNotEmpty({ message: 'auth.validator.email_not_empty' })
   @IsEmail({}, { message: 'auth.validator.invalid_email' })
@@ -91,5 +112,21 @@ export class MeResponseDTO {
   name: string;
   email: string;
   photo?: string;
+
+}
+
+export class VerifyEmailDTO {
+
+  @IsNotEmpty({ message: 'auth.validator.token_not_empty' })
+  @IsString({ message: 'auth.validator.token_must_be_string' })
+  token: string;
+
+}
+
+export class ConfirmCancelAccountDTO {
+
+  @IsNotEmpty({ message: 'auth.validator.token_not_empty' })
+  @IsString({ message: 'auth.validator.token_must_be_string' })
+  token: string;
 
 }

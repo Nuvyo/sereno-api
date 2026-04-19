@@ -1,5 +1,6 @@
-import { Body, Controller, Delete, Get, Patch, Post, Req, Res, UseGuards, UsePipes, ValidationPipe } from '@nestjs/common';
-import { MeResponseDTO, SigninDTO, SignupDTO, UpdateMeDTO } from '../auth/auth.dto';
+import { Body, Controller, Delete, Get, Patch, Post, Query, Req, Res, UseGuards, UsePipes, ValidationPipe } from '@nestjs/common';
+import { I18nContext } from 'nestjs-i18n';
+import { ConfirmCancelAccountDTO, MeResponseDTO, SigninDTO, SignupDTO, UpdateMeDTO, VerifyEmailDTO } from '../auth/auth.dto';
 import { AuthService } from '../auth/auth.service';
 import { Request, Response } from 'express';
 import { AuthGuard } from '../../core/guards/auth.guard';
@@ -19,7 +20,9 @@ export class AuthController {
 
   @Post('/signup')
   public signup(@Body() body: SignupDTO, @Req() req: Request): Promise<BaseMessageDTO> {
-    return this.authService.signup(body, this.getContext(req));
+    const lang = I18nContext.current()?.lang ?? 'ptbr';
+
+    return this.authService.signup(body, this.getContext(req), lang);
   }
 
   @Post('/signin')
@@ -48,10 +51,24 @@ export class AuthController {
     return this.authService.updateMe(req.userId, body, this.getContext(req));
   }
 
+  @Get('/verify-email')
+  @UsePipes(new ValidationPipe({ whitelist: true }))
+  public verifyEmail(@Query() query: VerifyEmailDTO, @Req() req: Request): Promise<BaseMessageDTO> {
+    return this.authService.verifyEmail(query.token, this.getContext(req));
+  }
+
   @Delete('/cancel-account')
   @UseGuards(AuthGuard)
   public cancelAccount(@Req() req: Request): Promise<BaseMessageDTO> {
-    return this.authService.cancelAccount(req.userId, this.getContext(req));
+    const lang = I18nContext.current()?.lang ?? 'ptbr';
+    
+    return this.authService.cancelAccount(req.userId, this.getContext(req), lang);
+  }
+
+  @Get('/cancel-account/confirm')
+  @UsePipes(new ValidationPipe({ whitelist: true }))
+  public confirmCancelAccount(@Query() query: ConfirmCancelAccountDTO, @Req() req: Request): Promise<BaseMessageDTO> {
+    return this.authService.confirmCancelAccount(query.token, this.getContext(req));
   }
 
   private getContext(req: Request): IAuditContext {

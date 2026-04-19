@@ -3,6 +3,7 @@ import { PostgresConfig } from '../src/core/datasources/postgres.datasource';
 import { AuthModule } from '../src/modules/auth/auth.module';
 import { Test } from '@nestjs/testing';
 import { INestApplication, ModuleMetadata, ValidationPipe } from '@nestjs/common';
+import { MailerService } from '@nestjs-modules/mailer';
 
 import { ExceptionMiddleware } from '../src/core/middleware/exception.middleware';
 import { HeaderResolver, I18nModule, I18nService } from 'nestjs-i18n';
@@ -38,7 +39,10 @@ export async function createApp(options?: ModuleMetadata) {
     controllers: [...(options?.controllers || [])],
     providers: [...(options?.providers || [])],
     exports: [...(options?.exports || [])],
-  }).compile();
+  })
+    .overrideProvider(MailerService)
+    .useValue({ sendMail: async () => {} })
+    .compile();
   const app = moduleRef.createNestApplication();
   const i18n = app.get<I18nService>(I18nService);
   const dictionary = new DictionaryService(i18n);

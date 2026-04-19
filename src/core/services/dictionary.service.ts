@@ -28,16 +28,17 @@ export class DictionaryService {
     this.language = lang || 'ptbr';
   }
 
-  public translate(key: string, args?: Record<string, any>): string {
+  public translate(key: string, args?: Record<string, any>, lang?: string): string {
     this.ensureCache();
+    const resolvedLang = lang ?? this.language;
     const [domain, ...restParts] = key.split('.');
     const innerKey = restParts.join('.');
     const bundle = (this.cache as any)[domain];
-    let text: string | undefined = bundle?.[this.language]?.[innerKey];
+    let text: string | undefined = bundle?.[resolvedLang]?.[innerKey];
 
     if (typeof text !== 'string' || text.length === 0) {
       try {
-        const maybe = this.i18nService.translate(key, { lang: this.language, args: args || {} }) as unknown as string;
+        const maybe = this.i18nService.translate(key, { lang: resolvedLang, args: args || {} }) as unknown as string;
 
         if (typeof maybe === 'string' && maybe !== key) {
           text = maybe;

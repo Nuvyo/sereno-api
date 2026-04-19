@@ -3,10 +3,11 @@ import * as dotenv from 'dotenv';
 import { User } from '../entities/user.entity';
 import { Session } from '../entities/session.entity';
 import { AuditLog } from '../entities/audit-log.entity';
+import { EmailLog } from '../entities/email-log.entity';
 
 dotenv.config();
 
-export const entities = [User, Session, AuditLog];
+export const entities = [User, Session, AuditLog, EmailLog];
 
 export const PostgresConfig: DataSourceOptions = {
   type: 'postgres',

@@ -7,7 +7,9 @@ export enum AuditAction {
   SIGNOUT = 'signout',
   SIGNOUT_ALL = 'signout_all',
   UPDATE_PROFILE = 'update_profile',
+  CANCEL_ACCOUNT_REQUESTED = 'cancel_account_requested',
   CANCEL_ACCOUNT = 'cancel_account',
+  EMAIL_VERIFICATION = 'email_verification',
 }
 
 @Entity('audit_logs')

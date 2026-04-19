@@ -6,6 +6,8 @@ import { Response } from 'express';
 import { AuthService } from './auth.service';
 import { BcryptService } from '../../core/services/bcrypt.service';
 import { AuditLogService } from '../../core/services/audit-log.service';
+import { MailService, ISendMailOptions } from '../../core/mail/mail.service';
+import { DictionaryService } from '../../core/services/dictionary.service';
 import { User } from '../../core/entities/user.entity';
 import { Session } from '../../core/entities/session.entity';
 import { SignupDTO, UpdateMeDTO } from './auth.dto';
@@ -18,8 +20,23 @@ function makeUser(partial: Partial<User> = {}): User {
     name: 'John Doe',
     email: 'john@example.com',
     password: 'hashed:Test@1234',
+    emailVerified: true,
+    emailVerificationToken: null,
+    language: 'ptbr',
     ...partial,
   });
+}
+
+function mockMailService(overrides: Record<string, any> = {}): MailService {
+  return {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    send: async (_options: ISendMailOptions) => {},
+    ...overrides,
+  } as unknown as MailService;
+}
+
+function mockDictionary(): DictionaryService {
+  return { translate: (key: string) => key } as unknown as DictionaryService;
 }
 
 function mockRepo(overrides: Record<string, any> = {}) {
@@ -78,6 +95,8 @@ describe('AuthService', () => {
         mockDataSource({ findOneOrFail: async () => user }),
         mockBcrypt(),
         mockAuditLog(),
+        mockMailService(),
+        mockDictionary(),
       );
 
       const result = await service.getMe(user.id);
@@ -93,6 +112,8 @@ describe('AuthService', () => {
         mockDataSource({ findOneOrFail: async () => { throw new Error('EntityNotFound'); } }),
         mockBcrypt(),
         mockAuditLog(),
+        mockMailService(),
+        mockDictionary(),
       );
 
       await assert.rejects(() => service.getMe('nonexistent'));
@@ -111,6 +132,8 @@ describe('AuthService', () => {
         }),
         mockBcrypt(),
         mockAuditLog(),
+        mockMailService(),
+        mockDictionary(),
       );
 
       const result = await service.updateMe(user.id, { name: 'New Name' } as UpdateMeDTO);
@@ -131,12 +154,89 @@ describe('AuthService', () => {
         }),
         mockBcrypt(),
         mockAuditLog(),
+        mockMailService(),
+        mockDictionary(),
       );
 
       await service.updateMe(user.id, {} as UpdateMeDTO);
 
       assert.ok(capture.saved);
       assert.equal(capture.saved.name, 'Original Name');
+    });
+
+    it('should update password when currentPassword and newPassword are provided', async () => {
+      const user = makeUser();
+      const capture: { saved: User | null } = { saved: null };
+
+      const service = new AuthService(
+        mockDataSource({
+          findOneOrFail: async () => user,
+          save: async (u: User) => { capture.saved = u; return u; },
+        }),
+        mockBcrypt(),
+        mockAuditLog(),
+        mockMailService(),
+        mockDictionary(),
+      );
+
+      await service.updateMe(user.id, {
+        currentPassword: 'Test@1234',
+        newPassword: 'New@5678',
+        newPasswordConfirmation: 'New@5678',
+      } as UpdateMeDTO);
+
+      assert.ok(capture.saved);
+      assert.equal(capture.saved.password, 'hashed:New@5678');
+    });
+
+    it('should throw BadRequestException when current password is wrong', async () => {
+      const user = makeUser();
+
+      const service = new AuthService(
+        mockDataSource({ findOneOrFail: async () => user }),
+        mockBcrypt({ compare: async () => false }),
+        mockAuditLog(),
+        mockMailService(),
+        mockDictionary(),
+      );
+
+      await assert.rejects(
+        () => service.updateMe(user.id, {
+          currentPassword: 'Wrong@1234',
+          newPassword: 'New@5678',
+          newPasswordConfirmation: 'New@5678',
+        } as UpdateMeDTO),
+        (err: any) => {
+          assert.ok(err instanceof BadRequestException);
+          assert.deepEqual(err.getResponse(), { key: 'auth.wrong_current_password' });
+          return true;
+        },
+      );
+    });
+
+    it('should throw BadRequestException when new passwords do not match', async () => {
+      const user = makeUser();
+
+      const service = new AuthService(
+        mockDataSource({ findOneOrFail: async () => user }),
+        mockBcrypt({ compare: async () => true }),
+        mockAuditLog(),
+        mockMailService(),
+        mockDictionary(),
+      );
+
+      await assert.rejects(
+        () => service.updateMe(user.id, {
+          currentPassword: 'Test@1234',
+          newPassword: 'New@5678',
+          newPasswordConfirmation: 'Different@9012',
+        } as UpdateMeDTO),
+        (err: any) => {
+          assert.ok(err instanceof BadRequestException);
+          assert.deepEqual(err.getResponse(), { key: 'auth.passwords_do_not_match' });
+          return true;
+        },
+      );
     });
   });
 
@@ -151,6 +251,8 @@ describe('AuthService', () => {
         }),
         mockBcrypt(),
         mockAuditLog(),
+        mockMailService(),
+        mockDictionary(),
       );
 
       const body: SignupDTO = {
@@ -160,13 +262,14 @@ describe('AuthService', () => {
         passwordConfirmation: 'Test@1234',
       };
 
-      const result = await service.signup(body);
+      const result = await service.signup(body, {}, 'en');
 
       assert.deepEqual(result, { message: { key: 'auth.signup_successful' } });
       assert.ok(capture.created);
       assert.equal(capture.created.name, 'John Doe');
       assert.equal(capture.created.email, 'john@example.com');
       assert.equal(capture.created.password, 'hashed:Test@1234');
+      assert.equal(capture.created.language, 'en');
     });
 
     it('should throw BadRequestException when email is already in use', async () => {
@@ -174,6 +277,8 @@ describe('AuthService', () => {
         mockDataSource({ exists: async () => true }),
         mockBcrypt(),
         mockAuditLog(),
+        mockMailService(),
+        mockDictionary(),
       );
 
       await assert.rejects(
@@ -191,6 +296,8 @@ describe('AuthService', () => {
         mockDataSource({ exists: async () => false }),
         mockBcrypt(),
         mockAuditLog(),
+        mockMailService(),
+        mockDictionary(),
       );
 
       await assert.rejects(
@@ -216,6 +323,8 @@ describe('AuthService', () => {
         ),
         mockBcrypt({ compare: async () => true }),
         mockAuditLog(),
+        mockMailService(),
+        mockDictionary(),
       );
 
       const session = await service.signin({ email: user.email, password: 'Test@1234' }, mockResponse(cookieSpy));
@@ -232,6 +341,8 @@ describe('AuthService', () => {
         mockDataSource({ findOne: async () => null }),
         mockBcrypt({ compare: async () => false }),
         mockAuditLog(),
+        mockMailService(),
+        mockDictionary(),
       );
 
       await assert.rejects(
@@ -247,11 +358,79 @@ describe('AuthService', () => {
         mockDataSource({ findOne: async () => user }),
         mockBcrypt({ compare: async () => false }),
         mockAuditLog(),
+        mockMailService(),
+        mockDictionary(),
       );
 
       await assert.rejects(
         () => service.signin({ email: user.email, password: 'Wrong@1234' }, mockResponse()),
         (err: any) => { assert.ok(err instanceof UnauthorizedException); return true; },
+      );
+    });
+
+    it('should throw UnauthorizedException when email is not verified', async () => {
+      const user = makeUser({ emailVerified: false });
+
+      const service = new AuthService(
+        mockDataSource({ findOne: async () => user }),
+        mockBcrypt({ compare: async () => true }),
+        mockAuditLog(),
+        mockMailService(),
+        mockDictionary(),
+      );
+
+      await assert.rejects(
+        () => service.signin({ email: user.email, password: 'Test@1234' }, mockResponse()),
+        (err: any) => {
+          assert.ok(err instanceof UnauthorizedException);
+          assert.deepEqual(err.getResponse(), { key: 'auth.email_not_verified' });
+          return true;
+        },
+      );
+    });
+  });
+
+  describe('verifyEmail', () => {
+    it('should mark email as verified and clear token', async () => {
+      const token = 'a'.repeat(100);
+      const user = makeUser({ emailVerified: false, emailVerificationToken: token });
+      const capture: { saved: User | null } = { saved: null };
+
+      const service = new AuthService(
+        mockDataSource({
+          findOne: async () => user,
+          save: async (u: User) => { capture.saved = u; return u; },
+        }),
+        mockBcrypt(),
+        mockAuditLog(),
+        mockMailService(),
+        mockDictionary(),
+      );
+
+      const result = await service.verifyEmail(token);
+
+      assert.deepEqual(result, { message: { key: 'auth.email_verification_successful' } });
+      assert.ok(capture.saved);
+      assert.equal(capture.saved.emailVerified, true);
+      assert.equal(capture.saved.emailVerificationToken, null);
+    });
+
+    it('should throw BadRequestException when token is invalid', async () => {
+      const service = new AuthService(
+        mockDataSource({ findOne: async () => null }),
+        mockBcrypt(),
+        mockAuditLog(),
+        mockMailService(),
+        mockDictionary(),
+      );
+
+      await assert.rejects(
+        () => service.verifyEmail('invalid-token'),
+        (err: any) => {
+          assert.ok(err instanceof BadRequestException);
+          assert.deepEqual(err.getResponse(), { key: 'auth.email_verification_invalid' });
+          return true;
+        },
       );
     });
   });
@@ -264,6 +443,8 @@ describe('AuthService', () => {
         mockDataSource({}, { delete: async (f: any) => { deletedFilter = f; return { affected: 1 }; } }),
         mockBcrypt(),
         mockAuditLog(),
+        mockMailService(),
+        mockDictionary(),
       );
 
       const result = await service.signout('user-id-1', 'session-id-1');
@@ -281,6 +462,8 @@ describe('AuthService', () => {
         mockDataSource({}, { delete: async (f: any) => { deletedFilter = f; return { affected: 3 }; } }),
         mockBcrypt(),
         mockAuditLog(),
+        mockMailService(),
+        mockDictionary(),
       );
 
       const result = await service.signoutAll('user-id-1');
@@ -291,19 +474,72 @@ describe('AuthService', () => {
   });
 
   describe('cancelAccount', () => {
-    it('should delete the user and return success message', async () => {
+    it('should save cancellation token and send email', async () => {
+      const user = makeUser();
+      const capture: { saved: User | null; mailOptions: any } = { saved: null, mailOptions: null };
+
+      const service = new AuthService(
+        mockDataSource({
+          findOneOrFail: async () => user,
+          save: async (u: User) => { capture.saved = u; return u; },
+        }),
+        mockBcrypt(),
+        mockAuditLog(),
+        mockMailService({ send: async (opts: any) => { capture.mailOptions = opts; } }),
+        mockDictionary(),
+      );
+
+      const result = await service.cancelAccount('user-id-1', {}, 'en');
+
+      assert.deepEqual(result, { message: { key: 'auth.cancel_account_email_sent' } });
+      assert.ok(capture.saved);
+      assert.ok(typeof capture.saved.cancellationToken === 'string' && capture.saved.cancellationToken.length > 0);
+      assert.ok(capture.mailOptions);
+      assert.equal(capture.mailOptions.template, 'account-cancellation');
+      assert.equal(capture.mailOptions.userId, user.id);
+    });
+  });
+
+  describe('confirmCancelAccount', () => {
+    it('should delete the user when token is valid', async () => {
+      const token = 'b'.repeat(100);
+      const user = makeUser({ cancellationToken: token });
       let deletedFilter: any = null;
 
       const service = new AuthService(
-        mockDataSource({ delete: async (f: any) => { deletedFilter = f; return { affected: 1 }; } }),
+        mockDataSource({
+          findOne: async () => user,
+          delete: async (f: any) => { deletedFilter = f; return { affected: 1 }; },
+        }),
         mockBcrypt(),
         mockAuditLog(),
+        mockMailService(),
+        mockDictionary(),
       );
 
-      const result = await service.cancelAccount('user-id-1');
+      const result = await service.confirmCancelAccount(token);
 
-      assert.deepEqual(deletedFilter, { id: 'user-id-1' });
       assert.deepEqual(result, { message: { key: 'auth.account_cancellation_successful' } });
+      assert.deepEqual(deletedFilter, { id: user.id });
+    });
+
+    it('should throw BadRequestException when token is invalid', async () => {
+      const service = new AuthService(
+        mockDataSource({ findOne: async () => null }),
+        mockBcrypt(),
+        mockAuditLog(),
+        mockMailService(),
+        mockDictionary(),
+      );
+
+      await assert.rejects(
+        () => service.confirmCancelAccount('invalid-token'),
+        (err: any) => {
+          assert.ok(err instanceof BadRequestException);
+          assert.deepEqual(err.getResponse(), { key: 'auth.cancel_account_confirmation_invalid' });
+          return true;
+        },
+      );
     });
   });
 

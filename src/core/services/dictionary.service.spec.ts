@@ -40,7 +40,7 @@ describe('DictionaryService', () => {
   it('returns cached translation for known key', () => {
     const text = service.translate('auth.signup_successful', undefined);
 
-    assert.equal(text, 'Account created successfully');
+    assert.equal(text, 'Account created successfully. We sent a verification email to you');
   });
 
   it('falls back to i18nService for unknown key and applies args replacement', () => {
