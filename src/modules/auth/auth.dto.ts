@@ -123,6 +123,14 @@ export class VerifyEmailDTO {
 
 }
 
+export class ResendVerificationEmailDTO {
+
+  @IsNotEmpty({ message: 'auth.validator.email_not_empty' })
+  @IsEmail({}, { message: 'auth.validator.invalid_email' })
+  email: string;
+
+}
+
 export class ConfirmCancelAccountDTO {
 
   @IsNotEmpty({ message: 'auth.validator.token_not_empty' })

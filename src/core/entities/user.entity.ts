@@ -23,6 +23,9 @@ export class User extends CustomBaseEntity {
   @Column({ type: 'varchar', length: 100, nullable: true, select: false })
   emailVerificationToken: string | null;
 
+  @Column({ type: 'timestamptz', nullable: true, select: false })
+  emailVerificationTokenExpiresAt: Date | null;
+
   @Column({ type: 'varchar', length: 100, nullable: true, select: false })
   cancellationToken: string | null;
 

@@ -6,6 +6,7 @@ import {
   SignupDTO,
   MeResponseDTO,
   UpdateMeDTO,
+  ResendVerificationEmailDTO,
 } from '../auth/auth.dto';
 import { BcryptService } from '../../core/services/bcrypt.service';
 import crypto from 'node:crypto';
@@ -124,7 +125,25 @@ export class AuthService {
     return { message: { key: 'auth.email_verification_successful' } };
   }
 
-  public async signin(body: SigninDTO, response: Response, context: IAuditContext = {}): Promise<Session> {
+  public async resendVerificationEmail(body: ResendVerificationEmailDTO, context: IAuditContext = {}, lang = 'ptbr'): Promise<BaseMessageDTO> {
+    const user = await this.dataSource.getRepository(User).findOne({
+      where: { email: body.email },
+      select: { id: true, email: true, name: true, emailVerified: true, emailVerificationToken: true, emailVerificationTokenExpiresAt: true },
+    });
+
+    if (!user || user.emailVerified) {
+      return { message: { key: 'auth.verification_email_resent' } };
+    }
+
+    this.setVerificationToken(user);
+    await this.dataSource.getRepository(User).save(user);
+    await this.mailService.send(this.buildVerificationEmail(user, lang));
+    await this.auditLogService.log({ userId: user.id, action: AuditAction.EMAIL_VERIFICATION_RESENT, ...context });
+
+    return { message: { key: 'auth.verification_email_resent' } };
+  }
+
+  public async signin(body: SigninDTO, response: Response, context: IAuditContext = {}, lang = 'ptbr'): Promise<Session> {
     let user: User;
 
     try {
@@ -135,6 +154,15 @@ export class AuthService {
     }
 
     if (!user.emailVerified) {
+      const tokenExpired = !user.emailVerificationTokenExpiresAt || user.emailVerificationTokenExpiresAt < new Date();
+
+      if (tokenExpired) {
+        this.setVerificationToken(user);
+        await this.dataSource.getRepository(User).save(user);
+        await this.mailService.send(this.buildVerificationEmail(user, lang));
+        throw new UnauthorizedException({ key: 'auth.email_not_verified_new_link_sent' });
+      }
+
       throw new UnauthorizedException({ key: 'auth.email_not_verified' });
     }
 
@@ -235,6 +263,11 @@ export class AuthService {
     }
   }
 
+  private setVerificationToken(user: User): void {
+    user.emailVerificationToken = crypto.randomBytes(50).toString('hex');
+    user.emailVerificationTokenExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+  }
+
   private async createUser(body: SignupDTO, lang: string): Promise<User> {
     const data = new User();
 
@@ -243,7 +276,7 @@ export class AuthService {
     data.password = await this.bcryptService.hash(body.password);
     data.language = lang;
     data.emailVerified = process.env.NODE_ENV === 'test';
-    data.emailVerificationToken = crypto.randomBytes(50).toString('hex');
+    this.setVerificationToken(data);
 
     return this.dataSource.getRepository(User).save(data);
   }
@@ -251,7 +284,7 @@ export class AuthService {
   private async getAuthenticatedUser(body: SigninDTO): Promise<User> {
     const user = await this.dataSource.getRepository(User).findOne({
       where: { email: body.email },
-      select: { id: true, password: true, emailVerified: true },
+      select: { id: true, name: true, email: true, password: true, emailVerified: true, emailVerificationToken: true, emailVerificationTokenExpiresAt: true },
     });
     const passwordHash = user?.password || '';
     const isPasswordValid = await this.bcryptService.compare(body.password, passwordHash);

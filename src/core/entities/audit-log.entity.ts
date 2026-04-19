@@ -10,6 +10,7 @@ export enum AuditAction {
   CANCEL_ACCOUNT_REQUESTED = 'cancel_account_requested',
   CANCEL_ACCOUNT = 'cancel_account',
   EMAIL_VERIFICATION = 'email_verification',
+  EMAIL_VERIFICATION_RESENT = 'email_verification_resent',
 }
 
 @Entity('audit_logs')

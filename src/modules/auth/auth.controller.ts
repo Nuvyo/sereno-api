@@ -1,6 +1,6 @@
 import { Body, Controller, Delete, Get, Patch, Post, Query, Req, Res, UseGuards, UsePipes, ValidationPipe } from '@nestjs/common';
 import { I18nContext } from 'nestjs-i18n';
-import { ConfirmCancelAccountDTO, MeResponseDTO, SigninDTO, SignupDTO, UpdateMeDTO, VerifyEmailDTO } from '../auth/auth.dto';
+import { ConfirmCancelAccountDTO, MeResponseDTO, ResendVerificationEmailDTO, SigninDTO, SignupDTO, UpdateMeDTO, VerifyEmailDTO } from '../auth/auth.dto';
 import { AuthService } from '../auth/auth.service';
 import { Request, Response } from 'express';
 import { AuthGuard } from '../../core/guards/auth.guard';
@@ -27,9 +27,18 @@ export class AuthController {
 
   @Post('/signin')
   public async signin(@Body() body: SigninDTO, @Req() req: Request, @Res() response: Response): Promise<void> {
-    const session = await this.authService.signin(body, response, this.getContext(req));
+    const lang = I18nContext.current()?.lang ?? 'ptbr';
+    const session = await this.authService.signin(body, response, this.getContext(req), lang);
 
     response.json(session);
+  }
+
+  @Post('/resend-verification')
+  @UsePipes(new ValidationPipe({ whitelist: true }))
+  public resendVerificationEmail(@Body() body: ResendVerificationEmailDTO, @Req() req: Request): Promise<BaseMessageDTO> {
+    const lang = I18nContext.current()?.lang ?? 'ptbr';
+
+    return this.authService.resendVerificationEmail(body, this.getContext(req), lang);
   }
 
   @Post('/signout')
