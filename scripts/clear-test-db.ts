@@ -7,6 +7,7 @@ dotenv.config();
 const datasource = new DataSource({
   ...PostgresConfig,
   database: process.env.PGDATABASE_TEST,
+  synchronize: false,
 } as DataSourceOptions);
 
 datasource.initialize()
@@ -25,15 +26,13 @@ datasource.initialize()
   });
 
 async function clearTables() {
-  const deletes = entities.map(entity => {
-    const metadata = datasource.getMetadata(entity);
+  const tableNames = entities.map(entity => datasource.getMetadata(entity).tableName);
 
-    return `DELETE FROM ${metadata.tableName};`;
-  });
+  await datasource.query('SET session_replication_role = replica;');
 
-  // Desabilitar restrições de chave estrangeira no PostgreSQL
-  deletes.unshift('SET session_replication_role = replica;');
-  deletes.push('SET session_replication_role = DEFAULT;');
+  for (const table of tableNames) {
+    await datasource.query(`DELETE FROM ${table};`);
+  }
 
-  await datasource.query(deletes.join('\n'));
+  await datasource.query('SET session_replication_role = DEFAULT;');
 }

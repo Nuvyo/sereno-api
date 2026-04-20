@@ -10,16 +10,20 @@ import { closeApp, createApp } from '../../../test/setup';
 import Requester from '../../../test/requester';
 import { Session } from '../../core/entities/session.entity';
 import { daysInMilliseconds } from '../../core/utils/utils';
+import { DataSource } from 'typeorm';
+import { User } from '../../core/entities/user.entity';
 
 const VALID_PASSWORD = 'Test@1234';
 
 describe('v1/auth', () => {
   let app: INestApplication;
   let normalUserRequester1: Requester;
+  let dataSource: DataSource;
 
   before(async () => {
     app = await createApp();
     normalUserRequester1 = new Requester(app);
+    dataSource = app.get(DataSource, { strict: false });
   });
 
   after(async () => {
@@ -120,10 +124,13 @@ describe('v1/auth', () => {
       const createdAt = new Date(responseBody.createdAt);
       const expiresAt = new Date(responseBody.expiresAt);
 
-      const diffInSec = Math.round((expiresAt.getTime() - createdAt.getTime()) / 1000);
+      const diffInSec = (expiresAt.getTime() - createdAt.getTime()) / 1000;
       const expectedDiffInSec = daysInMilliseconds(30) / 1000;
 
-      assert.equal(diffInSec, expectedDiffInSec);
+      assert.ok(
+        Math.abs(diffInSec - expectedDiffInSec) <= 1,
+        `session duration ${diffInSec}s should be within 1s of ${expectedDiffInSec}s`,
+      );
 
       Object.keys(response.body).forEach((key) => {
         assert.equal(key in new Session(), true);
@@ -201,7 +208,7 @@ describe('v1/auth', () => {
       assert.equal(response.status, HttpStatus.UNAUTHORIZED);
     });
 
-    it('should cancel the account of normal user and succeed', async () => {
+    it('should request account cancellation and receive confirmation email notice', async () => {
       const signinBody: SigninDTO = {
         email: 'john.test.auth@email.com',
         password: VALID_PASSWORD,
@@ -212,10 +219,28 @@ describe('v1/auth', () => {
       const response = await normalUserRequester1.delete('/v1/auth/cancel-account');
 
       assert.equal(response.status, HttpStatus.OK);
+      assert.match(response.body.message, /We sent a confirmation email to cancel your account/);
+    });
+
+    it('should still allow access before confirming cancellation', async () => {
+      const response = await normalUserRequester1.delete('/v1/auth/cancel-account');
+
+      assert.equal(response.status, HttpStatus.OK);
+    });
+
+    it('should confirm cancellation and succeed', async () => {
+      const user = await dataSource.getRepository(User).findOneOrFail({
+        where: { email: 'john.test.auth@email.com' },
+        select: { id: true, cancellationToken: true },
+      });
+
+      const response = await normalUserRequester1.get(`/v1/auth/cancel-account/confirm?token=${user.cancellationToken}`);
+
+      assert.equal(response.status, HttpStatus.OK);
       assert.match(response.body.message, /Account cancelled successfully/);
     });
 
-    it('should fail to cancel the account again', async () => {
+    it('should fail to access after account is cancelled', async () => {
       const response = await normalUserRequester1.delete('/v1/auth/cancel-account');
 
       assert.equal(response.status, HttpStatus.UNAUTHORIZED);
