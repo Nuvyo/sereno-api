@@ -9,6 +9,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
+import { QueueModule } from '../core/queue/queue.module';
 
 dotenv.config();
 
@@ -30,6 +31,7 @@ dotenv.config();
       resolvers: [{ use: HeaderResolver, options: ['language'] }],
     }),
     TypeOrmModule.forRoot(PostgresConfig),
+    QueueModule,
     AuthModule,
   ],
   controllers: [AppController],

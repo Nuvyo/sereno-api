@@ -6,7 +6,8 @@ import { Response } from 'express';
 import { AuthService } from './auth.service';
 import { BcryptService } from '../../core/services/bcrypt.service';
 import { AuditLogService } from '../../core/services/audit-log.service';
-import { MailService, ISendMailOptions } from '../../core/mail/mail.service';
+import { ISendMailOptions } from '../../core/mail/mail.service';
+import { MailQueueService } from '../../core/mail/mail-queue.service';
 import { DictionaryService } from '../../core/services/dictionary.service';
 import { User } from '../../core/entities/user.entity';
 import { Session } from '../../core/entities/session.entity';
@@ -27,12 +28,12 @@ function makeUser(partial: Partial<User> = {}): User {
   });
 }
 
-function mockMailService(overrides: Record<string, any> = {}): MailService {
+function mockMailService(overrides: Record<string, any> = {}): MailQueueService {
   return {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     send: async (_options: ISendMailOptions) => {},
     ...overrides,
-  } as unknown as MailService;
+  } as unknown as MailQueueService;
 }
 
 function mockDictionary(): DictionaryService {
@@ -368,8 +369,29 @@ describe('AuthService', () => {
       );
     });
 
-    it('should throw UnauthorizedException when email is not verified', async () => {
-      const user = makeUser({ emailVerified: false });
+    it('should throw UnauthorizedException and resend email when verification token is expired', async () => {
+      const user = makeUser({ emailVerified: false, emailVerificationTokenExpiresAt: new Date(Date.now() - 1000) });
+
+      const service = new AuthService(
+        mockDataSource({ findOne: async () => user }),
+        mockBcrypt({ compare: async () => true }),
+        mockAuditLog(),
+        mockMailService(),
+        mockDictionary(),
+      );
+
+      await assert.rejects(
+        () => service.signin({ email: user.email, password: 'Test@1234' }, mockResponse()),
+        (err: any) => {
+          assert.ok(err instanceof UnauthorizedException);
+          assert.deepEqual(err.getResponse(), { key: 'auth.email_not_verified_new_link_sent' });
+          return true;
+        },
+      );
+    });
+
+    it('should throw UnauthorizedException without resend when verification token is still valid', async () => {
+      const user = makeUser({ emailVerified: false, emailVerificationTokenExpiresAt: new Date(Date.now() + 60_000) });
 
       const service = new AuthService(
         mockDataSource({ findOne: async () => user }),

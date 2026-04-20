@@ -16,7 +16,7 @@ import { daysInMilliseconds } from '../../core/utils/utils';
 import { Response } from 'express';
 import { AuditLogService, IAuditContext } from '../../core/services/audit-log.service';
 import { AuditAction } from '../../core/entities/audit-log.entity';
-import { MailService } from '../../core/mail/mail.service';
+import { MailQueueService } from '../../core/mail/mail-queue.service';
 import { DictionaryService } from '../../core/services/dictionary.service';
 
 @Injectable()
@@ -26,7 +26,7 @@ export class AuthService {
     private readonly dataSource: DataSource,
     private readonly bcryptService: BcryptService,
     private readonly auditLogService: AuditLogService,
-    private readonly mailService: MailService,
+    private readonly mailService: MailQueueService,
     private readonly dictionary: DictionaryService,
   ) {}
 
