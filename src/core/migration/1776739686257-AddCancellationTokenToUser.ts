@@ -1,8 +1,8 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class Migration1776643500000 implements MigrationInterface {
+export class Migration1776739686257 implements MigrationInterface {
 
-  name = 'Migration1776643500000';
+  name = 'Migration1776739686257';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query('ALTER TABLE "users" ADD "cancellationToken" character varying(100)');
